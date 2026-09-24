@@ -1,0 +1,397 @@
+/* ==========================================
+   ADVERTISEMENT CARD (empty promo slot)
+   Fully fluid: no fixed width/min-width, so it
+   adapts correctly inside .ads-track / .ads-track-item
+   whether that's a grid column (desktop) or a
+   100%-wide flex slide (mobile).
+========================================== */
+
+.advertisement-card {
+  --ad-bg-1: #14181d;
+  --ad-bg-2: #1e242b;
+  --ad-yellow: #ffc42d;
+  --ad-text: #f3f1ea;
+  --ad-text-dim: #9aa3ae;
+
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  gap: 10px;
+  overflow: hidden;
+
+  padding: 22px 16px 18px;
+
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+
+  background:
+    linear-gradient(to right, var(--ad-yellow) 2px, transparent 2px) top left / 22px 2px no-repeat,
+    linear-gradient(to bottom, var(--ad-yellow) 2px, transparent 2px) top left / 2px 22px no-repeat,
+    linear-gradient(to left, var(--ad-yellow) 2px, transparent 2px) top right / 22px 2px no-repeat,
+    linear-gradient(to bottom, var(--ad-yellow) 2px, transparent 2px) top right / 2px 22px no-repeat,
+    linear-gradient(to right, var(--ad-yellow) 2px, transparent 2px) bottom left / 22px 2px no-repeat,
+    linear-gradient(to top, var(--ad-yellow) 2px, transparent 2px) bottom left / 2px 22px no-repeat,
+    linear-gradient(to left, var(--ad-yellow) 2px, transparent 2px) bottom right / 22px 2px no-repeat,
+    linear-gradient(to top, var(--ad-yellow) 2px, transparent 2px) bottom right / 2px 22px no-repeat,
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 196, 45, 0.10), transparent 60%) center / 100% 100% no-repeat,
+    linear-gradient(160deg, var(--ad-bg-1), var(--ad-bg-2)) center / 100% 100% no-repeat;
+
+  opacity: 0.6;
+  transition: opacity 0.25s ease, transform 0.2s ease;
+}
+
+.advertisement-card:hover,
+.advertisement-card:focus-visible {
+  opacity: 1;
+  transform: translateY(-3px);
+}
+
+.advertisement-card:focus-visible {
+  outline: 2px solid var(--ad-yellow);
+  outline-offset: 3px;
+}
+
+.advertisement-spot-icon {
+  margin-bottom: 2px;
+}
+
+.advertisement-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  font-weight: 700;
+  color: var(--ad-text);
+  font-family: "Oswald", "Segoe UI", sans-serif;
+  letter-spacing: 0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.advertisement-card p {
+  margin: 0;
+  max-width: 230px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--ad-text-dim);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.advertisement-promote {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: var(--ad-yellow);
+  color: #14181d;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.advertisement-promote svg {
+  transition: transform 0.15s ease;
+}
+
+.advertisement-card:hover .advertisement-promote {
+  background: #ffd35c;
+}
+
+.advertisement-card:hover .advertisement-promote svg {
+  transform: translateX(2px);
+}
+
+.advertisement-live-badge {
+  display: none;
+}
+
+.ad-deal-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #141c2d;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  color: #ffffff;
+}
+
+.vehicle-grid .ad-deal-card,
+.vehicle-results-grid .ad-deal-card {
+  height: auto;
+  min-height: 360px;
+  max-width: none;
+}
+
+.ad-deal-media {
+  position: relative;
+  display: block;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 210px;
+  overflow: hidden;
+  background: #0a0f19;
+}
+
+.ad-deal-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ad-deal-media-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+}
+
+.ad-deal-ribbon {
+  position: absolute;
+  top: 26px;
+  left: -48px;
+  width: 210px;
+  padding: 10px 0;
+  transform: rotate(-38deg);
+  background: #ffc42d;
+  color: #000;
+  font-size: 15px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: lowercase;
+  pointer-events: none;
+}
+
+.ad-deal-body {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px 12px;
+}
+
+.ad-deal-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ad-deal-title:hover {
+  color: #dbeafe;
+}
+
+.ad-deal-specs {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.ad-deal-user {
+  margin: 0;
+}
+
+.ad-deal-footer {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ad-deal-price {
+  color: #60a5fa;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ad-deal-save {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 10px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ==========================================
+   OFFERS MODAL
+========================================== */
+
+.ad-offers-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 12, 15, 0.65);
+  backdrop-filter: blur(2px);
+}
+
+.ad-offers-panel {
+  width: min(640px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  border-radius: 16px;
+  padding: 24px;
+  background: #14181d;
+  border: 1px solid rgba(255, 196, 45, 0.25);
+  color: #f3f1ea;
+}
+
+.ad-offers-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.ad-offers-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.ad-offers-close {
+  border: none;
+  background: transparent;
+  color: #9aa3ae;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.ad-offers-close:hover {
+  color: #f3f1ea;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ad-offers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.ad-offer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #1e242b;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.ad-offer:hover,
+.ad-offer:focus-visible {
+  border-color: #ffc42d;
+  transform: translateY(-2px);
+}
+
+.ad-offer-popular {
+  border-color: #ffc42d;
+  background: #262019;
+}
+
+.ad-offer-badge {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #ffc42d;
+  color: #000000;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ad-offer span {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #9aa3ae;
+}
+
+.ad-offer strong {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f3f1ea;
+}
+
+.ad-offer em {
+  font-style: normal;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffc42d;
+}
+
+.ad-offer p {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #9aa3ae;
+}
+
+@media (max-width: 640px) {
+  .ad-offers-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .advertisement-card,
+  .advertisement-promote,
+  .advertisement-promote svg,
+  .ad-offer {
+    transition: none;
+  }
+}

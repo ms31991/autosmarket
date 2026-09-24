@@ -1,0 +1,60 @@
+.confirm-card-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.confirm-card {
+  width: min(400px, 100%);
+  padding: 22px 22px 18px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+  color: #0f172a;
+}
+
+.confirm-card h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.confirm-card p {
+  margin: 0 0 18px;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.confirm-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.confirm-card-actions button {
+  min-width: 88px;
+  transition: none;
+  transform: none;
+}
+
+.confirm-card-actions button:hover {
+  transform: none;
+  filter: none;
+}
+
+.confirm-card-actions button:first-child {
+  background: #fecaca;
+  color: #7f1d1d;
+}
+
+.confirm-card-actions .confirm-card-cancel {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}

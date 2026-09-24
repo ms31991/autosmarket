@@ -1,0 +1,673 @@
+/* =========================================
+   REGISTER PAGE
+========================================= */
+
+.register-page {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  max-width: 100%;
+  height: var(--auth-vh, 100dvh);
+  box-sizing: border-box;
+  margin: 0;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+
+  padding: calc(78px + 16px) 16px 28px;
+
+  color-scheme: dark;
+
+  background:
+    radial-gradient(
+      circle at 50% 15%,
+      rgba(37, 99, 235, 0.28),
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(59, 130, 246, 0.10),
+      transparent 45%
+    ),
+    #0a0f19;
+}
+
+.auth-brand {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 16px;
+}
+
+.auth-brand img {
+  height: 64px;
+  width: auto;
+  max-width: min(280px, 80vw);
+  object-fit: contain;
+}
+
+.register-page .auth-legal-gate {
+  width: min(360px, 100%);
+  margin: 4px auto 8px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.register-page .auth-consent-error {
+  margin: 8px 0 0;
+  color: #f87171;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.register-page .legal-consent {
+  margin: 0 0 4px;
+  max-width: 100%;
+}
+
+.register-page .legal-consent span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* =========================================
+   AUTH CARD
+========================================= */
+
+.register-page .auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 6px 0 10px;
+  box-sizing: border-box;
+  transform: none;
+}
+
+.register-page .auth-legal-links {
+  width: 100%;
+  max-width: 360px;
+  margin: 0;
+  padding: 14px 12px;
+  box-sizing: border-box;
+}
+
+/* =========================================
+   CLERK ROOT
+========================================= */
+
+.register-page .cl-rootBox,
+.register-page .cl-cardBox,
+.register-page .cl-main,
+.register-page .cl-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* =========================================
+   CLERK CARD
+========================================= */
+
+.register-page .cl-card {
+  width: 100%;
+
+  background: #141c2d;
+
+  border: 1px solid rgba(255, 255, 255, 0.10);
+
+  border-radius: 16px;
+
+  padding: 10px 16px !important;
+
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.45),
+    0 0 40px rgba(37, 99, 235, 0.06);
+}
+
+.register-page .cl-header {
+  margin: 0 0 6px !important;
+  padding: 0 !important;
+}
+
+.register-page .cl-main,
+.register-page .cl-form,
+.register-page .cl-socialButtons {
+  gap: 8px !important;
+}
+
+.register-page .cl-formFieldRow,
+.register-page .cl-formField {
+  margin: 0 !important;
+}
+
+.register-page .cl-formFieldLabel {
+  margin-bottom: 2px !important;
+}
+
+.register-page .cl-dividerRow {
+  margin: 6px 0 !important;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+.register-page .cl-headerTitle {
+  color: #ffffff;
+
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.register-page .cl-headerSubtitle {
+  color: rgba(255, 255, 255, 0.60);
+
+  font-size: 12px;
+}
+
+/* =========================================
+   LABELS
+========================================= */
+
+.register-page .cl-formFieldLabel {
+  color: rgba(255, 255, 255, 0.85);
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* =========================================
+   INPUTS
+========================================= */
+
+.register-page .cl-formFieldInput,
+.register-page .cl-otpCodeFieldInput,
+.register-page input[name="code"],
+.register-page input[autocomplete="one-time-code"] {
+  height: 32px;
+
+  background: #0a0f19;
+
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  caret-color: #ffffff;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  border-radius: 10px;
+
+  transition: 0.2s ease;
+}
+
+.register-page .cl-otpCodeFieldInput {
+  width: 2rem;
+  height: 2.3rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.register-page .cl-formFieldInput::placeholder,
+.register-page .cl-otpCodeFieldInput::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.35);
+}
+
+.register-page .cl-formFieldInput:focus,
+.register-page .cl-otpCodeFieldInput:focus {
+  border-color: #3b82f6;
+
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.register-page input:-webkit-autofill,
+.register-page input:-webkit-autofill:hover,
+.register-page input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  caret-color: #ffffff;
+  box-shadow: 0 0 0 1000px #0a0f19 inset;
+  transition: background-color 9999s ease-out;
+}
+
+/* =========================================
+   PRIMARY BUTTON
+========================================= */
+
+.register-page .cl-formButtonPrimary {
+  height: 32px;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: linear-gradient(
+    135deg,
+    #3b82f6,
+    #2563eb
+  );
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  box-shadow:
+    0 8px 20px rgba(37, 99, 235, 0.25);
+
+  transition: 0.25s ease;
+}
+
+.register-page .cl-formButtonPrimary:hover {
+  background: #60a5fa;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 10px 25px rgba(37, 99, 235, 0.35);
+}
+
+/* =========================================
+   GOOGLE + APPLE BUTTONS
+========================================= */
+
+.register-page .cl-socialButtonsBlockButton {
+  min-height: 32px;
+
+  background: #ffffff;
+
+  color: #111111;
+
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.12);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.register-page .cl-socialButtonsBlockButton:hover {
+  background: #f8fafc;
+
+  color: #000000;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+/* Social text */
+
+.register-page .cl-socialButtonsBlockButtonText {
+  color: #111111;
+
+  font-weight: 700;
+}
+
+/* Social icons */
+
+.register-page .cl-socialButtonsBlockButton svg {
+  color: #111111;
+}
+
+/* =========================================
+   DIVIDER
+========================================= */
+
+.register-page .cl-dividerLine {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.register-page .cl-dividerText {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* =========================================
+   CLERK FOOTER
+========================================= */
+
+.register-page .cl-footer {
+  display: none !important;
+}
+
+/* =========================================
+   LINKS
+========================================= */
+
+.register-page .cl-footerActionLink,
+.register-page .cl-formFieldAction {
+  color: #60a5fa;
+
+  font-weight: 600;
+}
+
+.register-page .cl-footerActionLink:hover,
+.register-page .cl-formFieldAction:hover {
+  color: #93c5fd;
+}
+
+/* =========================================
+   ERRORS
+========================================= */
+
+.register-page .cl-formFieldErrorText {
+  color: #f87171;
+}
+
+/* =========================================
+   ALREADY HAVE ACCOUNT
+========================================= */
+
+.register-page .auth-banner {
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
+  width: min(360px, 100%);
+  margin-top: 4px;
+  margin-bottom: 8px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.register-page .auth-banner a {
+  color: #60a5fa;
+
+  font-weight: 700;
+
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.register-page .auth-banner a:hover {
+  color: #93c5fd;
+
+  text-decoration: underline;
+}
+
+/* =========================================
+   BLUE GLOW
+========================================= */
+
+.register-page .auth-card::after {
+  content: "";
+
+  position: absolute;
+
+  left: 50%;
+  bottom: -55px;
+
+  width: 230px;
+  height: 70px;
+
+  transform: translateX(-50%);
+
+  background: rgba(59, 130, 246, 0.45);
+
+  filter: blur(45px);
+
+  border-radius: 50%;
+
+  pointer-events: none;
+
+  animation: registerGlow 3s ease-in-out infinite;
+}
+
+/* =========================================
+   MOVING BLUE LIGHT
+========================================= */
+
+.register-page .auth-card::before {
+  content: "";
+
+  position: absolute;
+
+  left: 50%;
+  bottom: -28px;
+
+  width: 90px;
+  height: 5px;
+
+  transform: translateX(-50%);
+
+  background: #3b82f6;
+
+  border-radius: 50%;
+
+  filter: blur(5px);
+
+  opacity: 0.8;
+
+  pointer-events: none;
+
+  animation: registerPulse 2.5s ease-in-out infinite;
+}
+
+/* =========================================
+   GLOW ANIMATION
+========================================= */
+
+@keyframes registerGlow {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(0.85);
+    opacity: 0.45;
+  }
+
+  50% {
+    transform: translateX(-50%) scale(1.2);
+    opacity: 0.9;
+  }
+}
+
+/* =========================================
+   PULSE ANIMATION
+========================================= */
+
+@keyframes registerPulse {
+  0%,
+  100% {
+    transform: translateX(-50%) scaleX(0.7);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: translateX(-50%) scaleX(1.4);
+    opacity: 1;
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+  .register-page {
+    padding: 48px 26px 10px;
+    justify-content: flex-start;
+  }
+
+  .register-page .auth-card,
+  .register-page .auth-legal-gate,
+  .register-page .auth-banner {
+    max-width: 90%;
+    width: 90%;
+  }
+
+  .register-page .auth-card {
+    padding: 0;
+    transform: none;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .register-page .cl-card {
+    border-radius: 14px;
+    box-sizing: border-box;
+    padding: 4px 10px 6px !important;
+  }
+
+  .register-page .cl-header {
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    min-height: 0 !important;
+  }
+
+  .register-page .cl-headerTitle {
+    font-size: 14px;
+    line-height: 1.1;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .register-page .cl-headerSubtitle {
+    display: none;
+  }
+
+  .register-page .cl-socialButtonsRoot,
+  .register-page .cl-socialButtons {
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 4px !important;
+  }
+
+  .register-page .cl-main,
+  .register-page .cl-form,
+  .register-page .cl-socialButtons {
+    gap: 2px !important;
+  }
+
+  .register-page .cl-formFieldRow,
+  .register-page .cl-formField,
+  .register-page .cl-formField__firstName,
+  .register-page .cl-formField__lastName,
+  .register-page .cl-formField__emailAddress,
+  .register-page .cl-formField__password,
+  .register-page .cl-formFieldInputGroup,
+  .register-page .cl-formFieldInputShowPasswordButton {
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+  }
+
+  .register-page .cl-formFieldLabelRow {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    gap: 4px !important;
+  }
+
+  .register-page .cl-formFieldLabel {
+    font-size: 11px;
+    line-height: 1.15;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .register-page .cl-formFieldHintText,
+  .register-page .cl-formFieldInfoText,
+  .register-page .cl-formFieldOptional {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10px;
+    line-height: 1.1;
+  }
+
+  .register-page .cl-formFieldInput,
+  .register-page .cl-formButtonPrimary {
+    height: 30px;
+    font-size: 13px;
+    border-radius: 8px;
+    margin-top: 0 !important;
+  }
+
+  .register-page .cl-socialButtonsBlockButton {
+    min-height: 30px;
+    border-radius: 8px;
+  }
+
+  .register-page .cl-dividerRow {
+    margin: 1px 0 !important;
+  }
+
+  .register-page .legal-consent {
+    font-size: 12px;
+    gap: 6px;
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  .register-page .auth-legal-gate {
+    margin: 1px auto 3px;
+  }
+
+  .register-page .auth-consent-error {
+    font-size: 12px;
+    margin-top: 3px;
+  }
+
+  .register-page .auth-banner {
+    font-size: 12px;
+    margin-top: 1px;
+    margin-bottom: 3px;
+  }
+
+  .register-page .auth-card::after,
+  .register-page .auth-card::before {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .register-page {
+    padding: 44px 22px 10px;
+  }
+
+  .register-page .cl-card {
+    padding: 4px 10px 6px !important;
+  }
+
+  .register-page .cl-formFieldInput,
+  .register-page .cl-formButtonPrimary,
+  .register-page .cl-socialButtonsBlockButton {
+    height: 32px;
+    min-height: 32px;
+  }
+}
+
+@media (min-width: 901px) {
+  .register-page {
+    justify-content: center;
+  }
+}

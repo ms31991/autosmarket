@@ -1,0 +1,82 @@
+/* my-vehicles-page */
+.my-vehicles-page {
+  color: var(--text);
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 36px 0 80px;
+}
+
+.my-vehicles-back-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  margin-bottom: 18px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  background: #141c2d;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.my-vehicles-back-btn:hover {
+  border-color: #3b82f6;
+  color: #60a5fa;
+}
+
+.my-vehicles-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.my-vehicles-page h1 {
+  font-family: var(--font-display);
+  font-size: 36px;
+  margin: 0 0 8px;
+}
+
+.my-vehicles-page p {
+  color: var(--muted);
+}
+
+.my-vehicles-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #3b82f6;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.my-vehicles-add-btn:hover {
+  background: #60a5fa;
+}
+
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  max-width: 980px;
+}
+
+@media (max-width: 650px) {
+  .my-vehicles-header {
+    align-items: stretch;
+  }
+
+  .my-vehicles-add-btn {
+    width: 100%;
+  }
+}

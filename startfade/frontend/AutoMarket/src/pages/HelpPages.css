@@ -1,0 +1,208 @@
+.help-page {
+  background: #0a0f19;
+  color: #f8fafc;
+}
+
+.help-inner {
+  width: min(760px, calc(100% - 40px));
+  margin: 40px auto 72px;
+}
+
+.help-inner.help-wide {
+  width: min(1100px, calc(100% - 40px));
+}
+
+.help-kicker {
+  margin: 0 0 8px;
+  color: #93c5fd;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.help-inner h1 {
+  margin: 0 0 12px;
+  font-size: clamp(32px, 4vw, 42px);
+  line-height: 1.15;
+  color: #ffffff;
+}
+
+.help-lead {
+  margin: 0 0 32px;
+  color: #cbd5e1;
+  font-size: 17px;
+  line-height: 1.6;
+  max-width: 640px;
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.faq-item {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(20, 28, 45, 0.55);
+  overflow: hidden;
+}
+
+.faq-item summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 16px 18px;
+  font-size: 16px;
+  font-weight: 650;
+  color: #ffffff;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary::after {
+  content: "+";
+  float: right;
+  color: #93c5fd;
+  font-weight: 500;
+}
+
+.faq-item[open] summary::after {
+  content: "–";
+}
+
+.faq-item p {
+  margin: 0;
+  padding: 0 18px 18px;
+  color: #e2e8f0;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.hiw-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 36px;
+}
+
+.hiw-card {
+  padding: 22px 20px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(20, 28, 45, 0.55);
+}
+
+.hiw-card h2 {
+  margin: 0 0 14px;
+  font-size: 20px;
+  color: #ffffff;
+}
+
+.hiw-card ol {
+  margin: 0 0 18px;
+  padding-left: 18px;
+  color: #e2e8f0;
+  line-height: 1.55;
+}
+
+.hiw-card li + li {
+  margin-top: 8px;
+}
+
+.hiw-cta {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: #3b82f6;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.hiw-cta:hover {
+  background: #2563eb;
+}
+
+.hiw-tips {
+  padding: 22px 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(20, 28, 45, 0.4);
+}
+
+.hiw-tips h2 {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+
+.hiw-tips ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #e2e8f0;
+  line-height: 1.6;
+}
+
+.hiw-tips li + li {
+  margin-top: 8px;
+}
+
+.help-more {
+  margin: 28px 0 0;
+  color: #94a3b8;
+}
+
+.help-more a {
+  color: #bfdbfe;
+}
+
+.help-more a:hover {
+  color: #ffffff;
+}
+
+.guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.guide-card {
+  display: block;
+  padding: 18px 18px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(20, 28, 45, 0.55);
+  color: inherit;
+  text-decoration: none;
+}
+
+.guide-card h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #ffffff;
+}
+
+.guide-card p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.guide-body {
+  margin: 0 0 14px;
+  color: #e2e8f0;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .hiw-grid {
+    grid-template-columns: 1fr;
+  }
+}

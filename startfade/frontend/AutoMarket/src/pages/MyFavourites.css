@@ -1,0 +1,81 @@
+/* my-favourites-page */
+.my-favourites-page {
+  color: var(--text);
+}
+
+.my-favourites-page h1 {
+  font-family: var(--font-display);
+  font-size: 36px;
+  margin: 0 0 8px;
+}
+
+.my-favourites-page p {
+  color: var(--muted);
+}
+
+.my-favourites-page form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0 28px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.my-favourites-page input,
+.my-favourites-page select,
+.my-favourites-page textarea {
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: #0c111a;
+  color: var(--text);
+  padding: 8px 10px;
+}
+
+.my-favourites-page button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.my-favourites-page button[type="submit"],
+.my-favourites-page form button:first-of-type {
+  background: linear-gradient(135deg, var(--gold), #a4843a);
+  color: #16120a;
+}
+
+.my-favourites-page table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--surface-solid);
+}
+
+.my-favourites-page th,
+.my-favourites-page td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.my-favourites-page th {
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  max-width: 980px;
+}

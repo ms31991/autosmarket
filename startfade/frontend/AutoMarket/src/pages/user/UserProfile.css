@@ -1,0 +1,378 @@
+.ig-profile {
+  width: min(935px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 36px 0 120px;
+  color: #ffffff;
+}
+
+.ig-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 72px;
+  padding: 8px 12px 44px;
+}
+
+.ig-avatar-ring {
+  width: 158px;
+  height: 158px;
+  flex-shrink: 0;
+  padding: 4px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #60a5fa, #1d4ed8);
+}
+
+.ig-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  background: #141c2d;
+  border: 3px solid #0a0f19;
+}
+
+.ig-profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ig-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.ig-name-row h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+  color: #ffffff;
+}
+
+.ig-friend-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ig-edit-btn {
+  height: 34px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ig-edit-btn.ghost {
+  background: #141c2d;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.ig-friends-menu {
+  position: relative;
+}
+
+.ig-friends-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 5;
+  min-width: 140px;
+  padding: 6px;
+  border-radius: 12px;
+  background: #141c2d;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ig-friends-dropdown button {
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #f87171;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ig-edit-btn:hover {
+  background: #1d4ed8;
+}
+
+.ig-edit-btn.ghost:hover {
+  background: #1c2538;
+}
+
+.ig-more-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 26px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.ig-more-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ig-stats {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 18px;
+}
+
+.ig-stats div {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+}
+
+.ig-stats strong {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.ig-bio {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.ig-bio strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.ig-bio span {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.ig-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ig-tabs button {
+  position: relative;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ig-tabs button.active {
+  color: #ffffff;
+}
+
+.ig-tabs button.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 1px;
+  background: #ffffff;
+}
+
+.ig-profile-content {
+  padding-top: 4px;
+}
+
+.ig-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.ig-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  border: none;
+  overflow: hidden;
+  background: #141c2d;
+  cursor: pointer;
+}
+
+.ig-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  max-width: none;
+}
+
+.ig-cell-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px;
+  text-align: left;
+  opacity: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent 55%);
+  color: #ffffff;
+  transition: opacity 0.2s ease;
+}
+
+.ig-cell:hover .ig-cell-overlay {
+  opacity: 1;
+}
+
+.ig-empty {
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.ig-empty-icon {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  font-size: 28px;
+  color: #ffffff;
+}
+
+.ig-empty h3 {
+  margin: 0 0 8px;
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.ig-empty p {
+  margin: 0;
+  max-width: 320px;
+}
+
+.ig-profile-state {
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #ffffff;
+  text-align: center;
+}
+
+.ig-profile-state p {
+  color: #f87171;
+}
+
+.ig-profile-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #60a5fa;
+  border-radius: 50%;
+  animation: igSpin 0.8s linear infinite;
+}
+
+@keyframes igSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 735px) {
+  .ig-profile {
+    width: 100%;
+    padding: 20px 0 120px;
+  }
+
+  .ig-profile-header {
+    gap: 22px;
+    padding: 8px 16px 24px;
+    align-items: flex-start;
+  }
+
+  .ig-avatar-ring,
+  .ig-avatar-ring .ig-avatar {
+    width: 86px;
+    height: 86px;
+  }
+
+  .ig-avatar-ring {
+    width: 86px;
+    height: 86px;
+    padding: 2px;
+  }
+
+  .ig-name-row h1 {
+    width: 100%;
+    font-size: 18px;
+  }
+
+  .ig-stats {
+    gap: 18px;
+  }
+
+  .ig-stats div {
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+  }
+
+  .ig-tabs {
+    gap: 0;
+  }
+
+  .ig-tabs button {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .ig-grid {
+    gap: 2px;
+  }
+
+  .ig-cell-overlay {
+    display: none;
+  }
+}

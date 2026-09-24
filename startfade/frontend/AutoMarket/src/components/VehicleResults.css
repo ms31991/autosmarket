@@ -1,0 +1,138 @@
+.vehicle-results {
+  width: 100%;
+  max-width: 1400px;
+
+  margin: 0 auto;
+
+  padding: 48px 20px 70px;
+
+  box-sizing: border-box;
+}
+
+
+/* ================================
+   BACK BUTTON
+================================ */
+
+.results-back {
+  margin-bottom: 25px;
+}
+
+.back-button {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  height: 42px;
+
+  padding: 0 16px;
+
+  border: 1px solid #d1d5db;
+
+  border-radius: 8px;
+
+  background: #fff;
+
+  color: #374151;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background: #f3f4f6;
+
+  border-color: #9ca3af;
+}
+
+
+/* ================================
+   GRID
+================================ */
+
+.vehicle-results-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  width: 100%;
+  max-width: none;
+}
+
+.vehicle-results-grid .ad-deal-card {
+  height: auto;
+  min-height: 360px;
+}
+
+
+/* ================================
+   NO RESULTS
+================================ */
+
+.no-results {
+  padding: 70px 20px;
+
+  text-align: center;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 12px;
+
+  background: #fff;
+}
+
+.no-results h2 {
+  margin: 0 0 8px;
+
+  color: #111827;
+}
+
+.no-results p {
+  margin: 0;
+
+  color: #6b7280;
+}
+
+
+/* ================================
+   TABLET
+================================ */
+
+@media (max-width: 950px) {
+
+  .vehicle-results-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+/* ================================
+   MOBILE
+================================ */
+
+@media (max-width: 600px) {
+
+  .vehicle-results {
+    padding: 20px 12px 40px;
+  }
+
+  .vehicle-results-grid {
+    grid-template-columns: 1fr;
+
+    gap: 24px;
+  }
+
+  .back-button {
+    width: 100%;
+
+    justify-content: center;
+  }
+
+}

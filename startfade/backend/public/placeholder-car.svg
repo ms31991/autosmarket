@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#141b28"/>
+  <rect x="40" y="40" width="720" height="420" rx="28" fill="#10151f" stroke="#d4af63" stroke-opacity="0.25"/>
+  <path d="M170 320h460c18 0 32-14 32-32v-28c0-22-12-42-32-52l-70-34c-14-7-30-10-46-10H316c-16 0-32 3-46 10l-70 34c-20 10-32 30-32 52v28c0 18 14 32 32 32z" fill="#1c2433" stroke="#d4af63" stroke-width="3"/>
+  <circle cx="260" cy="328" r="38" fill="#07090e" stroke="#d4af63" stroke-width="3"/>
+  <circle cx="540" cy="328" r="38" fill="#07090e" stroke="#d4af63" stroke-width="3"/>
+  <text x="400" y="430" text-anchor="middle" fill="#9aa3b5" font-family="Arial, sans-serif" font-size="22">Nuk ka foto</text>
+</svg>

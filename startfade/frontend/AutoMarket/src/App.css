@@ -1,0 +1,71 @@
+.app-root {
+  min-height: 100vh;
+}
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -40px;
+  z-index: 2000;
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #0a0f19;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.legal-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 0;
+  color: #e2e8f0;
+  font-size: 14px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.legal-consent input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: #2563eb;
+}
+
+.legal-consent a {
+  color: #93c5fd;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.auth-legal-gate {
+  width: min(460px, 100%);
+  margin: 0 auto 12px;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+.auth-legal-links {
+  width: min(460px, 100%);
+  margin: 8px auto 0;
+  padding: 0 10px;
+  color: #cbd5e1;
+  font-size: 13px;
+  text-align: center;
+}
+
+.auth-legal-links a {
+  color: #93c5fd;
+}

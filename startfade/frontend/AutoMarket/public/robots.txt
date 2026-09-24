@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /register
+Disallow: /admin
+Disallow: /messages
+Disallow: /settings
+Disallow: /add-vehicle
+Disallow: /edit-vehicle
+Disallow: /my-vehicles
+Disallow: /userprofile
+Disallow: /select-vehicle
+Disallow: /payment
+
+Sitemap: https://autosmarket.me/sitemap.xml

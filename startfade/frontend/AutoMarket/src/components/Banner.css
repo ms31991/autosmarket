@@ -1,0 +1,283 @@
+.banner {
+  position: relative;
+  height: 500px;
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(10, 15, 25, 1) 0%,
+      rgba(10, 15, 25, .92) 38%,
+      rgba(10, 15, 25, .45) 75%,
+      rgba(10, 15, 25, .25) 100%
+    ),
+    url("https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=2000&q=85");
+
+  background-size: cover;
+  background-position: center;
+}
+
+.banner-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+    to bottom,
+    transparent 45%,
+    rgba(10, 15, 25, 0.15) 55%,
+    rgba(10, 15, 25, 0.40) 68%,
+    rgba(10, 15, 25, 0.70) 80%,
+    rgba(10, 15, 25, 0.90) 90%,
+    #000000 100%
+  );
+}
+
+.banner-content {
+  position: relative;
+  z-index: 2;
+
+  max-width: 1250px;
+  height: 100%;
+  margin: auto;
+  padding: 55px 40px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+
+/* LOGO */
+
+.banner-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  text-decoration: none;
+  margin-bottom: 25px;
+}
+
+.banner-logo img {
+  height: 72px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.banner-logo-icon {
+  width: 54px;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background: linear-gradient(
+    135deg,
+    #3b82f6,
+    #2563eb
+  );
+
+  box-shadow: 0 8px 25px rgba(37,99,235,.35);
+}
+
+.banner-logo-icon span {
+  color: white;
+  font-size: 29px;
+  font-weight: 900;
+  font-style: italic;
+}
+
+.banner-logo-text {
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.logo-auto {
+  color: white;
+}
+
+.logo-market {
+  color: #60a5fa;
+}
+
+
+/* BADGE */
+
+.banner-badge {
+  padding: 7px 13px;
+
+  border: 1px solid rgba(96,165,250,.35);
+  border-radius: 30px;
+
+  background: rgba(37,99,235,.12);
+  color: #60a5fa;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+
+  margin-bottom: 15px;
+}
+
+
+/* TITLE */
+
+.banner-title {
+  margin: 0;
+
+  color: white;
+
+  font-size: clamp(45px, 5vw, 68px);
+  line-height: 1;
+  letter-spacing: -3px;
+  font-weight: 800;
+}
+
+.banner-title span {
+  color: #60a5fa;
+}
+
+
+/* TEXT */
+
+.banner-subtitle {
+  margin: 18px 0 0;
+
+  color: rgba(255,255,255,.8);
+
+  font-size: 16px;
+}
+
+
+/* SELL QUOTE */
+
+.banner-sell-quote {
+  margin-top: 14px;
+  padding-left: 12px;
+
+  border-left: 3px solid #3b82f6;
+
+  color: rgba(255,255,255,.75);
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.banner-sell-quote span {
+  color: #60a5fa;
+}
+
+
+/* BUTTONS */
+
+.banner-buttons {
+  display: flex;
+  gap: 12px;
+
+  margin-top: 24px;
+}
+
+.banner-primary,
+.banner-secondary {
+  min-height: 46px;
+  padding: 0 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  border-radius: 9px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  text-decoration: none;
+
+  transition: .25s ease;
+}
+
+
+/* PRIMARY */
+
+.banner-primary {
+  color: white;
+
+  background: linear-gradient(
+    135deg,
+    #3b82f6,
+    #2563eb
+  );
+
+  box-shadow: 0 8px 22px rgba(37,99,235,.3);
+}
+
+.banner-primary:hover {
+  transform: translateY(-2px);
+  background: #60a5fa;
+}
+
+
+/* SECONDARY */
+
+.banner-secondary {
+  color: white;
+
+  border: 1px solid rgba(255,255,255,.4);
+
+  background: rgba(10,15,25,.4);
+
+  backdrop-filter: blur(8px);
+}
+
+.banner-secondary:hover {
+  transform: translateY(-2px);
+
+  color: #60a5fa;
+  border-color: #60a5fa;
+  background: rgba(255,255,255,.06);
+}
+
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+
+  .banner {
+    height: 520px;
+
+    background-position: 65% center;
+  }
+
+  .banner-content {
+    padding: 35px 20px 80px;
+  }
+
+  .banner-logo {
+    margin-bottom: 20px;
+  }
+
+  .banner-title {
+    font-size: 44px;
+  }
+
+  .banner-subtitle {
+    font-size: 14px;
+  }
+
+  .banner-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .banner-primary,
+  .banner-secondary {
+    width: 100%;
+  }
+}

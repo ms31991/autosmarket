@@ -1,0 +1,614 @@
+/* =========================================
+   LOGIN PAGE
+========================================= */
+
+.auth-page {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: var(--auth-vh, 100dvh);
+  overflow: hidden;
+  overscroll-behavior: none;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  box-sizing: border-box;
+
+  color-scheme: dark;
+
+  background:
+    radial-gradient(
+      circle at 50% 15%,
+      rgba(37, 99, 235, 0.28),
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(59, 130, 246, 0.10),
+      transparent 45%
+    ),
+    #0a0f19;
+}
+
+
+/* =========================================
+   AUTH CARD
+========================================= */
+
+.auth-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.auth-brand img {
+  height: 64px;
+  width: auto;
+  max-width: min(280px, 80vw);
+  object-fit: contain;
+}
+
+.auth-card {
+  position: relative;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  max-width: 440px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+
+/* =========================================
+   CLERK SIGN IN
+========================================= */
+
+.auth-card .cl-rootBox {
+  width: 100%;
+}
+
+.auth-card .cl-card {
+  width: 100%;
+
+  background: #141c2d;
+
+  border: 1px solid rgba(255, 255, 255, 0.10);
+
+  border-radius: 22px;
+
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.45),
+    0 0 40px rgba(37, 99, 235, 0.06);
+}
+
+
+/* =========================================
+   CLERK HEADER
+========================================= */
+
+.auth-card .cl-headerTitle {
+  color: #ffffff;
+
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.auth-card .cl-headerSubtitle {
+  color: rgba(255, 255, 255, 0.60);
+}
+
+
+/* =========================================
+   LABELS
+========================================= */
+
+.auth-card .cl-formFieldLabel {
+  color: rgba(255, 255, 255, 0.85);
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+
+/* =========================================
+   INPUTS
+========================================= */
+
+.auth-card .cl-formFieldInput:not(.cl-otpCodeFieldInput) {
+  height: 46px;
+
+  background: #0a0f19;
+
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  caret-color: #ffffff;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  border-radius: 10px;
+
+  transition: 0.2s ease;
+}
+
+.auth-card .cl-otpCodeField {
+  position: relative;
+}
+
+.auth-card .cl-otpCodeFieldInputs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.auth-card .cl-otpCodeFieldInput {
+  width: 2.5rem;
+  min-width: 2.5rem;
+  max-width: 2.5rem;
+  height: 2.8rem;
+  padding: 0;
+  overflow: hidden;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  background: #0a0f19;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  caret-color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+}
+
+.auth-card .cl-headerBackLink,
+.auth-card .cl-backRow,
+.auth-card .cl-backRow a,
+.auth-card .cl-backLink,
+.auth-card .cl-footerActionText,
+.auth-card .cl-footerItem,
+.auth-card .cl-footerAction__alternativeMethods .cl-footerActionLink,
+.auth-card .cl-footerAction__havingTrouble .cl-footerActionLink {
+  color: #ffffff !important;
+  font-weight: 800;
+}
+
+.auth-card .cl-alternativeMethods button,
+.auth-card .cl-alternativeMethods a,
+.auth-card .cl-alternativeMethods span,
+.auth-card .cl-alternativeMethods p {
+  color: #ffffff !important;
+}
+
+.auth-card .cl-otpCodeField:has(.cl-otpCodeFieldInputs) > input.cl-formFieldInput,
+.auth-card .cl-otpCodeField:has(.cl-otpCodeFieldInputs) input[name="code"]:not(.cl-otpCodeFieldInput),
+.auth-card .cl-otpCodeField:has(.cl-otpCodeFieldInputs) input[autocomplete="one-time-code"]:not(.cl-otpCodeFieldInput) {
+  position: absolute !important;
+  opacity: 0 !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  caret-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  pointer-events: none;
+}
+
+.auth-card .cl-formFieldInput::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.35);
+}
+
+.auth-card .cl-formFieldInput:not(.cl-otpCodeFieldInput):focus,
+.auth-card .cl-otpCodeFieldInput:focus {
+  border-color: #3b82f6;
+
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.auth-card input:-webkit-autofill,
+.auth-card input:-webkit-autofill:hover,
+.auth-card input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  caret-color: #ffffff;
+  box-shadow: 0 0 0 1000px #0a0f19 inset;
+  transition: background-color 9999s ease-out;
+}
+
+
+/* =========================================
+   PRIMARY BUTTON
+========================================= */
+
+.auth-card .cl-formButtonPrimary {
+  height: 46px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background: linear-gradient(
+    135deg,
+    #3b82f6,
+    #2563eb
+  );
+
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  box-shadow:
+    0 8px 20px rgba(37, 99, 235, 0.25);
+
+  transition: 0.25s ease;
+}
+
+.auth-card .cl-formButtonPrimary:hover {
+  background: #60a5fa;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 10px 25px rgba(37, 99, 235, 0.35);
+}
+
+
+/* =========================================
+   CLERK LINKS
+========================================= */
+
+.auth-card .cl-footerActionLink,
+.auth-card .cl-formFieldAction,
+.auth-card .cl-formResendCodeLink,
+.auth-card .cl-backLink {
+  color: #ffffff;
+
+  font-weight: 800;
+}
+
+.auth-card .cl-footerActionLink:hover,
+.auth-card .cl-formFieldAction:hover,
+.auth-card .cl-formResendCodeLink:hover,
+.auth-card .cl-backLink:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.auth-card .cl-alternativeMethodsBlockButton {
+  width: 100%;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.auth-card .cl-alternativeMethodsBlockButtonText,
+.auth-card .cl-alternativeMethodsBlockButtonArrow {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.auth-card .cl-alternativeMethodsBlockButton:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+
+/* =========================================
+   GOOGLE + APPLE BUTTONS
+========================================= */
+
+.auth-card .cl-socialButtonsBlockButton {
+  min-height: 46px;
+
+  background: #ffffff;
+
+  color: #111111;
+
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.12);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.auth-card .cl-socialButtonsBlockButton:hover {
+  background: #f8fafc;
+
+  color: #000000;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+
+/* Social button text */
+
+.auth-card .cl-socialButtonsBlockButtonText {
+  color: #111111;
+
+  font-weight: 700;
+}
+
+
+/* Social button icons */
+
+.auth-card .cl-socialButtonsBlockButton svg {
+  color: #111111;
+}
+
+
+/* =========================================
+   DIVIDER
+========================================= */
+
+.auth-card .cl-dividerLine {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.auth-card .cl-dividerText {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+
+/* =========================================
+   CLERK FOOTER
+========================================= */
+
+.auth-card .cl-footer {
+  background: transparent;
+  display: flex !important;
+}
+
+.auth-card .cl-footerAction__signUp {
+  display: none !important;
+}
+
+
+/* Fsheh badge-in "Secured by Clerk" */
+
+.auth-card .cl-internal-1dauvpw,
+.auth-card .cl-logoBox,
+.auth-card .cl-poweredByClerk,
+.auth-card .cl-internal-uyq16t,
+.auth-card .cl-internal-16vtwdp,
+.auth-card [class*="cl-internal"]:has(> a[href*="clerk.com"]),
+.auth-card a[href*="clerk.com"],
+.auth-card .cl-footer > div:last-child:not(.cl-footerAction) {
+  display: none !important;
+}
+
+
+/* =========================================
+   ERRORS
+========================================= */
+
+.auth-card .cl-formFieldErrorText {
+  color: #f87171;
+}
+
+
+
+/* =========================================
+   SIGN UP - OUTSIDE CARD
+========================================= */
+
+.auth-banner {
+  position: relative;
+  z-index: 5;
+
+  margin-top: 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  color: rgba(255, 255, 255, 0.55);
+
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.auth-banner a {
+  color: #60a5fa;
+
+  font-weight: 700;
+
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.auth-banner a:hover {
+  color: #93c5fd;
+
+  text-decoration: underline;
+}
+
+
+/* =========================================
+   GLOW UNDER CARD
+========================================= */
+
+.auth-card::after {
+  content: "";
+
+  position: absolute;
+
+  left: 50%;
+  bottom: -60px;
+
+  width: 260px;
+  height: 80px;
+
+  transform: translateX(-50%);
+
+  background: rgba(59, 130, 246, 0.45);
+
+  filter: blur(45px);
+
+  border-radius: 50%;
+
+  pointer-events: none;
+
+  animation: loginGlow 3s ease-in-out infinite;
+}
+
+
+/* =========================================
+   MOVING BLUE LIGHT
+========================================= */
+
+.auth-card::before {
+  content: "";
+
+  position: absolute;
+
+  left: 50%;
+  bottom: -30px;
+
+  width: 100px;
+  height: 5px;
+
+  transform: translateX(-50%);
+
+  background: #3b82f6;
+
+  border-radius: 50%;
+
+  filter: blur(5px);
+
+  opacity: 0.8;
+
+  pointer-events: none;
+
+  animation: loginPulse 2.5s ease-in-out infinite;
+}
+
+
+/* =========================================
+   GLOW ANIMATION
+========================================= */
+
+@keyframes loginGlow {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(0.85);
+    opacity: 0.45;
+  }
+
+  50% {
+    transform: translateX(-50%) scale(1.25);
+    opacity: 0.95;
+  }
+}
+
+
+/* =========================================
+   PULSE ANIMATION
+========================================= */
+
+@keyframes loginPulse {
+  0%,
+  100% {
+    transform: translateX(-50%) scaleX(0.7);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: translateX(-50%) scaleX(1.5);
+    opacity: 1;
+  }
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+  .auth-page {
+    padding: 52px 26px 90px;
+    transform: none;
+    background:
+      radial-gradient(
+        circle at 50% 18%,
+        rgba(37, 99, 235, 0.25),
+        transparent 60%
+      ),
+      #0a0f19;
+  }
+
+  .auth-page .auth-card {
+    max-width: 90%;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0;
+    transform: translateX(-10px);
+  }
+
+  .auth-page .auth-card .cl-card {
+    border-radius: 16px;
+    padding: 8px 12px 10px !important;
+  }
+
+  .auth-page .auth-card .cl-headerTitle {
+    font-size: 18px;
+  }
+
+  .auth-page .auth-banner {
+    width: 90%;
+    max-width: 90%;
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .auth-page .auth-legal-links {
+    width: 90%;
+    max-width: 90%;
+  }
+
+  .auth-page .auth-card::after {
+    bottom: -50px;
+    width: 210px;
+    height: 65px;
+  }
+
+  .auth-page .auth-card::before {
+    bottom: -25px;
+    width: 85px;
+  }
+}

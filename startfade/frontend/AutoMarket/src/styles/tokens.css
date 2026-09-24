@@ -1,0 +1,57 @@
+:root {
+  --bg: #07090e;
+  --bg-elevated: #10151f;
+  --surface: rgba(18, 24, 36, 0.86);
+  --surface-solid: #141b28;
+  --line: rgba(212, 175, 99, 0.18);
+  --line-strong: rgba(255, 255, 255, 0.1);
+  --text: #f4efe4;
+  --muted: #c5cddb;
+  --gold: #d4af63;
+  --gold-2: #f0d78c;
+  --blue: #5b8def;
+  --danger: #f07171;
+  --ok: #7dcea0;
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  --radius: 18px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: Georgia, "Times New Roman", serif;
+  --nav-h: 78px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font);
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(212, 175, 99, 0.12), transparent 50%),
+    radial-gradient(900px 500px at -10% 20%, rgba(91, 141, 239, 0.12), transparent 46%),
+    var(--bg);
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}

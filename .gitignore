@@ -1,0 +1,15 @@
+.cursor
+.DS_Store
+Thumbs.db
+*.log
+
+node_modules/
+dist/
+dist-ssr/
+
+.env
+.env.*
+!.env.example
+
+startfade/backend/public/uploads/
+startfade/frontend/AutoMarket/.env
