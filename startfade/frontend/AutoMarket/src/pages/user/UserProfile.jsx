@@ -264,11 +264,10 @@ export const UserProfilePage = () => {
       .toLowerCase()
       .includes("@users.autosmarket.me");
 
-  const clerkEmail = clerkUser?.primaryEmailAddress?.emailAddress || "";
-  const profileEmail = looksLikeClerkId(profile.email) ? "" : profile.email || "";
+  const storedUserName = String(profile.userName || "").trim();
   const username =
+    (storedUserName && !looksLikeClerkId(storedUserName) && storedUserName) ||
     (isOwn && clerkUser?.username) ||
-    (profileEmail || clerkEmail).split("@")[0] ||
     fullName.toLowerCase().replace(/\s+/g, ".") ||
     "member";
 
@@ -297,7 +296,7 @@ export const UserProfilePage = () => {
 
         <div className="ig-profile-info">
           <div className="ig-name-row">
-            <h1>{isOwn ? username : fullName}</h1>
+            <h1>{username}</h1>
 
             {isOwn ? (
               <>
@@ -400,7 +399,6 @@ export const UserProfilePage = () => {
 
           <div className="ig-bio">
             <strong>{fullName}</strong>
-            {isOwn && profile.email && <span>{profile.email}</span>}
             {isOwn && profile.phoneNumber && <span>{profile.phoneNumber}</span>}
           </div>
         </div>

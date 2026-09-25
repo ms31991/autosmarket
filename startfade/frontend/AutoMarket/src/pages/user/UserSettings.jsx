@@ -61,6 +61,7 @@ export const UserSettingsPage = () => {
 
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
+  const [userName, setUserName] = useState("");
   const [phone, setPhone] = useState("");
   const [photoPreview, setPhotoPreview] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -74,6 +75,15 @@ export const UserSettingsPage = () => {
   useEffect(() => {
     setName(dbUser?.name || user?.firstName || "");
     setSurname(dbUser?.surname || user?.lastName || "");
+    const stored = String(dbUser?.userName || "").trim();
+    const fake =
+      /^user_/i.test(stored) || stored.toLowerCase().includes("@users.autosmarket.me");
+    setUserName(
+      (!fake && stored) ||
+        user?.username ||
+        String(user?.primaryEmailAddress?.emailAddress || "").split("@")[0] ||
+        ""
+    );
     setPhone(dbUser?.phoneNumber || "");
     setPhotoPreview(mediaUrl(dbUser?.profileImage || user?.imageUrl));
     setStatus("");
@@ -123,6 +133,7 @@ export const UserSettingsPage = () => {
       await updateProfile({
         name: name.trim(),
         surname: surname.trim(),
+        userName: userName.trim().replace(/^@/, ""),
         phoneNumber: phone.trim(),
       });
       if (user) {
@@ -338,6 +349,20 @@ export const UserSettingsPage = () => {
             />
           </label>
           <label>
+            Username
+            <input
+              value={userName}
+              onChange={(e) => setUserName(e.target.value.replace(/\s/g, ""))}
+              minLength={3}
+              maxLength={30}
+              required
+              autoComplete="username"
+            />
+          </label>
+          <p className="ig-settings-note">
+            Username is shown on your profile. Use 3–30 letters, numbers, dots or underscores.
+          </p>
+          <label>
             Phone (optional)
             <input
               value={phone}
@@ -349,9 +374,7 @@ export const UserSettingsPage = () => {
             Phone is optional. We only use it so buyers can reach you about a listing.
           </p>
           <p className="ig-settings-note">
-            Email is managed by your sign-in account:
-            {" "}
-            {dbUser?.email || user?.primaryEmailAddress?.emailAddress}
+            Email is managed by your sign-in account and is not shown on your public profile.
           </p>
           <button type="submit" disabled={saving}>
             {saving ? "Saving..." : "Save"}
