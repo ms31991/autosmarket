@@ -183,9 +183,9 @@ export async function provisionUser(payload) {
         id,
         clerkUserId,
         userName: email || clerkUserId,
-        email,
-        name,
-        surname,
+        email: email || `${clerkUserId}@users.autosmarket.me`,
+        name: name || "User",
+        surname: surname || "User",
         roliId,
       }
     );
@@ -244,7 +244,8 @@ export function requireAuth(req, res, next) {
       }
       next();
     })
-    .catch(() => {
+    .catch((err) => {
+      console.error("AUTH FAIL:", err && err.message);
       res.status(401).json({ message: "User nuk është i autentikuar." });
     });
 }
