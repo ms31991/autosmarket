@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import { query, queryOne } from "../db.js";
 import { optionalAuth, requireAuth } from "../auth.js";
 import { pick } from "../camel.js";
+import { isPlaceholderName } from "../personName.js";
 import {
   findUserByAnyId,
   friendCount,
@@ -67,6 +68,7 @@ export function usersRouter() {
       id: user.Id,
       name: user.Name,
       surname: user.Surname,
+      userName: user.UserName || null,
       profileImage: toPublicUrl(user.ProfileImage) || null,
       friendCount: await friendCount(targetId),
       isSelf,
@@ -85,17 +87,62 @@ export function usersRouter() {
     if (!user) {
       return res.status(404).json({ message: "User nuk u gjet. Duhet të bëhet sync me Clerk." });
     }
+
+    const name = String(pick(req.body, "Name") || "").trim();
+    const surname = String(pick(req.body, "Surname") || "").trim();
+    const email = String(pick(req.body, "Email") || "").trim().toLowerCase();
+    let userName = String(pick(req.body, "UserName") || "")
+      .trim()
+      .replace(/^@/, "");
+    if (userName && (!/^[a-zA-Z0-9._]{3,30}$/.test(userName) || /^user_/i.test(userName))) {
+      userName = "";
+    }
+
+    const currentName = String(user.Name || "").trim();
+    const currentSurname = String(user.Surname || "").trim();
+    const nextName = name && !isPlaceholderName(name) ? name : currentName;
+    const nextSurname =
+      surname && !isPlaceholderName(surname) ? surname : currentSurname;
+    const nextEmail =
+      email.includes("@") && !email.endsWith("@users.autosmarket.me")
+        ? email
+        : user.Email;
+    const currentUserName = String(user.UserName || "").trim();
+    const nextUserName =
+      userName ||
+      (!isPlaceholderName(currentUserName) ? currentUserName : currentUserName);
+
+    await query(
+      `UPDATE ApplicationUsers
+       SET Name = CASE WHEN @name <> '' THEN @name ELSE Name END,
+           Surname = CASE WHEN @surname <> '' THEN @surname ELSE Surname END,
+           Email = CASE WHEN @email <> '' THEN @email ELSE Email END,
+           UserName = CASE
+             WHEN @userName <> '' AND (UserName IS NULL OR UserName LIKE 'user_%' OR LOWER(UserName) LIKE '%@users.autosmarket.me')
+             THEN @userName ELSE UserName END
+       WHERE ClerkUserId = @clerkUserId`,
+      {
+        name: isPlaceholderName(nextName) ? "" : nextName,
+        surname: isPlaceholderName(nextSurname) ? "" : nextSurname,
+        email: nextEmail || "",
+        userName: nextUserName && !isPlaceholderName(nextUserName) ? nextUserName : "",
+        clerkUserId: req.user.clerkUserId,
+      }
+    );
+
+    const fresh = await findByClerk(req.user.clerkUserId);
     res.json({
       message: "User already exists.",
       user: {
-        id: user.Id,
-        clerkUserId: user.ClerkUserId,
-        name: user.Name,
-        surname: user.Surname,
-        email: user.Email,
-        profileImage: user.ProfileImage,
-        phoneNumber: user.PhoneNumber,
-        roli_id: user.roli_id,
+        id: fresh.Id,
+        clerkUserId: fresh.ClerkUserId,
+        name: fresh.Name,
+        surname: fresh.Surname,
+        userName: fresh.UserName,
+        email: fresh.Email,
+        profileImage: fresh.ProfileImage,
+        phoneNumber: fresh.PhoneNumber,
+        roli_id: fresh.roli_id,
       },
     });
   });
@@ -110,6 +157,7 @@ export function usersRouter() {
       clerkUserId: user.ClerkUserId,
       name: user.Name,
       surname: user.Surname,
+      userName: user.UserName,
       email: user.Email,
       phoneNumber: user.PhoneNumber,
       profileImage: toPublicUrl(user.ProfileImage) || null,
@@ -123,15 +171,34 @@ export function usersRouter() {
   router.put("/profile", async (req, res) => {
     const name = pick(req.body, "Name");
     const surname = pick(req.body, "Surname");
+    const userName = String(pick(req.body, "UserName") || "")
+      .trim()
+      .replace(/^@/, "");
     if (!name?.trim()) return res.status(400).json({ message: "Emri është i detyrueshëm." });
     if (!surname?.trim()) return res.status(400).json({ message: "Mbiemri është i detyrueshëm." });
+    if (!userName) return res.status(400).json({ message: "Username is required." });
+    if (!/^[a-zA-Z0-9._]{3,30}$/.test(userName) || /^user_/i.test(userName)) {
+      return res.status(400).json({
+        message: "Username must be 3–30 letters, numbers, dots or underscores.",
+      });
+    }
+    const taken = await queryOne(
+      `SELECT Id FROM ApplicationUsers
+       WHERE LOWER(LTRIM(RTRIM(UserName))) = LOWER(@userName)
+         AND ClerkUserId <> @clerkUserId`,
+      { userName, clerkUserId: req.user.clerkUserId }
+    );
+    if (taken) {
+      return res.status(400).json({ message: "That username is taken." });
+    }
     await query(
       `UPDATE ApplicationUsers
-       SET Name = @name, Surname = @surname, PhoneNumber = @phoneNumber
+       SET Name = @name, Surname = @surname, UserName = @userName, PhoneNumber = @phoneNumber
        WHERE ClerkUserId = @clerkUserId`,
       {
         name: name.trim(),
         surname: surname.trim(),
+        userName,
         phoneNumber: pick(req.body, "PhoneNumber") || null,
         clerkUserId: req.user.clerkUserId,
       }

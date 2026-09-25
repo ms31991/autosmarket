@@ -53,6 +53,12 @@ export function AuthProvider({ children }) {
         await apiFetch('/Users/sync', {
           method: 'POST',
           token,
+          body: JSON.stringify({
+            name: clerkUser?.firstName || '',
+            surname: clerkUser?.lastName || '',
+            userName: clerkUser?.username || '',
+            email: clerkUser?.primaryEmailAddress?.emailAddress || '',
+          }),
         })
 
         // Merr profilin
@@ -81,7 +87,7 @@ export function AuthProvider({ children }) {
     return () => {
       isMounted = false
     }
-  }, [getToken, isLoaded, isSignedIn])
+  }, [clerkUser, getToken, isLoaded, isSignedIn])
 
   const refreshDbUser = async () => {
     if (!isSignedIn) {

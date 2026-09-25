@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { mediaUrl } from "../utils/mediaUrl";
+import { personDisplayName } from "../utils/personName";
 import "./PublisherChip.css";
 
 export function publisherFrom(item) {
@@ -12,10 +12,11 @@ export function publisherFrom(item) {
     item.advertiserId ||
     item.OwnerId ||
     item.AdvertiserId;
-  const name = [item.ownerName, item.ownerSurname]
-    .filter(Boolean)
-    .join(" ")
-    .trim() || item.userName || item.sellerName || "";
+  const name = personDisplayName({
+    name: item.ownerName,
+    surname: item.ownerSurname,
+    userName: item.ownerUserName || item.userName || item.sellerName,
+  });
   if (!userId && !name) return null;
   return {
     userId: userId || null,

@@ -24,6 +24,7 @@ import {
   sendFriendRequest,
 } from "../../services/friendService";
 import { mediaUrl } from "../../utils/mediaUrl";
+import { isPlaceholderName, personDisplayName } from "../../utils/personName";
 import "./UserProfile.css";
 
 export const UserProfilePage = () => {
@@ -253,20 +254,16 @@ export const UserProfilePage = () => {
 
   if (!profile) return null;
 
-  const fullName =
-    `${profile.name || ""} ${profile.surname || ""}`.trim() ||
-    (isOwn ? clerkUser?.fullName : "") ||
-    "User";
-
-  const looksLikeClerkId = (value) =>
-    /^user_[a-zA-Z0-9]+$/i.test(String(value || "").trim()) ||
-    String(value || "")
-      .toLowerCase()
-      .includes("@users.autosmarket.me");
+  const fullName = personDisplayName({
+    name: profile.name || (isOwn ? clerkUser?.firstName : ""),
+    surname: profile.surname || (isOwn ? clerkUser?.lastName : ""),
+    userName: profile.userName || (isOwn ? clerkUser?.username : ""),
+    fallback: isOwn ? clerkUser?.fullName : "User",
+  });
 
   const storedUserName = String(profile.userName || "").trim();
   const username =
-    (storedUserName && !looksLikeClerkId(storedUserName) && storedUserName) ||
+    (storedUserName && !isPlaceholderName(storedUserName) && storedUserName) ||
     (isOwn && clerkUser?.username) ||
     fullName.toLowerCase().replace(/\s+/g, ".") ||
     "member";

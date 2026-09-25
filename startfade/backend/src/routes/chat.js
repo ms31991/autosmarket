@@ -52,12 +52,22 @@ export function chatRouter() {
          CASE WHEN c.User1Id = @userId THEN u2.Surname ELSE u1.Surname END AS OtherUserLastName,
          CASE WHEN c.User1Id = @userId
            THEN COALESCE(
-             NULLIF(LTRIM(RTRIM(ISNULL(u2.Name, '') + ' ' + ISNULL(u2.Surname, ''))), ''),
+             NULLIF(CASE
+               WHEN LOWER(LTRIM(RTRIM(ISNULL(u2.Name, '')))) IN (N'', N'user')
+                AND LOWER(LTRIM(RTRIM(ISNULL(u2.Surname, '')))) IN (N'', N'user')
+               THEN N''
+               ELSE LTRIM(RTRIM(ISNULL(u2.Name, '') + ' ' + ISNULL(u2.Surname, '')))
+             END, N''),
              CASE WHEN u2.UserName IS NULL OR u2.UserName LIKE 'user_%' OR u2.UserName = u2.ClerkUserId
                THEN NULL ELSE u2.UserName END
            )
            ELSE COALESCE(
-             NULLIF(LTRIM(RTRIM(ISNULL(u1.Name, '') + ' ' + ISNULL(u1.Surname, ''))), ''),
+             NULLIF(CASE
+               WHEN LOWER(LTRIM(RTRIM(ISNULL(u1.Name, '')))) IN (N'', N'user')
+                AND LOWER(LTRIM(RTRIM(ISNULL(u1.Surname, '')))) IN (N'', N'user')
+               THEN N''
+               ELSE LTRIM(RTRIM(ISNULL(u1.Name, '') + ' ' + ISNULL(u1.Surname, '')))
+             END, N''),
              CASE WHEN u1.UserName IS NULL OR u1.UserName LIKE 'user_%' OR u1.UserName = u1.ClerkUserId
                THEN NULL ELSE u1.UserName END
            ) END AS OtherUserName,
@@ -152,10 +162,15 @@ export function chatRouter() {
     );
     const first = String(sender?.Name || "").trim();
     const last = String(sender?.Surname || "").trim();
-    const senderName = [first, last]
-      .filter((part) => part && !part.startsWith("user_"))
-      .join(" ")
-      .trim() || "Someone";
+    const senderName =
+      [first, last]
+        .filter((part) => part && !part.startsWith("user_") && part.toLowerCase() !== "user")
+        .join(" ")
+        .trim() ||
+      (String(sender?.UserName || "").trim() &&
+      !String(sender.UserName).startsWith("user_")
+        ? String(sender.UserName).trim()
+        : "Someone");
 
     const inserted = await query(
       `INSERT INTO Messages (ConversationId, SenderId, Text, SentAt, IsRead)

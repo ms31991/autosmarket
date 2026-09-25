@@ -3,6 +3,7 @@ import { camel } from "./camel.js";
 import { emitToUser } from "./realtime.js";
 import { resolveUserKeys } from "./identity.js";
 import { toPublicUrl } from "./paths.js";
+import { personDisplayName } from "./personName.js";
 
 export async function ensureFriendshipsTable() {
   await query(`
@@ -21,7 +22,7 @@ export async function ensureFriendshipsTable() {
 }
 
 export function displayName(user) {
-  return `${user?.Name || user?.name || ""} ${user?.Surname || user?.surname || ""}`.trim() || "User";
+  return personDisplayName(user);
 }
 
 function asId(value) {
@@ -171,14 +172,12 @@ export async function listAcceptedFriends(authUser) {
     const id = asId(row.id);
     if (!id || seen.has(id.toLowerCase())) continue;
     seen.add(id.toLowerCase());
-    const name = `${row.name || ""} ${row.surname || ""}`.trim();
     const userName = String(row.userName || "").trim();
     friends.push({
       id,
       clerkUserId: row.clerkUserId || null,
-      name:
-        name ||
-        (userName && !userName.startsWith("user_") ? userName : "User"),
+      name: personDisplayName(row),
+      userName: userName || null,
       profileImage: toPublicUrl(row.profileImage),
     });
   }

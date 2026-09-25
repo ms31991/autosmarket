@@ -9,6 +9,7 @@ const VEHICLE_SELECT = `
   SELECT
     v.Id, v.OwnerId, u.ClerkUserId AS OwnerClerkUserId,
     u.Name AS OwnerName, u.Surname AS OwnerSurname,
+    u.UserName AS OwnerUserName,
     u.ProfileImage AS OwnerProfileImage,
     v.ListingTypeId, lt.Name AS ListingTypeName,
     v.CategoryId, c.Name AS CategoryName,

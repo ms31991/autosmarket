@@ -13,6 +13,7 @@ import {
 } from "../services/chatService";
 import { getFriends, onFriendshipChanged } from "../services/friendService";
 import { mediaUrl } from "../utils/mediaUrl";
+import { isPlaceholderName, personDisplayName } from "../utils/personName";
 
 import { createChatConnection } from "../services/signalRService";
 import { ChatWindow } from "./ChatWindow";
@@ -256,40 +257,11 @@ export const MessagesPage = () => {
       return "User";
     }
 
-    const looksLikeId = (value) =>
-      typeof value === "string" &&
-      (value.startsWith("user_") ||
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-          value
-        ));
-
-    const fromParts = [
-      conversation.otherUserFirstName,
-      conversation.otherUserLastName,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .trim();
-
-    if (fromParts && !looksLikeId(fromParts)) {
-      return fromParts;
-    }
-
-    if (
-      conversation.otherUserFullName &&
-      !looksLikeId(conversation.otherUserFullName)
-    ) {
-      return conversation.otherUserFullName;
-    }
-
-    if (
-      conversation.otherUserName &&
-      !looksLikeId(conversation.otherUserName)
-    ) {
-      return conversation.otherUserName;
-    }
-
-    return "User";
+    return personDisplayName({
+      name: conversation.otherUserFirstName,
+      surname: conversation.otherUserLastName,
+      userName: conversation.otherUserName || conversation.otherUserFullName,
+    });
   };
 
   // =====================================================

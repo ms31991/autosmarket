@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import { getClerkToken } from "../services/clerkToken";
 import { PublisherChip } from "../components/PublisherChip";
+import { personDisplayName } from "../utils/personName";
 import { mediaUrl, PLACEHOLDER_IMAGE } from "../utils/mediaUrl";
 import { isPromotedVehicle } from "../utils/promotedSearch";
 import { API_BASE } from "../config/api";
@@ -219,13 +220,11 @@ export const VehicleCard = ({
     ? `${vehicle.powerHP} hp`
     : "";
 
-  const publisherName = [
-    vehicle?.ownerName,
-    vehicle?.ownerSurname,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  const publisherName = personDisplayName({
+    name: vehicle?.ownerName,
+    surname: vehicle?.ownerSurname,
+    userName: vehicle?.ownerUserName,
+  });
 
   const publisherImage = vehicle?.ownerProfileImage
     ? mediaUrl(vehicle.ownerProfileImage)

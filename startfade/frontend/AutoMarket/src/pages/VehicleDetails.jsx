@@ -25,7 +25,7 @@ import {
 import { getClerkToken } from "../services/clerkToken";
 import { createChatConnection } from "../services/signalRService";
 import { ChatWindow } from "./ChatWindow";
-import { PublisherChip } from "../components/PublisherChip";
+import { personDisplayName } from "../utils/personName";
 import { useAuth } from "../context/AuthContext";
 import { SeoHead } from "../seo/SeoHead";
 import { mediaUrl } from "../utils/mediaUrl";
@@ -578,16 +578,11 @@ export const VehicleDetails = () => {
     : null;
 
   const sellerId = vehicle.ownerId || vehicle.userId;
-  const sellerName = [
-    vehicle.ownerName,
-    vehicle.ownerSurname,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .trim()
-    || vehicle.userName
-    || vehicle.sellerName
-    || "User";
+  const sellerName = personDisplayName({
+    name: vehicle.ownerName,
+    surname: vehicle.ownerSurname,
+    userName: vehicle.ownerUserName || vehicle.userName || vehicle.sellerName,
+  });
 
   const renderSellerCard = () =>
     sellerId ? (

@@ -414,6 +414,7 @@ export function advertisementsRouter() {
         CONVERT(nvarchar(128), a.AdvertiserId) AS AdvertiserId,
         u.Name AS OwnerName,
         u.Surname AS OwnerSurname,
+        u.UserName AS OwnerUserName,
         adv.Name AS AdvertiserName,
         adv.Surname AS AdvertiserSurname,
         COALESCE(u.ProfileImage, adv.ProfileImage) AS OwnerProfileImage,

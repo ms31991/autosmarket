@@ -181,8 +181,13 @@ export async function provisionUser(payload) {
     const currentSurname = String(user.Surname || "").trim();
     const currentUserName = String(user.UserName || "").trim();
     const currentEmail = String(user.Email || "").trim();
-    const nameIsId = !currentName || looksLikeClerkUserId(currentName);
-    const surnameIsId = looksLikeClerkUserId(currentSurname);
+    const nameIsId =
+      !currentName ||
+      looksLikeClerkUserId(currentName) ||
+      currentName.toLowerCase() === "user";
+    const surnameIsId =
+      looksLikeClerkUserId(currentSurname) ||
+      currentSurname.toLowerCase() === "user";
     const userNameIsId =
       !currentUserName ||
       looksLikeClerkUserId(currentUserName) ||
@@ -205,10 +210,10 @@ export async function provisionUser(payload) {
       await query(
         `UPDATE ApplicationUsers
          SET Name = CASE
-               WHEN (Name IS NULL OR LTRIM(RTRIM(Name)) = '' OR Name LIKE 'user_%') AND @name <> ''
+               WHEN (Name IS NULL OR LTRIM(RTRIM(Name)) = '' OR Name LIKE 'user_%' OR LOWER(LTRIM(RTRIM(Name))) = 'user') AND @name <> ''
                THEN @name ELSE Name END,
              Surname = CASE
-               WHEN (Surname IS NULL OR LTRIM(RTRIM(Surname)) = '' OR Surname LIKE 'user_%') AND @surname <> ''
+               WHEN (Surname IS NULL OR LTRIM(RTRIM(Surname)) = '' OR Surname LIKE 'user_%' OR LOWER(LTRIM(RTRIM(Surname))) = 'user') AND @surname <> ''
                THEN @surname ELSE Surname END,
              UserName = CASE
                WHEN UserName IS NULL OR LTRIM(RTRIM(UserName)) = '' OR UserName LIKE 'user_%'
@@ -220,8 +225,8 @@ export async function provisionUser(payload) {
          WHERE Id = @id`,
         {
           id: user.Id,
-          name: name || currentName.replace(/^user_.*/i, "") || "User",
-          surname: surname || (surnameIsId ? "User" : currentSurname) || "User",
+        name: name || (nameIsId ? "User" : currentName) || "User",
+        surname: surname || (surnameIsId ? "User" : currentSurname) || "User",
           userName: displayUserName,
           email,
         }
