@@ -26,6 +26,7 @@ import {
   uploadProfileImage,
 } from "../../services/userService";
 import { mediaUrl } from "../../utils/mediaUrl";
+import { compressImageFile } from "../../utils/compressImage";
 import { API_BASE } from "../../config/api";
 import "./UserSettings.css";
 
@@ -161,7 +162,8 @@ export const UserSettingsPage = () => {
     setSaving(true);
     setStatus("");
     try {
-      const result = await uploadProfileImage(file);
+      const ready = await compressImageFile(file);
+      const result = await uploadProfileImage(ready);
       setPhotoPreview(mediaUrl(result.profileImage));
       await refreshDbUser();
       setStatus("Photo updated.");

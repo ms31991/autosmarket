@@ -3,6 +3,7 @@ import { query, queryOne } from "../db.js";
 import { camel, pick } from "../camel.js";
 import { requireAuth } from "../auth.js";
 import { toPublicUrl } from "../paths.js";
+import { withPublicOwnerNames } from "../personName.js";
 import { keysFromAuth, ownsRecord, requireDbUser, resolveUserKeys, userMatchSql } from "../identity.js";
 
 const VEHICLE_SELECT = `
@@ -67,11 +68,13 @@ async function withImages(vehicles) {
     if (!byVehicle[img.VehicleId]) byVehicle[img.VehicleId] = [];
     byVehicle[img.VehicleId].push(toPublicUrl(img.ImageUrl));
   }
-  return list.map((v) => ({
-    ...v,
-    images: byVehicle[v.id] || [],
-    ownerProfileImage: toPublicUrl(v.ownerProfileImage) || null,
-  }));
+  return list.map((v) =>
+    withPublicOwnerNames({
+      ...v,
+      images: byVehicle[v.id] || [],
+      ownerProfileImage: toPublicUrl(v.ownerProfileImage) || null,
+    })
+  );
 }
 
 function vehicleParams(body) {

@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { getClerkToken } from '../services/clerkToken'
 import { mediaUrl } from '../utils/mediaUrl'
 import { API_BASE } from '../config/api'
+import { compressImageFile } from '../utils/compressImage'
 
 export const EditVehicle = () => {
   const { id } = useParams()
@@ -379,30 +380,13 @@ export const EditVehicle = () => {
   // IMAGE FILE CHANGE
   // =====================================================
 
-  function handleFileChange(e) {
+  async function handleFileChange(e) {
     const file = e.target.files?.[0]
 
     if (!file) {
       setSelectedFile(null)
       return
     }
-
-    // -------------------------------------------------
-    // CHECK SIZE
-    // -------------------------------------------------
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError(
-        'Fotoja nuk mund të jetë më e madhe se 5 MB.'
-      )
-
-      setSelectedFile(null)
-      return
-    }
-
-    // -------------------------------------------------
-    // CHECK TYPE
-    // -------------------------------------------------
 
     const allowedTypes = [
       'image/jpeg',
@@ -411,18 +395,19 @@ export const EditVehicle = () => {
     ]
 
     if (!allowedTypes.includes(file.type)) {
-      setError(
-        'Lejohen vetëm JPG, JPEG, PNG dhe WEBP.'
-      )
-
+      setError('Lejohen vetëm JPG, JPEG, PNG dhe WEBP.')
       setSelectedFile(null)
       return
     }
 
-    setSelectedFile(file)
-
-    setError('')
-    setSuccess('')
+    try {
+      setSelectedFile(await compressImageFile(file))
+      setError('')
+      setSuccess('')
+    } catch (err) {
+      setError(err.message || 'Fotoja nuk mund të jetë më e madhe se 5 MB.')
+      setSelectedFile(null)
+    }
   }
 
   // =====================================================

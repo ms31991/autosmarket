@@ -22,3 +22,31 @@ export function personDisplayName(user) {
   }
   return "User";
 }
+
+export function withPublicOwnerNames(vehicle) {
+  const first = isPlaceholderName(vehicle.ownerName)
+    ? ""
+    : String(vehicle.ownerName || "").trim();
+  const last = isPlaceholderName(vehicle.ownerSurname)
+    ? ""
+    : String(vehicle.ownerSurname || "").trim();
+  const label = personDisplayName({
+    name: first || vehicle.ownerName,
+    surname: last || vehicle.ownerSurname,
+    userName: vehicle.ownerUserName,
+  });
+  if (first || last) {
+    return {
+      ...vehicle,
+      ownerName: first,
+      ownerSurname: last,
+      publisherName: `${first} ${last}`.trim(),
+    };
+  }
+  return {
+    ...vehicle,
+    ownerName: label === "User" ? "" : label,
+    ownerSurname: "",
+    publisherName: label,
+  };
+}

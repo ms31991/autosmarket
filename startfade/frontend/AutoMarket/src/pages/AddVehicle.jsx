@@ -8,6 +8,7 @@ import {
 } from "../components/LegalConsent";
 import { useLanguage } from "../i18n/LanguageContext";
 import { API_BASE } from "../config/api";
+import { compressImageFile } from "../utils/compressImage";
 
 export const AddVehicle = () => {
   const navigate = useNavigate();
@@ -437,7 +438,7 @@ export const AddVehicle = () => {
     return Number(value);
   }
 
-  function handleImageChange(e) {
+  async function handleImageChange(e) {
     const selectedFiles = Array.from(e.target.files || []);
 
     setError("");
@@ -448,39 +449,27 @@ export const AddVehicle = () => {
       "image/webp",
     ];
 
-    const maxSize = 5 * 1024 * 1024;
-
     const validFiles = [];
     const invalidFiles = [];
 
-    selectedFiles.forEach((file) => {
+    for (const file of selectedFiles) {
       if (!allowedTypes.includes(file.type)) {
-        invalidFiles.push(
-          `${file.name} - format i palejuar`
-        );
-        return;
+        invalidFiles.push(`${file.name} - format i palejuar`);
+        continue;
       }
-
-      if (file.size > maxSize) {
-        invalidFiles.push(
-          `${file.name} - më e madhe se 5 MB`
-        );
-        return;
+      try {
+        validFiles.push(await compressImageFile(file));
+      } catch {
+        invalidFiles.push(`${file.name} - nuk u kompresua nën 5 MB`);
       }
-
-      validFiles.push(file);
-    });
-
-    if (invalidFiles.length > 0) {
-      setError(
-        `Disa foto nuk u pranuan: ${invalidFiles.join(", ")}`
-      );
     }
 
-    setImages((previous) => [
-      ...previous,
-      ...validFiles,
-    ]);
+    if (invalidFiles.length > 0) {
+      setError(`Disa foto nuk u pranuan: ${invalidFiles.join(", ")}`);
+    }
+
+    setImages((previous) => [...previous, ...validFiles]);
+    e.target.value = "";
   }
 
   function removeImage(index) {
