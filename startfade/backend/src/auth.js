@@ -70,6 +70,16 @@ async function namesFromClerkPayload(payload) {
   return { name, surname };
 }
 
+function looksLikeClerkUserId(value) {
+  return /^user_[a-zA-Z0-9]+$/i.test(String(value || "").trim());
+}
+
+function isFallbackEmail(value) {
+  return String(value || "")
+    .toLowerCase()
+    .endsWith("@users.autosmarket.me");
+}
+
 function emailFromPayload(payload) {
   const direct = String(
     payload.email ||
@@ -79,8 +89,29 @@ function emailFromPayload(payload) {
   )
     .trim()
     .toLowerCase();
-  if (direct.includes("@")) return direct;
+  if (direct.includes("@") && !looksLikeClerkUserId(direct.split("@")[0])) {
+    return direct;
+  }
   return "";
+}
+
+function usernameFromPayload(payload, email, name, surname, fallbackId) {
+  const claimed = String(
+    payload.username || payload.preferred_username || ""
+  ).trim();
+  if (claimed && !looksLikeClerkUserId(claimed)) {
+    return claimed.slice(0, 40);
+  }
+  if (email.includes("@") && !isFallbackEmail(email)) {
+    return email.split("@")[0].slice(0, 40);
+  }
+  const slug = `${name}${surname ? `.${surname}` : ""}`
+    .toLowerCase()
+    .replace(/[^a-z0-9.]+/g, "")
+    .replace(/^\.+|\.+$/g, "")
+    .slice(0, 40);
+  if (slug && slug !== "user" && slug !== "user.user") return slug;
+  return `member${String(fallbackId || "").replace(/[^a-z0-9]/gi, "").slice(-6)}`;
 }
 
 async function findUserByEmail(email) {
@@ -148,10 +179,29 @@ export async function provisionUser(payload) {
   if (user) {
     const currentName = String(user.Name || "").trim();
     const currentSurname = String(user.Surname || "").trim();
-    const nameIsId = !currentName || currentName.startsWith("user_");
-    const surnameIsId = currentSurname.startsWith("user_");
+    const currentUserName = String(user.UserName || "").trim();
+    const currentEmail = String(user.Email || "").trim();
+    const nameIsId = !currentName || looksLikeClerkUserId(currentName);
+    const surnameIsId = looksLikeClerkUserId(currentSurname);
+    const userNameIsId =
+      !currentUserName ||
+      looksLikeClerkUserId(currentUserName) ||
+      isFallbackEmail(currentUserName);
+    const displayUserName = usernameFromPayload(
+      payload,
+      email,
+      name,
+      surname,
+      user.Id
+    );
 
-    if ((nameIsId && name) || (surnameIsId && surname) || (!currentSurname && surname)) {
+    if (
+      (nameIsId && name) ||
+      (surnameIsId && surname) ||
+      (!currentSurname && surname) ||
+      userNameIsId ||
+      isFallbackEmail(currentEmail)
+    ) {
       await query(
         `UPDATE ApplicationUsers
          SET Name = CASE
@@ -159,9 +209,22 @@ export async function provisionUser(payload) {
                THEN @name ELSE Name END,
              Surname = CASE
                WHEN (Surname IS NULL OR LTRIM(RTRIM(Surname)) = '' OR Surname LIKE 'user_%') AND @surname <> ''
-               THEN @surname ELSE Surname END
+               THEN @surname ELSE Surname END,
+             UserName = CASE
+               WHEN UserName IS NULL OR LTRIM(RTRIM(UserName)) = '' OR UserName LIKE 'user_%'
+                    OR LOWER(UserName) LIKE '%@users.autosmarket.me'
+               THEN @userName ELSE UserName END,
+             Email = CASE
+               WHEN Email IS NULL OR LTRIM(RTRIM(Email)) = '' OR LOWER(Email) LIKE '%@users.autosmarket.me'
+               THEN NULLIF(@email, '') ELSE Email END
          WHERE Id = @id`,
-        { id: user.Id, name, surname }
+        {
+          id: user.Id,
+          name: name || currentName.replace(/^user_.*/i, "") || "User",
+          surname: surname || (surnameIsId ? "User" : currentSurname) || "User",
+          userName: displayUserName,
+          email,
+        }
       );
     }
 
@@ -182,8 +245,8 @@ export async function provisionUser(payload) {
       {
         id,
         clerkUserId,
-        userName: email || clerkUserId,
-        email: email || `${clerkUserId}@users.autosmarket.me`,
+        userName: usernameFromPayload(payload, email, name, surname, id),
+        email: email || null,
         name: name || "User",
         surname: surname || "User",
         roliId,

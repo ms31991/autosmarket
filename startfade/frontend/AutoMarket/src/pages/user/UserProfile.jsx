@@ -258,9 +258,19 @@ export const UserProfilePage = () => {
     (isOwn ? clerkUser?.fullName : "") ||
     "User";
 
+  const looksLikeClerkId = (value) =>
+    /^user_[a-zA-Z0-9]+$/i.test(String(value || "").trim()) ||
+    String(value || "")
+      .toLowerCase()
+      .includes("@users.autosmarket.me");
+
+  const clerkEmail = clerkUser?.primaryEmailAddress?.emailAddress || "";
+  const profileEmail = looksLikeClerkId(profile.email) ? "" : profile.email || "";
   const username =
-    (profile.email || clerkUser?.primaryEmailAddress?.emailAddress || "")
-      .split("@")[0] || fullName.toLowerCase().replace(/\s+/g, ".");
+    (isOwn && clerkUser?.username) ||
+    (profileEmail || clerkEmail).split("@")[0] ||
+    fullName.toLowerCase().replace(/\s+/g, ".") ||
+    "member";
 
   const avatarSrc = mediaUrl(
     profile.profileImage || (isOwn ? clerkUser?.imageUrl : "")
