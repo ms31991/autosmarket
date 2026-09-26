@@ -140,7 +140,8 @@
   background: #141c2d; 
   border: 1px solid rgba(255, 255, 255, 0.14); 
   grid-template-columns: repeat(5, minmax(0, 1fr)); 
-  gap: 8px 10px; 
+  gap: 8px 10px;
+  overflow: visible;
 } 
  
 .advanced-search.filters-open { 
@@ -159,7 +160,8 @@
 } 
  
 .advanced-search select, 
-.advanced-search input[type="number"] { 
+.advanced-search input[type="number"],
+.advanced-search input[type="text"] { 
   height: 32px; 
   border-radius: 8px; 
   border: 1px solid rgba(255, 255, 255, 0.14); 
@@ -167,6 +169,43 @@
   color: #ffffff; 
   padding: 0 8px; 
   font-size: 12.5px; 
+}
+
+.vehicle-search .filter-item.city-autocomplete {
+  position: relative;
+}
+
+.vehicle-search .city-suggest-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 200px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: #0a0f19;
+}
+
+.vehicle-search .city-suggest-item {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 0;
+  background: #0a0f19;
+  color: #ffffff;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vehicle-search .city-suggest-item:hover {
+  background: #3a4254;
 } 
  
 .advanced-search .reset-button { 

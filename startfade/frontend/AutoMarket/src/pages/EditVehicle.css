@@ -53,3 +53,42 @@
   background: linear-gradient(135deg, var(--gold), #a4843a);
   color: #16120a;
 }
+
+.edit-vehicle-page .city-autocomplete {
+  position: relative;
+}
+
+.edit-vehicle-page .city-suggest-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  background: #0a0f19;
+}
+
+.edit-vehicle-page .city-suggest-item {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 0;
+  background: #0a0f19;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+}
+
+.edit-vehicle-page .city-suggest-item:hover {
+  background: #3a4254;
+  color: #ffffff;
+}

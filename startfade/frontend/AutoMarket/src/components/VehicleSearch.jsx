@@ -44,6 +44,8 @@ export const VehicleSearch = ({
 
   const [brandId, setBrandId] = useState("");
   const [modelId, setModelId] = useState("");
+  const [modelQuery, setModelQuery] = useState("");
+  const [modelOpen, setModelOpen] = useState(false);
   const [categoryId, setCategoryId] = useState("");
   const [bodyTypeId, setBodyTypeId] = useState("");
   const [fuelTypeId, setFuelTypeId] = useState("");
@@ -147,6 +149,22 @@ export const VehicleSearch = ({
       )
     : models;
 
+  function normalizePlace(value) {
+    return String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "");
+  }
+
+  const modelSuggestions = (() => {
+    const needle = normalizePlace(modelQuery);
+    if (needle.length < 1) return [];
+    return filteredModels
+      .filter((model) => normalizePlace(model.name).includes(needle))
+      .slice(0, 15);
+  })();
+
   // =====================================================
   // FILTER CITIES BY COUNTRY
   // =====================================================
@@ -166,9 +184,9 @@ export const VehicleSearch = ({
     const value = e.target.value;
 
     setBrandId(value);
-
-    // Reset model when brand changes
     setModelId("");
+    setModelQuery("");
+    setModelOpen(false);
   };
 
   // =====================================================
@@ -577,6 +595,8 @@ export const VehicleSearch = ({
 
     setBrandId("");
     setModelId("");
+    setModelQuery("");
+    setModelOpen(false);
     setCategoryId("");
     setBodyTypeId("");
     setFuelTypeId("");
@@ -845,26 +865,54 @@ export const VehicleSearch = ({
 
           {/* MODEL */}
 
-          <SelectFilter
-            label={t("model")}
-            value={modelId}
-            onChange={(e) =>
-              setModelId(e.target.value)
-            }
-          >
-            <option value="">
-              {t("allModels")}
-            </option>
-
-            {filteredModels.map((model) => (
-              <option
-                key={model.id}
-                value={model.id}
-              >
-                {model.name}
-              </option>
-            ))}
-          </SelectFilter>
+          <div className="filter-item city-autocomplete">
+            <label htmlFor="filter-model">{t("model")}</label>
+            <input
+              id="filter-model"
+              type="text"
+              autoComplete="off"
+              placeholder={t("typeModel")}
+              value={modelQuery}
+              onChange={(e) => {
+                const value = e.target.value;
+                setModelQuery(value);
+                setModelOpen(true);
+                const current = models.find(
+                  (model) => Number(model.id) === Number(modelId)
+                );
+                if (!current || current.name !== value) {
+                  setModelId("");
+                }
+              }}
+              onFocus={() => setModelOpen(true)}
+              onBlur={() => {
+                window.setTimeout(() => setModelOpen(false), 160);
+              }}
+            />
+            {modelOpen && modelSuggestions.length > 0 ? (
+              <ul className="city-suggest-list" role="listbox">
+                {modelSuggestions.map((model) => (
+                  <li key={model.id}>
+                    <button
+                      type="button"
+                      className="city-suggest-item"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setModelId(String(model.id));
+                        setModelQuery(model.name);
+                        setModelOpen(false);
+                        if (model.brandId) {
+                          setBrandId(String(model.brandId));
+                        }
+                      }}
+                    >
+                      {model.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
 
           <SelectFilter
             label={t("category")}

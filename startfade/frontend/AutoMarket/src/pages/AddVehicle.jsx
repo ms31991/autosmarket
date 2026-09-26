@@ -28,6 +28,8 @@ export const AddVehicle = () => {
   const [cities, setCities] = useState([]);
   const [cityQuery, setCityQuery] = useState("");
   const [cityOpen, setCityOpen] = useState(false);
+  const [modelQuery, setModelQuery] = useState("");
+  const [modelOpen, setModelOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     listingTypeId: "",
@@ -172,6 +174,8 @@ export const AddVehicle = () => {
       brandId,
       modelId: "",
     }));
+    setModelQuery("");
+    setModelOpen(false);
     setCatalogVariants([]);
     setCatalogVariantId("");
     setCatalogStatus("");
@@ -180,17 +184,34 @@ export const AddVehicle = () => {
     setSuccess("");
   }
 
-  function handleModelChange(e) {
-    const modelId = e.target.value;
-
-    setFormData((previous) => ({
-      ...previous,
-      modelId,
-    }));
+  function handleModelQueryChange(e) {
+    const value = e.target.value;
+    setModelQuery(value);
+    setModelOpen(true);
+    setFormData((previous) => {
+      const current = models.find(
+        (model) => Number(model.id) === Number(previous.modelId)
+      );
+      if (current && current.name === value) return previous;
+      return { ...previous, modelId: "" };
+    });
     setCatalogVariants([]);
     setCatalogVariantId("");
     setCatalogStatus("");
+    setError("");
+    setSuccess("");
+  }
 
+  function pickModel(model) {
+    setFormData((previous) => ({
+      ...previous,
+      modelId: String(model.id),
+    }));
+    setModelQuery(model.name);
+    setModelOpen(false);
+    setCatalogVariants([]);
+    setCatalogVariantId("");
+    setCatalogStatus("");
     setError("");
     setSuccess("");
   }
@@ -347,6 +368,15 @@ export const AddVehicle = () => {
     if (!city) return "";
     return city.countryName ? `${city.name} - ${city.countryName}` : city.name;
   }
+
+  const modelSuggestions = (() => {
+    if (!formData.brandId) return [];
+    const needle = normalizePlace(modelQuery);
+    if (needle.length < 1) return [];
+    return filteredModels
+      .filter((model) => normalizePlace(model.name).includes(needle))
+      .slice(0, 15);
+  })();
 
   const citySuggestions = (() => {
     const needle = normalizePlace(cityQuery);
@@ -778,6 +808,7 @@ export const AddVehicle = () => {
 
       setImages([]);
       setCityQuery("");
+      setModelQuery("");
 
       setTimeout(() => {
         navigate("/my-vehicles");
@@ -1029,31 +1060,39 @@ export const AddVehicle = () => {
             </select>
           </div>
 
-          <div className="form-field">
-            <label htmlFor="modelId">Model</label>
-
-            <select
-              id="modelId"
-              name="modelId"
-              value={formData.modelId}
-              onChange={handleModelChange}
-              disabled={!formData.brandId}
-            >
-              <option value="">
-                {formData.brandId
-                  ? "Select Model"
-                  : "First select Brand"}
-              </option>
-
-              {filteredModels.map((model) => (
-                <option
-                  key={model.id}
-                  value={model.id}
-                >
-                  {model.name}
-                </option>
-              ))}
-            </select>
+          <div className="form-field city-autocomplete">
+            <label htmlFor="modelSearch">{t("model")}</label>
+            <input
+              id="modelSearch"
+              type="text"
+              autoComplete="off"
+              placeholder={
+                formData.brandId ? t("typeModel") : t("firstBrand")
+              }
+              value={modelQuery}
+              onChange={handleModelQueryChange}
+              onFocus={() => formData.brandId && setModelOpen(true)}
+              onBlur={() => {
+                window.setTimeout(() => setModelOpen(false), 160);
+              }}
+              disabled={!formData.brandId || saving}
+            />
+            {modelOpen && modelSuggestions.length > 0 ? (
+              <ul className="city-suggest-list" role="listbox">
+                {modelSuggestions.map((model) => (
+                  <li key={model.id}>
+                    <button
+                      type="button"
+                      className="city-suggest-item"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => pickModel(model)}
+                    >
+                      {model.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
 
           <div className="form-field form-field-wide">

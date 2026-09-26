@@ -25,6 +25,8 @@ export const EditVehicle = () => {
   const [colors, setColors] = useState([])
   const [cities, setCities] = useState([])
   const [listingTypes, setListingTypes] = useState([])
+  const [modelQuery, setModelQuery] = useState('')
+  const [modelOpen, setModelOpen] = useState(false)
 
   // =====================================================
   // VEHICLE IMAGES
@@ -85,6 +87,14 @@ export const EditVehicle = () => {
   useEffect(() => {
     checkAuthAndLoad()
   }, [id])
+
+  useEffect(() => {
+    if (!formData.modelId) return
+    const model = models.find(
+      (item) => Number(item.id) === Number(formData.modelId)
+    )
+    if (model) setModelQuery(model.name)
+  }, [models, formData.modelId])
 
   async function checkAuthAndLoad() {
     const token = await getClerkToken()
@@ -333,6 +343,8 @@ export const EditVehicle = () => {
       brandId,
       modelId: '',
     }))
+    setModelQuery('')
+    setModelOpen(false)
 
     setError('')
     setSuccess('')
@@ -349,6 +361,47 @@ export const EditVehicle = () => {
           Number(formData.brandId)
       )
     : []
+
+  function normalizePlace(value) {
+    return String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '')
+  }
+
+  const modelSuggestions = (() => {
+    if (!formData.brandId) return []
+    const needle = normalizePlace(modelQuery)
+    if (needle.length < 1) return []
+    return filteredModels
+      .filter((model) => normalizePlace(model.name).includes(needle))
+      .slice(0, 15)
+  })()
+
+  function handleModelQueryChange(e) {
+    const value = e.target.value
+    setModelQuery(value)
+    setModelOpen(true)
+    setFormData((previous) => {
+      const current = models.find(
+        (model) => Number(model.id) === Number(previous.modelId)
+      )
+      if (current && current.name === value) return previous
+      return { ...previous, modelId: '' }
+    })
+    setError('')
+  }
+
+  function pickModel(model) {
+    setFormData((previous) => ({
+      ...previous,
+      modelId: String(model.id),
+    }))
+    setModelQuery(model.name)
+    setModelOpen(false)
+    setError('')
+  }
 
   // =====================================================
   // SELECTED COLOR
@@ -1350,37 +1403,49 @@ export const EditVehicle = () => {
             MODEL
         ================================================= */}
 
-        <div>
-          <label>
+        <div className="city-autocomplete">
+          <label htmlFor="modelSearch">
             Model
           </label>
 
           <br />
 
-          <select
-            name="modelId"
-            value={formData.modelId}
-            onChange={handleChange}
-            disabled={
-              !formData.brandId
+          <input
+            id="modelSearch"
+            type="text"
+            autoComplete="off"
+            placeholder={
+              formData.brandId
+                ? 'Shkruaj modelin'
+                : 'Së pari zgjidh markën'
             }
-          >
-            <option value="">
-              Select Model
-            </option>
-
-            {filteredModels.map(
-              (model) => (
-                <option
-                  key={model.id}
-                  value={model.id}
-                >
-                  {model.name}
-                </option>
-              )
-            )}
-
-          </select>
+            value={modelQuery}
+            onChange={handleModelQueryChange}
+            onFocus={() => formData.brandId && setModelOpen(true)}
+            onBlur={() => {
+              window.setTimeout(() => setModelOpen(false), 160)
+            }}
+            disabled={
+              !formData.brandId ||
+              saving
+            }
+          />
+          {modelOpen && modelSuggestions.length > 0 ? (
+            <ul className="city-suggest-list" role="listbox">
+              {modelSuggestions.map((model) => (
+                <li key={model.id}>
+                  <button
+                    type="button"
+                    className="city-suggest-item"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => pickModel(model)}
+                  >
+                    {model.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
 
         <br />
