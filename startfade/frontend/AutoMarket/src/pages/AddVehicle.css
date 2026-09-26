@@ -371,6 +371,10 @@
   position: relative;
 }
 
+.city-autocomplete input {
+  color: #ffffff;
+}
+
 .city-suggest-list {
   position: absolute;
   top: calc(100% + 4px);
@@ -394,17 +398,14 @@
   border: 0;
   background: transparent;
   color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
   font-size: 13px;
   text-align: left;
   cursor: pointer;
 }
 
 .city-suggest-item:hover {
-  background: #151c28;
-}
-
-.city-suggest-country {
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* =========================
