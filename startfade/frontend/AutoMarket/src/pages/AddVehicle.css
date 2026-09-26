@@ -199,7 +199,23 @@
   font-weight: 700;
 }
 
-.vehicle-photo-remove {
+.vehicle-photo-make-main {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  z-index: 1;
+  width: auto !important;
+  min-height: 16px !important;
+  height: 16px;
+  padding: 0 5px !important;
+  border: 0 !important;
+  border-radius: 4px !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: #fff !important;
+  font-size: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
   position: absolute;
   top: 4px;
   right: 4px;

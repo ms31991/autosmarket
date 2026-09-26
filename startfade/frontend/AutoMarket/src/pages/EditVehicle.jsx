@@ -1,14 +1,16 @@
-import "./EditVehicle.css";
+import "./AddVehicle.css";
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getClerkToken } from '../services/clerkToken'
 import { mediaUrl } from '../utils/mediaUrl'
 import { API_BASE } from '../config/api'
 import { compressImageFile } from '../utils/compressImage'
+import { useLanguage } from '../i18n/LanguageContext'
 
 export const EditVehicle = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { t } = useLanguage()
 
   // =====================================================
   // DROPDOWN DATA
@@ -517,185 +519,78 @@ export const EditVehicle = () => {
   // =====================================================
 
   async function handleFileChange(e) {
-    const file = e.target.files?.[0]
+    const selectedFiles = Array.from(e.target.files || [])
+    e.target.value = ''
 
-    if (!file) {
-      setSelectedFile(null)
-      return
-    }
+    if (!selectedFiles.length) return
 
-    if (images.length >= 10) {
-      setError('Maksimumi është 10 foto.')
-      setSelectedFile(null)
-      e.target.value = ''
-      return
-    }
-
-    const allowedTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-    ]
-
-    if (!allowedTypes.includes(file.type)) {
-      setError('Lejohen vetëm JPG, JPEG, PNG dhe WEBP.')
-      setSelectedFile(null)
-      return
-    }
-
-    try {
-      setSelectedFile(await compressImageFile(file))
-      setError('')
-      setSuccess('')
-    } catch (err) {
-      setError(err.message || 'Fotoja nuk mund të jetë më e madhe se 5 MB.')
-      setSelectedFile(null)
-    }
-  }
-
-  // =====================================================
-  // UPLOAD IMAGE
-  // =====================================================
-
-  async function handleUploadImage() {
-    if (!selectedFile) {
-      setError('Zgjidh një foto.')
-      return
-    }
-
-    if (images.length >= 10) {
+    const room = 10 - images.length
+    if (room <= 0) {
       setError('Maksimumi është 10 foto.')
       return
     }
 
     const token = await getClerkToken()
-
     if (!token) {
       setError('Nuk jeni të kyçur.')
       return
     }
 
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    const files = selectedFiles.slice(0, room)
+    setUploadingImage(true)
+    setError('')
+    setSuccess('')
+
     try {
-      setUploadingImage(true)
-      setError('')
-      setSuccess('')
-
-      const formDataImage = new FormData()
-
-      formDataImage.append(
-        'file',
-        selectedFile
-      )
-
-      const uploadUrl =
-        `${API_BASE}/VehicleImage/vehicle/${id}/upload`
-
-      console.log(
-        'UPLOAD VEHICLE IMAGE:',
-        uploadUrl
-      )
-
-      const response = await fetch(
-        uploadUrl,
-        {
-          method: 'POST',
-
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-
-          body: formDataImage,
+      for (const file of files) {
+        if (!allowedTypes.includes(file.type)) {
+          setError('Lejohen vetëm JPG, JPEG, PNG dhe WEBP.')
+          continue
         }
-      )
-
-      const responseText =
-        await response.text()
-
-      console.log(
-        'UPLOAD IMAGE STATUS:',
-        response.status
-      )
-
-      console.log(
-        'UPLOAD IMAGE RESPONSE:',
-        responseText
-      )
-
-      if (!response.ok) {
-        let message =
-          `Fotoja nuk u uploadua. Status: ${response.status}`
-
-        try {
-          const errorData =
-            JSON.parse(responseText)
-
-          if (errorData.message) {
-            message =
-              errorData.message
+        const compressed = await compressImageFile(file)
+        const formDataImage = new FormData()
+        formDataImage.append('file', compressed)
+        const response = await fetch(
+          `${API_BASE}/VehicleImage/vehicle/${id}/upload`,
+          {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formDataImage,
           }
-        } catch {
-          if (responseText) {
-            message =
-              responseText
-          }
-        }
-
-        throw new Error(message)
-      }
-
-      const newImage =
-        JSON.parse(responseText)
-
-      // -------------------------------------------------
-      // ADD IMAGE TO STATE
-      // -------------------------------------------------
-
-      setImages((previous) => [
-        ...previous,
-        {
-          id: newImage.imageId,
-          vehicleId:
-            newImage.vehicleId,
-          imageUrl:
-            newImage.imageUrl,
-          isPrimary:
-            newImage.isPrimary,
-          sortOrder:
-            newImage.sortOrder,
-        },
-      ])
-
-      // -------------------------------------------------
-      // RESET FILE
-      // -------------------------------------------------
-
-      setSelectedFile(null)
-
-      const input =
-        document.getElementById(
-          'vehicle-image-input'
         )
-
-      if (input) {
-        input.value = ''
+        const responseText = await response.text()
+        if (!response.ok) {
+          let message = `Fotoja nuk u uploadua. Status: ${response.status}`
+          try {
+            const errorData = JSON.parse(responseText)
+            if (errorData.message) message = errorData.message
+          } catch {
+            if (responseText) message = responseText
+          }
+          throw new Error(message)
+        }
+        const newImage = JSON.parse(responseText)
+        setImages((previous) => [
+          ...previous,
+          {
+            id: newImage.imageId,
+            vehicleId: newImage.vehicleId,
+            imageUrl: newImage.imageUrl,
+            isPrimary: newImage.isPrimary,
+            sortOrder: newImage.sortOrder,
+          },
+        ])
       }
-
-      setSuccess(
-        'Fotoja u uploadua me sukses.'
-      )
+      setSuccess('Fotoja u uploadua me sukses.')
     } catch (err) {
-      console.error(
-        'UPLOAD IMAGE ERROR:',
-        err
-      )
-
       setError(
         err.message ||
           'Ndodhi një gabim gjatë upload-it të fotos.'
       )
     } finally {
       setUploadingImage(false)
+      setSelectedFile(null)
     }
   }
 
@@ -1161,1012 +1056,548 @@ export const EditVehicle = () => {
     }
   }
 
-  // =====================================================
-  // LOADING
-  // =====================================================
 
   if (loading) {
     return (
-      <div className="edit-vehicle-page">
-        <h1>Edit Vehicle</h1>
-
-        <p>
-          Duke ngarkuar të dhënat...
-        </p>
+      <div className="add-vehicle-page">
+        <div className="add-vehicle-loading">
+          <div className="loading-spinner" />
+          <p>{t("loading")}</p>
+        </div>
       </div>
     )
   }
 
-  // =====================================================
-  // RENDER
-  // =====================================================
-
   return (
-    <div className="edit-vehicle-page">
-
-      <h1>Edit Vehicle</h1>
-
-      <p>
-        Ndrysho të dhënat e veturës.
-      </p>
-
-      {/* =================================================
-          ERROR
-      ================================================= */}
+    <div className="add-vehicle-page">
+      <div className="add-vehicle-heading">
+        <div>
+          <span className="form-eyebrow">AUTOTRADE</span>
+          <h1>{t("editTitle")}</h1>
+          <p>{t("editSubtitle")}</p>
+        </div>
+      </div>
 
       {error && (
-        <div
-          style={{
-            padding: '12px',
-            marginBottom: '20px',
-            border: '1px solid red',
-            color: 'red',
-            borderRadius: '5px',
-          }}
-        >
+        <div className="form-message form-error" role="alert">
+          <span>!</span>
           {error}
         </div>
       )}
 
-      {/* =================================================
-          SUCCESS
-      ================================================= */}
-
       {success && (
-        <div
-          style={{
-            padding: '12px',
-            marginBottom: '20px',
-            border: '1px solid green',
-            color: 'green',
-            borderRadius: '5px',
-          }}
-        >
+        <div className="form-message form-success">
+          <span>✓</span>
           {success}
         </div>
       )}
 
-      {/* =================================================
-          VEHICLE IMAGES
-      ================================================= */}
-
-      <div
-        style={{
-          marginBottom: '30px',
-          padding: '20px',
-          border: '1px solid #ccc',
-          borderRadius: '8px',
-        }}
-      >
-
-        <h2>
-          Vehicle Images
-        </h2>
-
-        {/* =================================================
-            EXISTING IMAGES
-        ================================================= */}
-
-        {images.length > 0 ? (
-
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '15px',
-              marginBottom: '25px',
-            }}
-          >
-
-            {images.map((image) => (
-
-              <div
-                key={image.id}
-                style={{
-                  width: '220px',
-                  padding: '10px',
-
-                  border:
-                    image.isPrimary
-                      ? '3px solid green'
-                      : '1px solid #ccc',
-
-                  borderRadius: '6px',
-                }}
-              >
-
-                <img
-                  src={mediaUrl(image.imageUrl)}
-                  alt="Vehicle"
-                  style={{
-                    width: '100%',
-                    height: '140px',
-                    objectFit: 'cover',
-                    display: 'block',
-                    marginBottom: '10px',
-                    borderRadius: '4px',
-                  }}
-                />
-
-                {image.isPrimary && (
-                  <p
-                    style={{
-                      color: 'green',
-                      fontWeight: 'bold',
-                      margin: '5px 0',
-                    }}
-                  >
-                    ⭐ Primary Image
-                  </p>
-                )}
-
-                {!image.isPrimary && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleSetPrimary(
-                        image.id
-                      )
-                    }
-                    disabled={
-                      uploadingImage ||
-                      saving
-                    }
-                  >
-                    Set Primary
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleDeleteImage(
-                      image.id
-                    )
-                  }
-                  disabled={
-                    uploadingImage ||
-                    saving
-                  }
-                  style={{
-                    marginLeft: '8px',
-                  }}
-                >
-                  Delete
-                </button>
-
-              </div>
-
-            ))}
-
+      <form onSubmit={handleSubmit}>
+        <section className="vehicle-photos-section">
+          <div className="vehicle-photos-compact-head">
+            <h2>{t("photos")}</h2>
+            <p>{t("photosHint")}</p>
           </div>
 
-        ) : (
-
-          <p>
-            Kjo veturë nuk ka ende foto.
-          </p>
-
-        )}
-
-        {/* =================================================
-            ADD NEW IMAGE
-        ================================================= */}
-
-        <div>
-
-          <h3>
-            Add New Image
-          </h3>
-
-          <input
-            id="vehicle-image-input"
-            type="file"
-            accept=".jpg,.jpeg,.png,.webp"
-            onChange={handleFileChange}
-            disabled={
-              uploadingImage ||
-              saving ||
-              images.length >= 10
-            }
-          />
-
-          <button
-            type="button"
-            onClick={handleUploadImage}
-            disabled={
-              !selectedFile ||
-              uploadingImage ||
-              saving ||
-              images.length >= 10
-            }
-            style={{
-              marginLeft: '10px',
-            }}
-          >
-            {uploadingImage
-              ? 'Uploading...'
-              : 'Upload Image'}
-          </button>
-
-          {selectedFile && (
-            <p>
-              Selected:{' '}
-              {selectedFile.name}
-            </p>
-          )}
-
-          <small>
-            Max 5 MB. JPG, JPEG, PNG, WEBP. Deri në 10 foto.
-          </small>
-
-        </div>
-
-      </div>
-
-      {/* =================================================
-          VEHICLE FORM
-      ================================================= */}
-
-      <form onSubmit={handleSubmit}>
-
-        {/* =================================================
-            CATEGORY
-        ================================================= */}
-
-        <div>
-          <label>
-            Category
+          <label className={`photo-add-circle-wrap${images.length < 2 ? " photo-add-needed" : ""}`}>
+            <input
+              id="vehicle-image-input"
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+              multiple
+              onChange={handleFileChange}
+              disabled={saving || uploadingImage || images.length >= 10}
+            />
+            <span className="photo-add-circle" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </span>
+            <span className="photo-add-count">
+              {images.length}/10
+            </span>
           </label>
 
-          <br />
-
-          <select
-            name="categoryId"
-            value={formData.categoryId}
-            onChange={handleChange}
-          >
-            <option value="">
-              Select Category
-            </option>
-
-            {categories.map(
-              (category) => (
-                <option
-                  key={category.id}
-                  value={category.id}
-                >
-                  {category.name}
-                </option>
-              )
-            )}
-
-          </select>
-        </div>
-
-        <br />
-
-        {/* =================================================
-            BRAND
-        ================================================= */}
-
-        <div className="city-autocomplete">
-          <label htmlFor="brandSearch">
-            Brand
-          </label>
-
-          <br />
-
-          <input
-            id="brandSearch"
-            type="text"
-            autoComplete="off"
-            placeholder="Shkruaj markën"
-            value={brandQuery}
-            onChange={handleBrandQueryChange}
-            onFocus={() => setBrandOpen(true)}
-            onBlur={() => {
-              window.setTimeout(() => setBrandOpen(false), 160)
-            }}
-            disabled={saving}
-          />
-          {brandOpen && brandSuggestions.length > 0 ? (
-            <ul className="city-suggest-list" role="listbox">
-              {brandSuggestions.map((brand) => (
-                <li key={brand.id}>
+          <div className="vehicle-photo-strip">
+            {images.map((image) => (
+              <div
+                className={`vehicle-photo-thumb ${image.isPrimary ? "main-photo" : ""}`}
+                key={image.id}
+              >
+                <img src={mediaUrl(image.imageUrl)} alt="" />
+                {image.isPrimary ? (
+                  <span className="main-photo-label">Main</span>
+                ) : (
                   <button
                     type="button"
-                    className="city-suggest-item"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => pickBrand(brand)}
+                    className="vehicle-photo-make-main"
+                    onClick={() => handleSetPrimary(image.id)}
+                    disabled={uploadingImage || saving}
                   >
-                    {brand.name}
+                    Main
                   </button>
-                </li>
+                )}
+                <button
+                  type="button"
+                  className="vehicle-photo-remove"
+                  aria-label="Remove photo"
+                  onClick={() => handleDeleteImage(image.id)}
+                  disabled={uploadingImage || saving}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div className="form-section-title">
+          <span>01</span>
+          <div>
+            <h2>{t("listing")}</h2>
+            <p>{t("listingHint")}</p>
+          </div>
+        </div>
+
+        <div className="form-grid">
+          <div className="form-field">
+            <label htmlFor="listingTypeId">{t("listingType")}</label>
+            <select
+              id="listingTypeId"
+              name="listingTypeId"
+              value={formData.listingTypeId}
+              onChange={handleChange}
+            >
+              <option value="">{t("selectSaleRent")}</option>
+              {listingTypes.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
               ))}
-            </ul>
-          ) : null}
-        </div>
+            </select>
+          </div>
 
-        <br />
-
-        {/* =================================================
-            MODEL
-        ================================================= */}
-
-        <div className="city-autocomplete">
-          <label htmlFor="modelSearch">
-            Model
-          </label>
-
-          <br />
-
-          <input
-            id="modelSearch"
-            type="text"
-            autoComplete="off"
-            placeholder={
-              formData.brandId
-                ? 'Shkruaj modelin'
-                : 'Së pari zgjidh markën'
-            }
-            value={modelQuery}
-            onChange={handleModelQueryChange}
-            onFocus={() => formData.brandId && setModelOpen(true)}
-            onBlur={() => {
-              window.setTimeout(() => setModelOpen(false), 160)
-            }}
-            disabled={
-              !formData.brandId ||
-              saving
-            }
-          />
-          {modelOpen && modelSuggestions.length > 0 ? (
-            <ul className="city-suggest-list" role="listbox">
-              {modelSuggestions.map((model) => (
-                <li key={model.id}>
-                  <button
-                    type="button"
-                    className="city-suggest-item"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => pickModel(model)}
-                  >
-                    {model.name}
-                  </button>
-                </li>
+          <div className="form-field">
+            <label htmlFor="categoryId">{t("category")}</label>
+            <select
+              id="categoryId"
+              name="categoryId"
+              value={formData.categoryId}
+              onChange={handleChange}
+            >
+              <option value="">{t("selectCategory")}</option>
+              {categories.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
               ))}
-            </ul>
-          ) : null}
+            </select>
+          </div>
+
+          <div className="form-field city-autocomplete">
+            <label htmlFor="citySearch">{t("city")}</label>
+            <input
+              id="citySearch"
+              type="text"
+              autoComplete="off"
+              placeholder={t("typeCity")}
+              value={cityQuery}
+              onChange={handleCityQueryChange}
+              onFocus={() => setCityOpen(true)}
+              onBlur={() => {
+                window.setTimeout(() => setCityOpen(false), 160)
+              }}
+              disabled={saving}
+            />
+            {cityOpen && citySuggestions.length > 0 ? (
+              <ul className="city-suggest-list" role="listbox">
+                {citySuggestions.map((city) => (
+                  <li key={city.id}>
+                    <button
+                      type="button"
+                      className="city-suggest-item"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => pickCity(city)}
+                    >
+                      {city.name}
+                      {city.countryName ? ` - ${city.countryName}` : ''}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         </div>
 
-        <br />
+        <div className="form-section-title">
+          <span>02</span>
+          <div>
+            <h2>{t("vehicle")}</h2>
+            <p>{t("vehicleHint")}</p>
+          </div>
+        </div>
 
-        {/* =================================================
-            LISTING TYPE
-        ================================================= */}
+        <div className="form-grid">
+          <div className="form-field city-autocomplete">
+            <label htmlFor="brandSearch">{t("brand")}</label>
+            <input
+              id="brandSearch"
+              type="text"
+              autoComplete="off"
+              placeholder={t("typeBrand")}
+              value={brandQuery}
+              onChange={handleBrandQueryChange}
+              onFocus={() => setBrandOpen(true)}
+              onBlur={() => {
+                window.setTimeout(() => setBrandOpen(false), 160)
+              }}
+              disabled={saving}
+            />
+            {brandOpen && brandSuggestions.length > 0 ? (
+              <ul className="city-suggest-list" role="listbox">
+                {brandSuggestions.map((brand) => (
+                  <li key={brand.id}>
+                    <button
+                      type="button"
+                      className="city-suggest-item"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => pickBrand(brand)}
+                    >
+                      {brand.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
 
-        <div>
-          <label>
-            Listing Type
-          </label>
+          <div className="form-field city-autocomplete">
+            <label htmlFor="modelSearch">{t("model")}</label>
+            <input
+              id="modelSearch"
+              type="text"
+              autoComplete="off"
+              placeholder={formData.brandId ? t("typeModel") : t("firstBrand")}
+              value={modelQuery}
+              onChange={handleModelQueryChange}
+              onFocus={() => formData.brandId && setModelOpen(true)}
+              onBlur={() => {
+                window.setTimeout(() => setModelOpen(false), 160)
+              }}
+              disabled={!formData.brandId || saving}
+            />
+            {modelOpen && modelSuggestions.length > 0 ? (
+              <ul className="city-suggest-list" role="listbox">
+                {modelSuggestions.map((model) => (
+                  <li key={model.id}>
+                    <button
+                      type="button"
+                      className="city-suggest-item"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => pickModel(model)}
+                    >
+                      {model.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
 
-          <br />
-
-          <select
-            name="listingTypeId"
-            value={
-              formData.listingTypeId
-            }
-            onChange={handleChange}
-          >
-            <option value="">
-              Select Listing Type
-            </option>
-
-            {listingTypes.map(
-              (listingType) => (
-                <option
-                  key={listingType.id}
-                  value={listingType.id}
-                >
-                  {listingType.name}
+          <div className="form-field">
+            <label htmlFor="bodyTypeId">{t("bodyType")}</label>
+            <select
+              id="bodyTypeId"
+              name="bodyTypeId"
+              value={formData.bodyTypeId}
+              onChange={handleChange}
+            >
+              <option value="">{t("selectBody")}</option>
+              {bodyTypes.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
                 </option>
-              )
-            )}
+              ))}
+            </select>
+          </div>
 
-          </select>
-        </div>
-
-        <br />
-
-        {/* =================================================
-            BODY TYPE
-        ================================================= */}
-
-        <div>
-          <label>
-            Body Type
-          </label>
-
-          <br />
-
-          <select
-            name="bodyTypeId"
-            value={
-              formData.bodyTypeId
-            }
-            onChange={handleChange}
-          >
-            <option value="">
-              Select Body Type
-            </option>
-
-            {bodyTypes.map(
-              (bodyType) => (
-                <option
-                  key={bodyType.id}
-                  value={bodyType.id}
-                >
-                  {bodyType.name}
-                </option>
-              )
-            )}
-
-          </select>
-        </div>
-
-        <br />
-
-        {/* =================================================
-            FUEL TYPE
-        ================================================= */}
-
-        <div>
-          <label>
-            Fuel Type
-          </label>
-
-          <br />
-
-          <select
-            name="fuelTypeId"
-            value={
-              formData.fuelTypeId
-            }
-            onChange={handleChange}
-          >
-            <option value="">
-              Select Fuel Type
-            </option>
-
-            {fuelTypes.map(
-              (fuel) => (
-                <option
-                  key={fuel.id}
-                  value={fuel.id}
-                >
-                  {fuel.name}
-                </option>
-              )
-            )}
-
-          </select>
-        </div>
-
-        <br />
-
-        {/* =================================================
-            TRANSMISSION
-        ================================================= */}
-
-        <div>
-          <label>
-            Transmission
-          </label>
-
-          <br />
-
-          <select
-            name="transmissionId"
-            value={
-              formData.transmissionId
-            }
-            onChange={handleChange}
-          >
-            <option value="">
-              Select Transmission
-            </option>
-
-            {transmissions.map(
-              (transmission) => (
-                <option
-                  key={transmission.id}
-                  value={
-                    transmission.id
-                  }
-                >
-                  {transmission.name}
-                </option>
-              )
-            )}
-
-          </select>
-        </div>
-
-        <br />
-
-        {/* =================================================
-            DRIVE TYPE
-        ================================================= */}
-
-        <div>
-          <label>
-            Drive Type
-          </label>
-
-          <br />
-
-          <select
-            name="driveTypeId"
-            value={
-              formData.driveTypeId
-            }
-            onChange={handleChange}
-          >
-            <option value="">
-              Select Drive Type
-            </option>
-
-            {driveTypes.map(
-              (drive) => (
-                <option
-                  key={drive.id}
-                  value={drive.id}
-                >
-                  {drive.name}
-                </option>
-              )
-            )}
-
-          </select>
-        </div>
-
-        <br />
-
-        {/* =================================================
-            CONDITION
-        ================================================= */}
-
-        <div>
-          <label>
-            Condition
-          </label>
-
-          <br />
-
-          <select
-            name="conditionId"
-            value={
-              formData.conditionId
-            }
-            onChange={handleChange}
-          >
-            <option value="">
-              Select Condition
-            </option>
-
-            {conditions.map(
-              (condition) => (
-                <option
-                  key={condition.id}
-                  value={condition.id}
-                >
-                  {condition.name}
-                </option>
-              )
-            )}
-
-          </select>
-        </div>
-
-        <br />
-
-        {/* =================================================
-            COLOR
-        ================================================= */}
-
-        <div>
-          <label>
-            Color
-          </label>
-
-          <br />
-
-          <select
-            name="colorId"
-            value={
-              formData.colorId
-            }
-            onChange={handleChange}
-          >
-            <option value="">
-              Select Color
-            </option>
-
-            {colors.map(
-              (color) => (
-                <option
-                  key={color.id}
-                  value={color.id}
-                >
+          <div className="form-field">
+            <label htmlFor="colorId">{t("color")}</label>
+            <select
+              id="colorId"
+              name="colorId"
+              value={formData.colorId}
+              onChange={handleChange}
+            >
+              <option value="">{t("selectColor")}</option>
+              {colors.map((color) => (
+                <option key={color.id} value={color.id}>
                   {color.name}
                 </option>
-              )
-            )}
-
-          </select>
-
-          {selectedColor?.hexCode && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                marginTop: '8px',
-              }}
-            >
-
-              <div
-                style={{
-                  width: '30px',
-                  height: '30px',
-                  backgroundColor:
-                    selectedColor.hexCode,
-                  border:
-                    '1px solid #000',
-                  borderRadius: '4px',
-                }}
-              />
-
-              <span>
-                {selectedColor.hexCode}
-              </span>
-
-            </div>
-          )}
-
-        </div>
-
-        <br />
-
-        {/* =================================================
-            CITY
-        ================================================= */}
-
-        <div className="city-autocomplete">
-          <label htmlFor="citySearch">
-            City
-          </label>
-
-          <br />
-
-          <input
-            id="citySearch"
-            type="text"
-            autoComplete="off"
-            placeholder="Shkruaj qytetin"
-            value={cityQuery}
-            onChange={handleCityQueryChange}
-            onFocus={() => setCityOpen(true)}
-            onBlur={() => {
-              window.setTimeout(() => setCityOpen(false), 160)
-            }}
-            disabled={saving}
-          />
-          {cityOpen && citySuggestions.length > 0 ? (
-            <ul className="city-suggest-list" role="listbox">
-              {citySuggestions.map((city) => (
-                <li key={city.id}>
-                  <button
-                    type="button"
-                    className="city-suggest-item"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => pickCity(city)}
-                  >
-                    {city.name}
-                    {city.countryName ? ` - ${city.countryName}` : ''}
-                  </button>
-                </li>
               ))}
-            </ul>
-          ) : null}
+            </select>
+            {selectedColor?.hexCode && (
+              <div className="color-preview">
+                <span style={{ backgroundColor: selectedColor.hexCode }} />
+                {selectedColor.name}
+              </div>
+            )}
+          </div>
         </div>
 
-        <hr />
-
-        {/* =================================================
-            PRICE
-        ================================================= */}
-
-        <div>
-          <label>
-            Price
-          </label>
-
-          <br />
-
-          <input
-            type="number"
-            name="price"
-            value={formData.price}
-            onChange={handleChange}
-            min="0"
-            step="0.01"
-          />
+        <div className="form-section-title">
+          <span>03</span>
+          <div>
+            <h2>{t("specs")}</h2>
+            <p>{t("specsHint")}</p>
+          </div>
         </div>
 
-        <br />
+        <div className="form-grid">
+          <div className="form-field">
+            <label htmlFor="fuelTypeId">{t("fuel")}</label>
+            <select
+              id="fuelTypeId"
+              name="fuelTypeId"
+              value={formData.fuelTypeId}
+              onChange={handleChange}
+            >
+              <option value="">{t("selectFuel")}</option>
+              {fuelTypes.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* =================================================
-            YEAR
-        ================================================= */}
+          <div className="form-field">
+            <label htmlFor="transmissionId">{t("transmission")}</label>
+            <select
+              id="transmissionId"
+              name="transmissionId"
+              value={formData.transmissionId}
+              onChange={handleChange}
+            >
+              <option value="">{t("selectTrans")}</option>
+              {transmissions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label>
-            Year
-          </label>
+          <div className="form-field">
+            <label htmlFor="driveTypeId">{t("driveType")}</label>
+            <select
+              id="driveTypeId"
+              name="driveTypeId"
+              value={formData.driveTypeId}
+              onChange={handleChange}
+            >
+              <option value="">{t("selectDrive")}</option>
+              {driveTypes.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <br />
+          <div className="form-field">
+            <label htmlFor="engine">{t("engine")}</label>
+            <input
+              id="engine"
+              type="text"
+              name="engine"
+              value={formData.engine}
+              onChange={handleChange}
+              placeholder="e.g. 2.0 Diesel"
+            />
+          </div>
 
-          <input
-            type="number"
-            name="year"
-            value={formData.year}
-            onChange={handleChange}
-            min="1900"
-            max="2100"
-          />
+          <div className="form-field">
+            <label htmlFor="engineCC">Engine CC</label>
+            <input
+              id="engineCC"
+              type="number"
+              name="engineCC"
+              value={formData.engineCC}
+              onChange={handleChange}
+              placeholder="e.g. 1995"
+              min="0"
+            />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="cylinders">Cylinders</label>
+            <input
+              id="cylinders"
+              type="number"
+              name="cylinders"
+              value={formData.cylinders}
+              onChange={handleChange}
+              placeholder="e.g. 4"
+              min="0"
+            />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="powerHP">Power HP</label>
+            <input
+              id="powerHP"
+              type="number"
+              name="powerHP"
+              value={formData.powerHP}
+              onChange={handleChange}
+              placeholder="e.g. 190"
+              min="0"
+            />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="powerKW">Power KW</label>
+            <input
+              id="powerKW"
+              type="number"
+              name="powerKW"
+              value={formData.powerKW}
+              onChange={handleChange}
+              placeholder="e.g. 140"
+              min="0"
+            />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="seats">Seats (optional)</label>
+            <input
+              id="seats"
+              type="number"
+              name="seats"
+              value={formData.seats}
+              onChange={handleChange}
+              placeholder="e.g. 5"
+              min="1"
+            />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="doors">Doors</label>
+            <input
+              id="doors"
+              type="number"
+              name="doors"
+              value={formData.doors}
+              onChange={handleChange}
+              min="0"
+            />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="conditionId">Condition</label>
+            <select
+              id="conditionId"
+              name="conditionId"
+              value={formData.conditionId}
+              onChange={handleChange}
+            >
+              <option value="">Select Condition</option>
+              {conditions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-field form-field-wide">
+            <label htmlFor="vin">VIN (optional)</label>
+            <input
+              id="vin"
+              type="text"
+              name="vin"
+              value={formData.vin}
+              onChange={handleChange}
+              autoComplete="off"
+            />
+          </div>
         </div>
 
-        <br />
-
-        {/* =================================================
-            MILEAGE
-        ================================================= */}
-
-        <div>
-          <label>
-            Mileage
-          </label>
-
-          <br />
-
-          <input
-            type="number"
-            name="mileage"
-            value={formData.mileage}
-            onChange={handleChange}
-            min="0"
-          />
+        <div className="form-section-title">
+          <span>04</span>
+          <div>
+            <h2>{t("priceDetails")}</h2>
+            <p>{t("priceHint")}</p>
+          </div>
         </div>
 
-        <br />
+        <div className="form-grid">
+          <div className="form-field">
+            <label htmlFor="year">{t("year")}</label>
+            <input
+              id="year"
+              type="number"
+              name="year"
+              value={formData.year}
+              onChange={handleChange}
+              placeholder="e.g. 2020"
+              min="1900"
+              max="2100"
+            />
+          </div>
 
-        {/* =================================================
-            ENGINE
-        ================================================= */}
+          <div className="form-field">
+            <label htmlFor="mileage">{t("mileage")}</label>
+            <div className="input-with-unit">
+              <input
+                id="mileage"
+                type="number"
+                name="mileage"
+                value={formData.mileage}
+                onChange={handleChange}
+                placeholder="e.g. 120000"
+                min="0"
+              />
+              <span>km</span>
+            </div>
+          </div>
 
-        <div>
-          <label>
-            Engine
-          </label>
-
-          <br />
-
-          <input
-            type="text"
-            name="engine"
-            value={formData.engine}
-            onChange={handleChange}
-          />
+          <div className="form-field price-field">
+            <label htmlFor="price">{t("price")}</label>
+            <div className="input-with-unit">
+              <input
+                id="price"
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                placeholder="e.g. 25000"
+                min="0"
+              />
+              <span>€</span>
+            </div>
+          </div>
         </div>
 
-        <br />
-
-        {/* =================================================
-            ENGINE CC
-        ================================================= */}
-
-        <div>
-          <label>
-            Engine CC
-          </label>
-
-          <br />
-
-          <input
-            type="number"
-            name="engineCC"
-            value={formData.engineCC}
-            onChange={handleChange}
-            min="0"
-          />
+        <div className="form-actions">
+          <button
+            type="button"
+            className="cancel-button"
+            onClick={() => navigate('/my-vehicles')}
+            disabled={saving || uploadingImage}
+          >
+            {t("cancel")}
+          </button>
+          <button
+            type="submit"
+            className="submit-button"
+            disabled={saving || uploadingImage}
+          >
+            {saving || uploadingImage ? t("saving") : t("saveChanges")}
+          </button>
         </div>
-
-        <br />
-
-        {/* =================================================
-            POWER HP
-        ================================================= */}
-
-        <div>
-          <label>
-            Power HP
-          </label>
-
-          <br />
-
-          <input
-            type="number"
-            name="powerHP"
-            value={formData.powerHP}
-            onChange={handleChange}
-            min="0"
-          />
-        </div>
-
-        <br />
-
-        {/* =================================================
-            POWER KW
-        ================================================= */}
-
-        <div>
-          <label>
-            Power KW
-          </label>
-
-          <br />
-
-          <input
-            type="number"
-            name="powerKW"
-            value={formData.powerKW}
-            onChange={handleChange}
-            min="0"
-          />
-        </div>
-
-        <br />
-
-        {/* =================================================
-            CYLINDERS
-        ================================================= */}
-
-        <div>
-          <label>
-            Cylinders
-          </label>
-
-          <br />
-
-          <input
-            type="number"
-            name="cylinders"
-            value={
-              formData.cylinders
-            }
-            onChange={handleChange}
-            min="0"
-          />
-        </div>
-
-        <br />
-
-        {/* =================================================
-            DOORS
-        ================================================= */}
-
-        <div>
-          <label>
-            Doors
-          </label>
-
-          <br />
-
-          <input
-            type="number"
-            name="doors"
-            value={formData.doors}
-            onChange={handleChange}
-            min="0"
-          />
-        </div>
-
-        <br />
-
-        {/* =================================================
-            SEATS
-        ================================================= */}
-
-        <div>
-          <label>
-            Seats
-          </label>
-
-          <br />
-
-          <input
-            type="number"
-            name="seats"
-            value={formData.seats}
-            onChange={handleChange}
-            min="0"
-          />
-        </div>
-
-        <br />
-
-        {/* =================================================
-            VIN
-        ================================================= */}
-
-        <div>
-          <label htmlFor="vin">
-            VIN (optional)
-          </label>
-
-          <br />
-
-          <input
-            id="vin"
-            type="text"
-            name="vin"
-            value={formData.vin}
-            onChange={handleChange}
-            autoComplete="off"
-          />
-          <p>
-            Only add a VIN if you want it stored with this listing.
-          </p>
-        </div>
-
-        <hr />
-
-        {/* =================================================
-            BUTTONS
-        ================================================= */}
-
-        <button
-          type="submit"
-          disabled={
-            saving ||
-            uploadingImage
-          }
-        >
-          {saving
-            ? 'Duke ruajtur...'
-            : 'Save Changes'}
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            navigate('/my-vehicles')
-          }
-          disabled={
-            saving ||
-            uploadingImage
-          }
-          style={{
-            marginLeft: '10px',
-          }}
-        >
-          Cancel
-        </button>
-
       </form>
-
     </div>
   )
 }
