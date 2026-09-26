@@ -367,6 +367,51 @@
   color: #667080;
 }
 
+.city-autocomplete {
+  position: relative;
+}
+
+.city-suggest-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+  max-height: 240px;
+  overflow: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: #101826;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.city-suggest-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.city-suggest-item:hover {
+  background: rgba(59, 130, 246, 0.16);
+}
+
+.city-suggest-country {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 /* =========================
    COLOR
 ========================= */
@@ -478,6 +523,63 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.publish-verify-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.publish-verify-overlay p {
+  margin: 22px 0 0;
+  color: #4b5563;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.verify-spinner {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+
+.verify-spinner span {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 8px;
+  height: 22px;
+  margin-left: -4px;
+  border-radius: 4px;
+  background: #111827;
+  transform-origin: 50% 36px;
+  animation: verify-fade 1s linear infinite;
+}
+
+.verify-spinner span:nth-child(1) { animation-delay: 0s; }
+.verify-spinner span:nth-child(2) { animation-delay: 0.083s; }
+.verify-spinner span:nth-child(3) { animation-delay: 0.166s; }
+.verify-spinner span:nth-child(4) { animation-delay: 0.25s; }
+.verify-spinner span:nth-child(5) { animation-delay: 0.333s; }
+.verify-spinner span:nth-child(6) { animation-delay: 0.416s; }
+.verify-spinner span:nth-child(7) { animation-delay: 0.5s; }
+.verify-spinner span:nth-child(8) { animation-delay: 0.583s; }
+.verify-spinner span:nth-child(9) { animation-delay: 0.666s; }
+.verify-spinner span:nth-child(10) { animation-delay: 0.75s; }
+.verify-spinner span:nth-child(11) { animation-delay: 0.833s; }
+.verify-spinner span:nth-child(12) { animation-delay: 0.916s; }
+
+@keyframes verify-fade {
+  0% { opacity: 1; }
+  100% { opacity: 0.15; }
 }
 
 /* =========================

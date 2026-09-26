@@ -1,10 +1,19 @@
 
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useLanguage } from "../i18n/LanguageContext";
 import { API_BASE } from "../config/api";
+import {
+  filterByListingType,
+  listingTypeIdFromCatalog,
+} from "../utils/listingType";
 import "./VehicleSearch.css";
 
-export const VehicleSearch = ({ onSearchResults }) => {
+export const VehicleSearch = ({
+  onSearchResults,
+  listingFilter,
+  activeLink = "home",
+}) => {
   const { t } = useLanguage();
   // =====================================================
   // DATABASE DATA
@@ -21,6 +30,7 @@ export const VehicleSearch = ({ onSearchResults }) => {
   const [colors, setColors] = useState([]);
   const [countries, setCountries] = useState([]);
   const [cities, setCities] = useState([]);
+  const [lockedListingTypeId, setLockedListingTypeId] = useState("");
 
   // =====================================================
   // SEARCH
@@ -57,6 +67,27 @@ export const VehicleSearch = ({ onSearchResults }) => {
   // =====================================================
 
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  useEffect(() => {
+    if (!listingFilter) {
+      setLockedListingTypeId("");
+      return;
+    }
+    let cancelled = false;
+    fetch(`${API_BASE}/ListingTypes`)
+      .then((response) => (response.ok ? response.json() : []))
+      .then((rows) => {
+        if (cancelled) return;
+        const id = listingTypeIdFromCatalog(rows, listingFilter);
+        setLockedListingTypeId(id ? String(id) : "");
+      })
+      .catch(() => {
+        if (!cancelled) setLockedListingTypeId("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [listingFilter]);
 
   // =====================================================
   // LOAD DATABASE DATA
@@ -246,6 +277,12 @@ export const VehicleSearch = ({ onSearchResults }) => {
         "Search",
         search.trim()
       );
+    }
+
+    params.append("pageSize", "100");
+
+    if (lockedListingTypeId) {
+      params.append("ListingTypeId", lockedListingTypeId);
     }
 
     // ===================================================
@@ -590,6 +627,8 @@ export const VehicleSearch = ({ onSearchResults }) => {
         vehicles = result.results;
       }
 
+      vehicles = filterByListingType(vehicles, listingFilter);
+
       // =================================================
       // SEND RESULTS TO HOME
       // =================================================
@@ -693,26 +732,38 @@ export const VehicleSearch = ({ onSearchResults }) => {
 
       <div className="vehicle-search-links">
 
-        <a
-          href="/"
-          className="vehicle-search-link active"
+        <Link
+          to="/"
+          className={
+            activeLink === "home"
+              ? "vehicle-search-link active"
+              : "vehicle-search-link"
+          }
         >
           {t("navHome")}
-        </a>
+        </Link>
 
-        <a
-          href="/vehicles-for-sale"
-          className="vehicle-search-link"
+        <Link
+          to="/vehicles-for-sale"
+          className={
+            activeLink === "sale"
+              ? "vehicle-search-link active"
+              : "vehicle-search-link"
+          }
         >
           {t("buy")}
-        </a>
+        </Link>
 
-        <a
-          href="/vehicles-for-rent"
-          className="vehicle-search-link"
+        <Link
+          to="/vehicles-for-rent"
+          className={
+            activeLink === "rent"
+              ? "vehicle-search-link active"
+              : "vehicle-search-link"
+          }
         >
           {t("rent")}
-        </a>
+        </Link>
 
       </div>
 

@@ -24,6 +24,8 @@ export const AddVehicle = () => {
   const [driveTypes, setDriveTypes] = useState([]);
   const [colors, setColors] = useState([]);
   const [cities, setCities] = useState([]);
+  const [cityQuery, setCityQuery] = useState("");
+  const [cityOpen, setCityOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     listingTypeId: "",
@@ -58,6 +60,7 @@ export const AddVehicle = () => {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
 
   const [error, setError] = useState("");
@@ -338,6 +341,44 @@ export const AddVehicle = () => {
       Number(color.id) === Number(formData.colorId)
   );
 
+  function cityLabel(city) {
+    if (!city) return "";
+    return city.countryName ? `${city.name} - ${city.countryName}` : city.name;
+  }
+
+  const citySuggestions = (() => {
+    const needle = normalizePlace(cityQuery);
+    if (needle.length < 1) return [];
+    return cities
+      .filter((city) =>
+        normalizePlace(`${city.name} ${city.countryName || ""}`).includes(
+          needle
+        )
+      )
+      .slice(0, 15);
+  })();
+
+  function handleCityQueryChange(e) {
+    const value = e.target.value;
+    setCityQuery(value);
+    setCityOpen(true);
+    setFormData((previous) => {
+      const current = cities.find(
+        (city) => Number(city.id) === Number(previous.cityId)
+      );
+      if (current && cityLabel(current) === value) return previous;
+      return { ...previous, cityId: "" };
+    });
+    setError("");
+  }
+
+  function pickCity(city) {
+    setFormData((previous) => ({ ...previous, cityId: String(city.id) }));
+    setCityQuery(cityLabel(city));
+    setCityOpen(false);
+    setError("");
+  }
+
   function normalizePlace(value) {
     return String(value || "")
       .toLowerCase()
@@ -358,10 +399,14 @@ export const AddVehicle = () => {
           );
           if (!response.ok) return;
           const data = await response.json();
-          const cityId = data.city?.id;
+          const located = data.city;
+          const cityId = located?.id;
           if (!cityId) return;
           setFormData((previous) =>
             previous.cityId ? previous : { ...previous, cityId: String(cityId) }
+          );
+          setCityQuery((previous) =>
+            previous ? previous : cityLabel(located)
           );
         } catch {
           /* user can pick the city */
@@ -587,6 +632,7 @@ export const AddVehicle = () => {
 
     try {
       setSaving(true);
+      setVerifying(true);
 
       const vehicleData = {
         listingTypeId: Number(formData.listingTypeId),
@@ -719,6 +765,7 @@ export const AddVehicle = () => {
       });
 
       setImages([]);
+      setCityQuery("");
 
       setTimeout(() => {
         navigate("/my-vehicles");
@@ -730,6 +777,7 @@ export const AddVehicle = () => {
         err.message ||
           "Ndodhi një gabim gjatë krijimit të veturës."
       );
+      setVerifying(false);
     } finally {
       setSaving(false);
     }
@@ -748,6 +796,16 @@ export const AddVehicle = () => {
 
   return (
     <div className="add-vehicle-page">
+      {verifying ? (
+        <div className="publish-verify-overlay" role="status" aria-live="polite">
+          <div className="verify-spinner" aria-hidden="true">
+            {Array.from({ length: 12 }, (_, i) => (
+              <span key={i} style={{ transform: `rotate(${i * 30}deg)` }} />
+            ))}
+          </div>
+          <p>{t("verifying")}</p>
+        </div>
+      ) : null}
 
       <div className="add-vehicle-heading">
         <div>
@@ -889,31 +947,41 @@ export const AddVehicle = () => {
             </select>
           </div>
 
-          <div className="form-field">
-            <label htmlFor="cityId">City</label>
-
-            <select
-              id="cityId"
-              name="cityId"
-              value={formData.cityId}
-              onChange={handleChange}
-            >
-              <option value="">
-                Select City
-              </option>
-
-              {cities.map((city) => (
-                <option
-                  key={city.id}
-                  value={city.id}
-                >
-                  {city.name}
-                  {city.countryName
-                    ? ` - ${city.countryName}`
-                    : ""}
-                </option>
-              ))}
-            </select>
+          <div className="form-field city-autocomplete">
+            <label htmlFor="citySearch">City</label>
+            <input
+              id="citySearch"
+              type="text"
+              autoComplete="off"
+              placeholder="Type a city, e.g. Str"
+              value={cityQuery}
+              onChange={handleCityQueryChange}
+              onFocus={() => setCityOpen(true)}
+              onBlur={() => {
+                window.setTimeout(() => setCityOpen(false), 160);
+              }}
+            />
+            {cityOpen && citySuggestions.length > 0 ? (
+              <ul className="city-suggest-list" role="listbox">
+                {citySuggestions.map((city) => (
+                  <li key={city.id}>
+                    <button
+                      type="button"
+                      className="city-suggest-item"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => pickCity(city)}
+                    >
+                      <span>{city.name}</span>
+                      {city.countryName ? (
+                        <span className="city-suggest-country">
+                          {city.countryName}
+                        </span>
+                      ) : null}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
 
         </div>

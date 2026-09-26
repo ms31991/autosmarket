@@ -560,7 +560,7 @@
 
 @media (max-width: 600px) {
   .auth-page {
-    padding: 52px 26px 90px;
+    padding: 10px 26px 90px;
     transform: none;
     background:
       radial-gradient(
@@ -577,7 +577,7 @@
     margin-left: auto;
     margin-right: auto;
     padding: 0;
-    transform: translateX(-10px);
+    transform: translateX(-22px);
   }
 
   .auth-page .auth-card .cl-card {

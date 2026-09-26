@@ -1,11 +1,14 @@
 .help-page {
   background: #0a0f19;
   color: #f8fafc;
+  padding-top: 40px;
+  padding-bottom: 32px;
+  box-sizing: border-box;
 }
 
 .help-inner {
   width: min(760px, calc(100% - 40px));
-  margin: 40px auto 72px;
+  margin: 0 auto;
 }
 
 .help-inner.help-wide {
@@ -205,4 +208,17 @@
   .hiw-grid {
     grid-template-columns: 1fr;
   }
+}
+
+#main-content:has(.help-page) {
+  background: #0a0f19;
+  overflow: auto;
+}
+
+.app-root:has(.help-page) {
+  background: #0a0f19;
+}
+
+.app-root:has(.help-page) .navbar {
+  box-shadow: none;
 }

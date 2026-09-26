@@ -490,7 +490,10 @@ export const Home = () => {
 
       {!searchResults ? (
         <>
-          <VehicleSearch onSearchResults={handleSearchResults} />
+          <VehicleSearch
+            onSearchResults={handleSearchResults}
+            activeLink="home"
+          />
 
           <section className="advertisements">
             <div

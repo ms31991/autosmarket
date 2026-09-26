@@ -158,6 +158,11 @@ export function vehiclesRouter() {
       q.search
     );
     add("brandId", "v.BrandId = @brandId", q.brandId ? Number(q.brandId) : null);
+    add(
+      "listingTypeId",
+      "v.ListingTypeId = @listingTypeId",
+      q.listingTypeId ? Number(q.listingTypeId) : q.ListingTypeId ? Number(q.ListingTypeId) : null
+    );
     add("modelId", "v.ModelId = @modelId", q.modelId ? Number(q.modelId) : null);
     add("categoryId", "v.CategoryId = @categoryId", q.categoryId ? Number(q.categoryId) : null);
     add("cityId", "v.CityId = @cityId", q.cityId ? Number(q.cityId) : null);

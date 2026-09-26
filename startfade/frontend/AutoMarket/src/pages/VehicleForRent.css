@@ -64,6 +64,16 @@
   font-size: 14px;
 }
 
+.listing-page-search {
+  max-width: 1400px;
+  margin: 0 auto 30px;
+}
+
+.listing-page-search .vehicle-search,
+.listing-page-search .vehicle-search-links {
+  width: 100%;
+}
+
 
 /* =========================================
    FILTER BAR

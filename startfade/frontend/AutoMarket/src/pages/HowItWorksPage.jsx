@@ -41,7 +41,7 @@ export const HowItWorksPage = () => {
   ];
 
   return (
-    <div className="help-page">
+    <div className="help-page how-it-works-page">
       <div className="help-inner help-wide">
         <p className="help-kicker">{t("hiwKicker")}</p>
         <h1>{t("howItWorks")}</h1>
