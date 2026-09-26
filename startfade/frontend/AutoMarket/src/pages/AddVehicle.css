@@ -396,21 +396,25 @@
   background: #0a0f19;
 }
 
-.city-suggest-item {
+.add-vehicle-page .city-suggest-item {
   display: block;
   width: 100%;
   padding: 10px 12px;
   border: 0;
-  background: transparent;
+  border-radius: 0;
+  background: #0a0f19;
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
   font-size: 13px;
+  font-weight: 400;
   text-align: left;
   cursor: pointer;
 }
 
-.city-suggest-item:hover {
-  background: #141c2d;
+.add-vehicle-page .city-suggest-item:hover {
+  background: #3a4254;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
 }
 
 /* =========================
