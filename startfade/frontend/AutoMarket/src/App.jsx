@@ -67,11 +67,34 @@ import { useLanguage } from './i18n/LanguageContext'
 import { SeoHead, organizationJsonLd } from './seo/SeoHead'
 import { getRouteSeo } from './seo/routeSeo'
 import { useSiteSettings } from './context/SiteSettingsContext'
+import { useCookieConsent } from './consent/CookieConsentContext'
+import { analyticsReady, GA_MEASUREMENT_ID } from './config/site'
+import { useEffect, useRef } from 'react'
 
 function App() {
   const location = useLocation()
   const { t } = useLanguage()
   const site = useSiteSettings()
+  const { adsAllowed } = useCookieConsent()
+  const lastAnalyticsPath = useRef("")
+
+  useEffect(() => {
+    if (!adsAllowed || !analyticsReady()) return
+    if (typeof window.gtag !== "function") return
+    const path = `${location.pathname}${location.search}`
+    if (lastAnalyticsPath.current === path) return
+    if (!lastAnalyticsPath.current) {
+      lastAnalyticsPath.current = path
+      return
+    }
+    lastAnalyticsPath.current = path
+    window.gtag("event", "page_view", {
+      page_title: document.title,
+      page_location: window.location.href,
+      page_path: path,
+      send_to: GA_MEASUREMENT_ID,
+    })
+  }, [adsAllowed, location.pathname, location.search])
 
   const isAdminPage =
     location.pathname.startsWith('/admin')

@@ -8,7 +8,7 @@ import {
 } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../i18n/LanguageContext";
-import { adsenseReady, ADSENSE_CLIENT } from "../config/site";
+import { adsenseReady, ADSENSE_CLIENT, analyticsReady, GA_MEASUREMENT_ID } from "../config/site";
 import "./CookieConsent.css";
 
 const STORAGE_KEY = "autotrade_consent_v1";
@@ -30,8 +30,26 @@ function applyConsent(adsGranted) {
     ad_storage: adsGranted ? "granted" : "denied",
     ad_user_data: adsGranted ? "granted" : "denied",
     ad_personalization: adsGranted ? "granted" : "denied",
-    analytics_storage: "denied",
+    analytics_storage: adsGranted ? "granted" : "denied",
   });
+}
+
+function loadGaScript() {
+  if (!analyticsReady()) return;
+  if (document.getElementById("ga-gtag")) return;
+  defaultGtag();
+  const script = document.createElement("script");
+  script.id = "ga-gtag";
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+  script.onload = () => {
+    window.gtag("js", new Date());
+    window.gtag("config", GA_MEASUREMENT_ID, {
+      anonymize_ip: true,
+      send_page_view: true,
+    });
+  };
+  document.head.appendChild(script);
 }
 
 function loadAdSenseScript() {
@@ -67,7 +85,10 @@ export function CookieConsentProvider({ children }) {
     if (stored) {
       setChoice(stored);
       applyConsent(stored.ads);
-      if (stored.ads) loadAdSenseScript();
+      if (stored.ads) {
+        loadAdSenseScript();
+        loadGaScript();
+      }
       return;
     }
     setBannerOpen(true);
@@ -80,7 +101,10 @@ export function CookieConsentProvider({ children }) {
     setChoice(next);
     setBannerOpen(false);
     applyConsent(next.ads);
-    if (next.ads) loadAdSenseScript();
+    if (next.ads) {
+      loadAdSenseScript();
+      loadGaScript();
+    }
   }, []);
 
   const openSettings = useCallback(() => {
