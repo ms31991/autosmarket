@@ -11,6 +11,8 @@ import { FiArrowRight, FiPlus } from "react-icons/fi";
 import { useAuth } from "@clerk/clerk-react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { CompanyBannerSlot } from "../components/CompanyBannerSlot";
+import { AdSenseBanner } from "../components/AdSenseBanner";
+import { ADSENSE_SLOT_HOME } from "../config/site";
 import { API_BASE } from "../config/api";
 
 // =====================================================
@@ -231,7 +233,25 @@ export const Home = () => {
   useAutoRotate(bmwVehicles.length, setBmwVehicles, setIsBmwSliding);
   useAutoRotate(mercedesVehicles.length, setMercedesVehicles, setIsMercedesSliding);
   useAutoRotate(golfVehicles.length, setGolfVehicles, setIsGolfSliding);
-  useAutoRotate(adSlots.length, setAdSlots, setIsAdsSliding);
+
+  useEffect(() => {
+    if (adSlots.length < 2) return undefined;
+
+    const interval = setInterval(() => {
+      const mobile = window.matchMedia("(max-width: 768px)").matches;
+      const slideMs = mobile ? 400 : 700;
+      setIsAdsSliding(true);
+      window.setTimeout(() => {
+        setAdSlots((prev) => {
+          if (prev.length < 2) return prev;
+          return [...prev.slice(1), prev[0]];
+        });
+        setIsAdsSliding(false);
+      }, slideMs);
+    }, window.matchMedia("(max-width: 768px)").matches ? 6000 : 12000);
+
+    return () => clearInterval(interval);
+  }, [adSlots.length]);
 
   // =====================================================
   // SEARCH
@@ -532,6 +552,14 @@ export const Home = () => {
               )}
             </div>
 
+            <button
+              type="button"
+              className="ads-promote-mobile"
+              onClick={() => setShowAdOffers(true)}
+            >
+              {t("adPromoteHere")}
+            </button>
+
             <AdvertisementOffers
               open={showAdOffers}
               onClose={() => setShowAdOffers(false)}
@@ -585,6 +613,8 @@ export const Home = () => {
               </div>
             </div>
           </section>
+
+          <AdSenseBanner slot={ADSENSE_SLOT_HOME} className="adsense-banner--home" />
 
           {/* BMW */}
           <VehicleSection

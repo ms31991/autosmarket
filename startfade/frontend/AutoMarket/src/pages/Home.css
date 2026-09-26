@@ -412,6 +412,10 @@
   height: 100%;
 }
 
+.ads-promote-mobile {
+  display: none;
+}
+
 .advertisement-card.compact {
   padding: 18px 14px 16px;
   gap: 8px;
@@ -573,7 +577,7 @@
   }
 
   .ads-track.ads-sliding {
-    animation: adsCarouselSlideMobile 0.7s ease forwards;
+    animation: adsCarouselSlideMobile 0.4s ease forwards;
   }
 
   @keyframes adsCarouselSlideMobile {
@@ -590,21 +594,29 @@
     display: none;
   }
 
+  .ads-promote-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 48px;
+    margin-top: 12px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 14px;
+    background: #3b82f6;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
   .advertisements-row.ads-full {
     flex-direction: column;
   }
 
   .advertisements-row.ads-full .ads-promote-aside {
-    display: block;
-    flex: none;
-    width: 100%;
-    height: auto;
-  }
-
-  .advertisements-row.ads-full .ads-promote-aside .advertisement-card {
-    min-height: 140px;
-    max-height: none;
-    height: auto;
+    display: none;
   }
 
   .home-seo-section {
