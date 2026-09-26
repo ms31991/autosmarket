@@ -25,6 +25,10 @@ export const EditVehicle = () => {
   const [colors, setColors] = useState([])
   const [cities, setCities] = useState([])
   const [listingTypes, setListingTypes] = useState([])
+  const [cityQuery, setCityQuery] = useState('')
+  const [cityOpen, setCityOpen] = useState(false)
+  const [brandQuery, setBrandQuery] = useState('')
+  const [brandOpen, setBrandOpen] = useState(false)
   const [modelQuery, setModelQuery] = useState('')
   const [modelOpen, setModelOpen] = useState(false)
 
@@ -89,12 +93,29 @@ export const EditVehicle = () => {
   }, [id])
 
   useEffect(() => {
-    if (!formData.modelId) return
-    const model = models.find(
-      (item) => Number(item.id) === Number(formData.modelId)
-    )
-    if (model) setModelQuery(model.name)
-  }, [models, formData.modelId])
+    if (formData.modelId) {
+      const model = models.find(
+        (item) => Number(item.id) === Number(formData.modelId)
+      )
+      if (model) setModelQuery(model.name)
+    }
+    if (formData.brandId) {
+      const brand = brands.find(
+        (item) => Number(item.id) === Number(formData.brandId)
+      )
+      if (brand) setBrandQuery(brand.name)
+    }
+    if (formData.cityId) {
+      const city = cities.find(
+        (item) => Number(item.id) === Number(formData.cityId)
+      )
+      if (city) {
+        setCityQuery(
+          city.countryName ? `${city.name} - ${city.countryName}` : city.name
+        )
+      }
+    }
+  }, [models, brands, cities, formData.modelId, formData.brandId, formData.cityId])
 
   async function checkAuthAndLoad() {
     const token = await getClerkToken()
@@ -335,17 +356,33 @@ export const EditVehicle = () => {
   // BRAND CHANGE
   // =====================================================
 
-  function handleBrandChange(e) {
-    const brandId = e.target.value
-
-    setFormData((previous) => ({
-      ...previous,
-      brandId,
-      modelId: '',
-    }))
+  function handleBrandQueryChange(e) {
+    const value = e.target.value
+    setBrandQuery(value)
+    setBrandOpen(true)
+    setFormData((previous) => {
+      const current = brands.find(
+        (brand) => Number(brand.id) === Number(previous.brandId)
+      )
+      if (current && current.name === value) return previous
+      return { ...previous, brandId: '', modelId: '' }
+    })
     setModelQuery('')
     setModelOpen(false)
+    setError('')
+    setSuccess('')
+  }
 
+  function pickBrand(brand) {
+    setFormData((previous) => ({
+      ...previous,
+      brandId: String(brand.id),
+      modelId: '',
+    }))
+    setBrandQuery(brand.name)
+    setBrandOpen(false)
+    setModelQuery('')
+    setModelOpen(false)
     setError('')
     setSuccess('')
   }
@@ -368,6 +405,52 @@ export const EditVehicle = () => {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '')
+  }
+
+  function cityLabel(city) {
+    if (!city) return ''
+    return city.countryName ? `${city.name} - ${city.countryName}` : city.name
+  }
+
+  const brandSuggestions = (() => {
+    const needle = normalizePlace(brandQuery)
+    if (needle.length < 1) return []
+    return brands
+      .filter((brand) => normalizePlace(brand.name).includes(needle))
+      .slice(0, 15)
+  })()
+
+  const citySuggestions = (() => {
+    const needle = normalizePlace(cityQuery)
+    if (needle.length < 1) return []
+    return cities
+      .filter((city) =>
+        normalizePlace(`${city.name} ${city.countryName || ''}`).includes(
+          needle
+        )
+      )
+      .slice(0, 15)
+  })()
+
+  function handleCityQueryChange(e) {
+    const value = e.target.value
+    setCityQuery(value)
+    setCityOpen(true)
+    setFormData((previous) => {
+      const current = cities.find(
+        (city) => Number(city.id) === Number(previous.cityId)
+      )
+      if (current && cityLabel(current) === value) return previous
+      return { ...previous, cityId: '' }
+    })
+    setError('')
+  }
+
+  function pickCity(city) {
+    setFormData((previous) => ({ ...previous, cityId: String(city.id) }))
+    setCityQuery(cityLabel(city))
+    setCityOpen(false)
+    setError('')
   }
 
   const modelSuggestions = (() => {
@@ -1367,34 +1450,42 @@ export const EditVehicle = () => {
             BRAND
         ================================================= */}
 
-        <div>
-          <label>
+        <div className="city-autocomplete">
+          <label htmlFor="brandSearch">
             Brand
           </label>
 
           <br />
 
-          <select
-            name="brandId"
-            value={formData.brandId}
-            onChange={handleBrandChange}
-          >
-            <option value="">
-              Select Brand
-            </option>
-
-            {brands.map(
-              (brand) => (
-                <option
-                  key={brand.id}
-                  value={brand.id}
-                >
-                  {brand.name}
-                </option>
-              )
-            )}
-
-          </select>
+          <input
+            id="brandSearch"
+            type="text"
+            autoComplete="off"
+            placeholder="Shkruaj markën"
+            value={brandQuery}
+            onChange={handleBrandQueryChange}
+            onFocus={() => setBrandOpen(true)}
+            onBlur={() => {
+              window.setTimeout(() => setBrandOpen(false), 160)
+            }}
+            disabled={saving}
+          />
+          {brandOpen && brandSuggestions.length > 0 ? (
+            <ul className="city-suggest-list" role="listbox">
+              {brandSuggestions.map((brand) => (
+                <li key={brand.id}>
+                  <button
+                    type="button"
+                    className="city-suggest-item"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => pickBrand(brand)}
+                  >
+                    {brand.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
 
         <br />
@@ -1752,40 +1843,43 @@ export const EditVehicle = () => {
             CITY
         ================================================= */}
 
-        <div>
-          <label>
+        <div className="city-autocomplete">
+          <label htmlFor="citySearch">
             City
           </label>
 
           <br />
 
-          <select
-            name="cityId"
-            value={
-              formData.cityId
-            }
-            onChange={handleChange}
-          >
-            <option value="">
-              Select City
-            </option>
-
-            {cities.map(
-              (city) => (
-                <option
-                  key={city.id}
-                  value={city.id}
-                >
-                  {city.name}
-
-                  {city.countryName
-                    ? ` - ${city.countryName}`
-                    : ''}
-                </option>
-              )
-            )}
-
-          </select>
+          <input
+            id="citySearch"
+            type="text"
+            autoComplete="off"
+            placeholder="Shkruaj qytetin"
+            value={cityQuery}
+            onChange={handleCityQueryChange}
+            onFocus={() => setCityOpen(true)}
+            onBlur={() => {
+              window.setTimeout(() => setCityOpen(false), 160)
+            }}
+            disabled={saving}
+          />
+          {cityOpen && citySuggestions.length > 0 ? (
+            <ul className="city-suggest-list" role="listbox">
+              {citySuggestions.map((city) => (
+                <li key={city.id}>
+                  <button
+                    type="button"
+                    className="city-suggest-item"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => pickCity(city)}
+                  >
+                    {city.name}
+                    {city.countryName ? ` - ${city.countryName}` : ''}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
 
         <hr />

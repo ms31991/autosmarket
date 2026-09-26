@@ -28,6 +28,8 @@ export const AddVehicle = () => {
   const [cities, setCities] = useState([]);
   const [cityQuery, setCityQuery] = useState("");
   const [cityOpen, setCityOpen] = useState(false);
+  const [brandQuery, setBrandQuery] = useState("");
+  const [brandOpen, setBrandOpen] = useState(false);
   const [modelQuery, setModelQuery] = useState("");
   const [modelOpen, setModelOpen] = useState(false);
 
@@ -137,12 +139,25 @@ export const AddVehicle = () => {
         const slug = String(item.slug || "").toLowerCase();
         return slug === "car" || name === "car";
       });
-      if (carCategory) {
-        setFormData((previous) =>
-          previous.categoryId
-            ? previous
-            : { ...previous, categoryId: String(carCategory.id) }
-        );
+      const sedan = data[4].find((item) => {
+        const name = String(item.name || "").toLowerCase();
+        const slug = String(item.slug || "").toLowerCase();
+        return slug === "sedan" || name === "sedan" || name === "limousine";
+      });
+      if (carCategory || sedan) {
+        setFormData((previous) => ({
+          ...previous,
+          categoryId: previous.categoryId
+            ? previous.categoryId
+            : carCategory
+              ? String(carCategory.id)
+              : previous.categoryId,
+          bodyTypeId: previous.bodyTypeId
+            ? previous.bodyTypeId
+            : sedan
+              ? String(sedan.id)
+              : previous.bodyTypeId,
+        }));
       }
 
       fillCityFromLocation();
@@ -166,20 +181,39 @@ export const AddVehicle = () => {
     setSuccess("");
   }
 
-  function handleBrandChange(e) {
-    const brandId = e.target.value;
-
-    setFormData((previous) => ({
-      ...previous,
-      brandId,
-      modelId: "",
-    }));
+  function handleBrandQueryChange(e) {
+    const value = e.target.value;
+    setBrandQuery(value);
+    setBrandOpen(true);
+    setFormData((previous) => {
+      const current = brands.find(
+        (brand) => Number(brand.id) === Number(previous.brandId)
+      );
+      if (current && current.name === value) return previous;
+      return { ...previous, brandId: "", modelId: "" };
+    });
     setModelQuery("");
     setModelOpen(false);
     setCatalogVariants([]);
     setCatalogVariantId("");
     setCatalogStatus("");
+    setError("");
+    setSuccess("");
+  }
 
+  function pickBrand(brand) {
+    setFormData((previous) => ({
+      ...previous,
+      brandId: String(brand.id),
+      modelId: "",
+    }));
+    setBrandQuery(brand.name);
+    setBrandOpen(false);
+    setModelQuery("");
+    setModelOpen(false);
+    setCatalogVariants([]);
+    setCatalogVariantId("");
+    setCatalogStatus("");
     setError("");
     setSuccess("");
   }
@@ -368,6 +402,14 @@ export const AddVehicle = () => {
     if (!city) return "";
     return city.countryName ? `${city.name} - ${city.countryName}` : city.name;
   }
+
+  const brandSuggestions = (() => {
+    const needle = normalizePlace(brandQuery);
+    if (needle.length < 1) return [];
+    return brands
+      .filter((brand) => normalizePlace(brand.name).includes(needle))
+      .slice(0, 15);
+  })();
 
   const modelSuggestions = (() => {
     if (!formData.brandId) return [];
@@ -808,6 +850,7 @@ export const AddVehicle = () => {
 
       setImages([]);
       setCityQuery("");
+      setBrandQuery("");
       setModelQuery("");
 
       setTimeout(() => {
@@ -996,7 +1039,7 @@ export const AddVehicle = () => {
               id="citySearch"
               type="text"
               autoComplete="off"
-              placeholder="Type a city, e.g. Str"
+              placeholder={t("typeCity")}
               value={cityQuery}
               onChange={handleCityQueryChange}
               onFocus={() => setCityOpen(true)}
@@ -1036,28 +1079,37 @@ export const AddVehicle = () => {
 
         <div className="form-grid">
 
-          <div className="form-field">
-            <label htmlFor="brandId">Brand</label>
-
-            <select
-              id="brandId"
-              name="brandId"
-              value={formData.brandId}
-              onChange={handleBrandChange}
-            >
-              <option value="">
-                Select Brand
-              </option>
-
-              {brands.map((brand) => (
-                <option
-                  key={brand.id}
-                  value={brand.id}
-                >
-                  {brand.name}
-                </option>
-              ))}
-            </select>
+          <div className="form-field city-autocomplete">
+            <label htmlFor="brandSearch">{t("brand")}</label>
+            <input
+              id="brandSearch"
+              type="text"
+              autoComplete="off"
+              placeholder={t("typeBrand")}
+              value={brandQuery}
+              onChange={handleBrandQueryChange}
+              onFocus={() => setBrandOpen(true)}
+              onBlur={() => {
+                window.setTimeout(() => setBrandOpen(false), 160);
+              }}
+              disabled={saving}
+            />
+            {brandOpen && brandSuggestions.length > 0 ? (
+              <ul className="city-suggest-list" role="listbox">
+                {brandSuggestions.map((brand) => (
+                  <li key={brand.id}>
+                    <button
+                      type="button"
+                      className="city-suggest-item"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => pickBrand(brand)}
+                    >
+                      {brand.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
 
           <div className="form-field city-autocomplete">
