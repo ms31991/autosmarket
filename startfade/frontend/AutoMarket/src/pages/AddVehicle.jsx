@@ -10,6 +10,8 @@ import { useLanguage } from "../i18n/LanguageContext";
 import { API_BASE } from "../config/api";
 import { compressImageFile } from "../utils/compressImage";
 
+const MAX_VEHICLE_PHOTOS = 10;
+
 export const AddVehicle = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -513,7 +515,17 @@ export const AddVehicle = () => {
       setError(`Disa foto nuk u pranuan: ${invalidFiles.join(", ")}`);
     }
 
-    setImages((previous) => [...previous, ...validFiles]);
+    setImages((previous) => {
+      const room = MAX_VEHICLE_PHOTOS - previous.length;
+      if (room <= 0) {
+        setError(t("photosMax"));
+        return previous;
+      }
+      if (validFiles.length > room) {
+        setError(t("photosMax"));
+      }
+      return [...previous, ...validFiles.slice(0, room)];
+    });
     e.target.value = "";
   }
 
@@ -849,7 +861,7 @@ export const AddVehicle = () => {
               accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
               multiple
               onChange={handleImageChange}
-              disabled={saving}
+              disabled={saving || images.length >= MAX_VEHICLE_PHOTOS}
             />
             <span className="photo-add-circle" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
@@ -857,7 +869,7 @@ export const AddVehicle = () => {
               </svg>
             </span>
             <span className="photo-add-count">
-              {images.length}/2
+              {images.length}/{MAX_VEHICLE_PHOTOS}
             </span>
           </label>
 

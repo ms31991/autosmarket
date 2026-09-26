@@ -67,6 +67,13 @@ export function vehicleImagesRouter() {
     const vehicleId = Number(req.params.vehicleId);
     const access = await assertCanEditVehicle(req, vehicleId);
     if (access.status) return res.status(access.status).json({ message: access.message });
+    const countRow = await queryOne(
+      `SELECT COUNT(*) AS n FROM VehicleImages WHERE VehicleId = @vehicleId`,
+      { vehicleId }
+    );
+    if (Number(countRow?.n ?? countRow?.N ?? 0) >= 10) {
+      return res.status(400).json({ message: "Maksimumi është 10 foto për veturë." });
+    }
     const maxRow = await queryOne(
       `SELECT MAX(SortOrder) AS maxOrder FROM VehicleImages WHERE VehicleId = @vehicleId`,
       { vehicleId }

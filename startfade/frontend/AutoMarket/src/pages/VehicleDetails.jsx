@@ -34,6 +34,7 @@ import { SITE_LOGO, ADSENSE_SLOT_DETAIL } from "../config/site";
 import { apiFetch } from "../services/api";
 import { useLanguage } from "../i18n/LanguageContext";
 import { AdSenseBanner } from "../components/AdSenseBanner";
+import { PublisherChip } from "../components/PublisherChip";
 import "./VehicleDetails.css";
 
 export const VehicleDetails = () => {

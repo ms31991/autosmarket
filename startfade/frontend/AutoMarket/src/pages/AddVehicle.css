@@ -538,34 +538,37 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: rgba(15, 23, 42, 0.12);
+  pointer-events: all;
 }
 
 .publish-verify-overlay p {
-  margin: 22px 0 0;
-  color: #4b5563;
-  font-size: 22px;
+  margin: 8px 0 0;
+  color: #111827;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
 }
 
 .verify-spinner {
   position: relative;
-  width: 72px;
-  height: 72px;
+  width: 22px;
+  height: 22px;
+  background: transparent;
 }
 
 .verify-spinner span {
   position: absolute;
   top: 0;
   left: 50%;
-  width: 8px;
-  height: 22px;
-  margin-left: -4px;
-  border-radius: 4px;
+  width: 2px;
+  height: 6px;
+  margin-left: -1px;
+  border-radius: 2px;
   background: #111827;
-  transform-origin: 50% 36px;
+  transform-origin: 50% 11px;
   animation: verify-fade 1s linear infinite;
 }
 

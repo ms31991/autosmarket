@@ -388,6 +388,13 @@ export const EditVehicle = () => {
       return
     }
 
+    if (images.length >= 10) {
+      setError('Maksimumi është 10 foto.')
+      setSelectedFile(null)
+      e.target.value = ''
+      return
+    }
+
     const allowedTypes = [
       'image/jpeg',
       'image/png',
@@ -417,6 +424,11 @@ export const EditVehicle = () => {
   async function handleUploadImage() {
     if (!selectedFile) {
       setError('Zgjidh një foto.')
+      return
+    }
+
+    if (images.length >= 10) {
+      setError('Maksimumi është 10 foto.')
       return
     }
 
@@ -1218,7 +1230,8 @@ export const EditVehicle = () => {
             onChange={handleFileChange}
             disabled={
               uploadingImage ||
-              saving
+              saving ||
+              images.length >= 10
             }
           />
 
@@ -1228,7 +1241,8 @@ export const EditVehicle = () => {
             disabled={
               !selectedFile ||
               uploadingImage ||
-              saving
+              saving ||
+              images.length >= 10
             }
             style={{
               marginLeft: '10px',
@@ -1247,7 +1261,7 @@ export const EditVehicle = () => {
           )}
 
           <small>
-            Max 5 MB. JPG, JPEG, PNG, WEBP.
+            Max 5 MB. JPG, JPEG, PNG, WEBP. Deri në 10 foto.
           </small>
 
         </div>
