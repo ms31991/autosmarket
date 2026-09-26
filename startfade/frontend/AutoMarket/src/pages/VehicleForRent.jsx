@@ -2,10 +2,12 @@ import "./VehicleForRent.css";
 import { useEffect, useState } from "react";
 import { SearchVehicleItem } from "../components/SearchVehicleItem";
 import { ListingAdsSidebar } from "../components/ListingAdsSidebar";
+import { AdSenseBanner } from "../components/AdSenseBanner";
 import { VehicleSearch } from "../components/VehicleSearch";
 import { getClerkToken } from "../services/clerkToken";
 import { useRankedSearchVehicles } from "../hooks/useRankedSearchVehicles";
 import { API_BASE } from "../config/api";
+import { ADSENSE_SLOT_HOME } from "../config/site";
 import { isRentListing } from "../utils/listingType";
 
 export const VehicleForRent = () => {
@@ -75,6 +77,8 @@ export const VehicleForRent = () => {
           activeLink="rent"
         />
       </div>
+
+      <AdSenseBanner slot={ADSENSE_SLOT_HOME} className="adsense-banner--listing" />
 
       {error ? (
         <div className="vehicle-page-message">

@@ -100,3 +100,30 @@
 .wp-view-site:hover {
   color: #ffffff;
 }
+
+@media (max-width: 900px) {
+  .wp-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(280px, 88vw);
+    min-height: 100vh;
+    z-index: 40;
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+  }
+
+  .wp-sidebar.collapsed,
+  .wp-sidebar.mobile-open {
+    width: min(280px, 88vw);
+  }
+
+  .wp-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .wp-collapse {
+    display: none;
+  }
+}

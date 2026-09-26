@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { AdSenseSlot } from "./AdSenseSlot";
 import { useLanguage } from "../i18n/LanguageContext";
+import { ADSENSE_SLOT_SIDEBAR } from "../config/site";
 import "./ListingAdsSidebar.css";
 
 export const ListingAdsSidebar = () => {
@@ -11,7 +12,7 @@ export const ListingAdsSidebar = () => {
       <div className="ad-placeholder">
         <span>{t("adsLabel")}</span>
         <div className="ad-box ad-box-live">
-          <AdSenseSlot />
+          <AdSenseSlot slot={ADSENSE_SLOT_SIDEBAR} />
         </div>
       </div>
 

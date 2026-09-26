@@ -5,10 +5,11 @@ function resolveApiOrigin() {
 
   if (typeof window === "undefined") return envUrl;
 
-  const { port } = window.location;
-  const viteDev = port === "5173" || port === "4173";
+  const host = window.location.hostname;
+  const localHost =
+    host === "localhost" || host === "127.0.0.1" || host === "::1";
 
-  if (import.meta.env.DEV && viteDev) {
+  if (import.meta.env.DEV && localHost) {
     return "";
   }
 

@@ -66,7 +66,12 @@ export const VehicleSearch = ({
   // MOBILE ADVANCED SEARCH
   // =====================================================
 
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(Boolean(listingFilter));
+
+  const yearOptions = Array.from(
+    { length: new Date().getFullYear() - 1979 },
+    (_, index) => new Date().getFullYear() - index
+  );
 
   useEffect(() => {
     if (!listingFilter) {
@@ -96,80 +101,30 @@ export const VehicleSearch = ({
   useEffect(() => {
     const loadSearchData = async () => {
       try {
-        const responses = await Promise.all([
-          fetch(`${API_BASE}/Brands`),
-          fetch(`${API_BASE}/VehicleModels`),
-          fetch(`${API_BASE}/VehicleCategories`),
-          fetch(`${API_BASE}/BodyTypes`),
-          fetch(`${API_BASE}/FuelTypes`),
-          fetch(`${API_BASE}/Transmissions`),
-          fetch(`${API_BASE}/DriveTypes`),
-          fetch(`${API_BASE}/Conditions`),
-          fetch(`${API_BASE}/Colors`),
-          fetch(`${API_BASE}/Country`),
-          fetch(`${API_BASE}/Cities`),
+        const loadJson = async (path, setter) => {
+          try {
+            const response = await fetch(`${API_BASE}${path}`);
+            if (!response.ok) return;
+            const data = await response.json();
+            setter(Array.isArray(data) ? data : []);
+          } catch (error) {
+            console.error(`Error loading ${path}:`, error);
+          }
+        };
+
+        await Promise.all([
+          loadJson("/Brands", setBrands),
+          loadJson("/VehicleModels", setModels),
+          loadJson("/VehicleCategories", setCategories),
+          loadJson("/BodyTypes", setBodyTypes),
+          loadJson("/FuelTypes", setFuelTypes),
+          loadJson("/Transmissions", setTransmissionTypes),
+          loadJson("/DriveTypes", setDriveTypes),
+          loadJson("/Conditions", setConditions),
+          loadJson("/Colors", setColors),
+          loadJson("/Country", setCountries),
+          loadJson("/Cities", setCities),
         ]);
-
-        const [
-          brandsResponse,
-          modelsResponse,
-          categoriesResponse,
-          bodyTypesResponse,
-          fuelResponse,
-          transmissionResponse,
-          driveResponse,
-          conditionsResponse,
-          colorsResponse,
-          countriesResponse,
-          citiesResponse,
-        ] = responses;
-
-        if (!brandsResponse.ok)
-          throw new Error("Failed to load brands");
-
-        if (!modelsResponse.ok)
-          throw new Error("Failed to load models");
-
-        if (!categoriesResponse.ok)
-          throw new Error("Failed to load categories");
-
-        if (!bodyTypesResponse.ok)
-          throw new Error("Failed to load body types");
-
-        if (!fuelResponse.ok)
-          throw new Error("Failed to load fuel types");
-
-        if (!transmissionResponse.ok)
-          throw new Error("Failed to load transmission types");
-
-        if (!driveResponse.ok)
-          throw new Error("Failed to load drive types");
-
-        if (!conditionsResponse.ok)
-          throw new Error("Failed to load conditions");
-
-        if (!colorsResponse.ok)
-          throw new Error("Failed to load colors");
-
-        if (!countriesResponse.ok)
-          throw new Error("Failed to load countries");
-
-        if (!citiesResponse.ok)
-          throw new Error("Failed to load cities");
-
-        setBrands(await brandsResponse.json());
-        setModels(await modelsResponse.json());
-        setCategories(await categoriesResponse.json());
-        setBodyTypes(await bodyTypesResponse.json());
-        setFuelTypes(await fuelResponse.json());
-        setTransmissionTypes(
-          await transmissionResponse.json()
-        );
-        setDriveTypes(await driveResponse.json());
-        setConditions(await conditionsResponse.json());
-        setColors(await colorsResponse.json());
-        setCountries(await countriesResponse.json());
-        setCities(await citiesResponse.json());
       } catch (error) {
         console.error(
           "Error loading search data:",
@@ -390,51 +345,10 @@ export const VehicleSearch = ({
       },
     });
 
-    // ===================================================
-    // YEAR
-    // ===================================================
-
-    addRange(params, year, {
-      "2025+": {
-        minKey: "MinYear",
-        min: 2025,
-      },
-
-      "2020-2024": {
-        minKey: "MinYear",
-        maxKey: "MaxYear",
-        min: 2020,
-        max: 2024,
-      },
-
-      "2015-2019": {
-        minKey: "MinYear",
-        maxKey: "MaxYear",
-        min: 2015,
-        max: 2019,
-      },
-
-      "2010-2014": {
-        minKey: "MinYear",
-        maxKey: "MaxYear",
-        min: 2010,
-        max: 2014,
-      },
-
-      "2000-2009": {
-        minKey: "MinYear",
-        maxKey: "MaxYear",
-        min: 2000,
-        max: 2009,
-      },
-
-      "1990-1999": {
-        minKey: "MinYear",
-        maxKey: "MaxYear",
-        min: 1990,
-        max: 1999,
-      },
-    });
+    if (year) {
+      params.append("MinYear", year);
+      params.append("MaxYear", year);
+    }
 
     // ===================================================
     // MILEAGE
@@ -637,8 +551,9 @@ export const VehicleSearch = ({
         onSearchResults(vehicles);
       }
 
-      // Close advanced filters on mobile
-      setShowAdvanced(false);
+      if (typeof window !== "undefined" && window.innerWidth <= 800 && !listingFilter) {
+        setShowAdvanced(false);
+      }
     } catch (error) {
       console.error(
         "Vehicle search error:",
@@ -678,8 +593,7 @@ export const VehicleSearch = ({
     setPower("");
     setEngine("");
 
-    // Close advanced filters
-    setShowAdvanced(false);
+    setShowAdvanced(Boolean(listingFilter));
 
     // IMPORTANT:
     // null means:
@@ -952,7 +866,26 @@ export const VehicleSearch = ({
             ))}
           </SelectFilter>
 
-        
+          <SelectFilter
+            label={t("category")}
+            value={categoryId}
+            onChange={(e) =>
+              setCategoryId(e.target.value)
+            }
+          >
+            <option value="">
+              {t("allCategories")}
+            </option>
+
+            {categories.map((category) => (
+              <option
+                key={category.id}
+                value={category.id}
+              >
+                {category.name}
+              </option>
+            ))}
+          </SelectFilter>
 
           {/* BODY TYPE */}
 
@@ -1024,29 +957,14 @@ export const VehicleSearch = ({
               Any Year
             </option>
 
-            <option value="2025+">
-              2025+
-            </option>
-
-            <option value="2020-2024">
-              2020 - 2024
-            </option>
-
-            <option value="2015-2019">
-              2015 - 2019
-            </option>
-
-            <option value="2010-2014">
-              2010 - 2014
-            </option>
-
-            <option value="2000-2009">
-              2000 - 2009
-            </option>
-
-            <option value="1990-1999">
-              1990 - 1999
-            </option>
+            {yearOptions.map((yearValue) => (
+              <option
+                key={yearValue}
+                value={yearValue}
+              >
+                {yearValue}
+              </option>
+            ))}
           </SelectFilter>
 
           {/* MILEAGE */}

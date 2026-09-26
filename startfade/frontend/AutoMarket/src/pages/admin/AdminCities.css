@@ -1,4 +1,28 @@
 /* admin-cities-page */
+.admin-cities-sync {
+  margin: 0 0 18px;
+}
+
+.admin-cities-sync button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.admin-cities-sync button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.admin-cities-sync p {
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+
 .admin-cities-page {
   color: var(--text);
 }

@@ -238,6 +238,139 @@ export function citiesRouter() {
     }
   });
 
+  router.post("/sync-api", requireAdmin, async (_req, res) => {
+    const sources = [
+      { api: "Albania", names: ["Albania"], code: "AL" },
+      { api: "Kosovo", names: ["Kosovo"], code: "XK" },
+      { api: "Macedonia", names: ["Macedonia", "North Macedonia"], code: "MK" },
+      { api: "North Macedonia", names: ["North Macedonia", "Macedonia"], code: "MK" },
+      { api: "Serbia", names: ["Serbia"], code: "RS" },
+      { api: "Montenegro", names: ["Montenegro"], code: "ME" },
+      { api: "Bosnia and Herzegovina", names: ["Bosnia and Herzegovina", "Bosnia"], code: "BA" },
+      { api: "Croatia", names: ["Croatia"], code: "HR" },
+      { api: "Slovenia", names: ["Slovenia"], code: "SI" },
+      { api: "Greece", names: ["Greece"], code: "GR" },
+      { api: "Bulgaria", names: ["Bulgaria"], code: "BG" },
+      { api: "Romania", names: ["Romania"], code: "RO" },
+      { api: "Hungary", names: ["Hungary"], code: "HU" },
+      { api: "Germany", names: ["Germany"], code: "DE" },
+      { api: "France", names: ["France"], code: "FR" },
+      { api: "Italy", names: ["Italy"], code: "IT" },
+      { api: "Spain", names: ["Spain"], code: "ES" },
+      { api: "Portugal", names: ["Portugal"], code: "PT" },
+      { api: "United Kingdom", names: ["United Kingdom"], code: "GB" },
+      { api: "Netherlands", names: ["Netherlands"], code: "NL" },
+      { api: "Belgium", names: ["Belgium"], code: "BE" },
+      { api: "Austria", names: ["Austria"], code: "AT" },
+      { api: "Switzerland", names: ["Switzerland"], code: "CH" },
+      { api: "Poland", names: ["Poland"], code: "PL" },
+      { api: "Czechia", names: ["Czechia", "Czech Republic"], code: "CZ" },
+      { api: "Slovakia", names: ["Slovakia"], code: "SK" },
+      { api: "Sweden", names: ["Sweden"], code: "SE" },
+      { api: "Norway", names: ["Norway"], code: "NO" },
+      { api: "Denmark", names: ["Denmark"], code: "DK" },
+      { api: "Finland", names: ["Finland"], code: "FI" },
+      { api: "Ireland", names: ["Ireland"], code: "IE" },
+    ];
+
+    try {
+      let removed = 0;
+      let inserted = 0;
+      let countriesReady = 0;
+      const failed = [];
+
+      await query(`
+        DELETE FROM Cities
+        WHERE NOT EXISTS (
+          SELECT 1 FROM Vehicles v WHERE v.CityId = Cities.Id
+        )
+      `);
+      const gone = await queryOne(`SELECT @@ROWCOUNT AS n`);
+      removed = Number(gone?.n || gone?.N || 0);
+
+      async function ensureCountry(names, code) {
+        for (const name of names) {
+          const row = await queryOne(
+            `SELECT Id FROM Country WHERE LOWER(LTRIM(RTRIM(Name))) = LOWER(@name)`,
+            { name }
+          );
+          if (row?.Id) return row.Id;
+        }
+        const created = await query(
+          `INSERT INTO Country (Name, Code) OUTPUT INSERTED.Id
+           VALUES (@name, @code)`,
+          { name: names[0], code }
+        );
+        return created[0].Id;
+      }
+
+      const seenCountries = new Set();
+      for (const source of sources) {
+        if (seenCountries.has(source.code) && source.api !== "Macedonia") {
+          /* still try API name variants */
+        }
+        let cityNames = [];
+        try {
+          const response = await fetch(
+            "https://countriesnow.space/api/v0.1/countries/cities",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ country: source.api }),
+            }
+          );
+          const payload = await response.json();
+          if (payload?.error || !Array.isArray(payload?.data)) {
+            failed.push(source.api);
+            continue;
+          }
+          cityNames = [
+            ...new Set(
+              payload.data
+                .map((item) => String(item || "").trim())
+                .filter(Boolean)
+            ),
+          ];
+        } catch {
+          failed.push(source.api);
+          continue;
+        }
+        if (!cityNames.length) {
+          failed.push(source.api);
+          continue;
+        }
+        const countryId = await ensureCountry(source.names, source.code);
+        countriesReady += 1;
+        seenCountries.add(source.code);
+        for (const name of cityNames) {
+          const exists = await queryOne(
+            `SELECT Id FROM Cities
+             WHERE CountryId = @countryId
+               AND LOWER(LTRIM(RTRIM(Name))) = LOWER(@name)`,
+            { countryId, name }
+          );
+          if (exists) continue;
+          await query(
+            `INSERT INTO Cities (Name, CountryId) VALUES (@name, @countryId)`,
+            { name, countryId }
+          );
+          inserted += 1;
+        }
+      }
+
+      res.json({
+        ok: true,
+        removedUnused: removed,
+        inserted,
+        countries: countriesReady,
+        failed,
+      });
+    } catch (err) {
+      console.error("Cities sync-api:", err);
+      res.status(500).json({ message: err.message || "City sync failed." });
+    }
+  });
+
   router.get("/:id", async (req, res) => {
     const row = await queryOne(
       `SELECT c.Id, c.Name, c.CountryId, co.Name AS CountryName

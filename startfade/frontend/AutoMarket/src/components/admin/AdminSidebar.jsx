@@ -70,7 +70,7 @@ const MENU = [
   },
 ];
 
-function AdminSidebar({ collapsed, onToggle }) {
+function AdminSidebar({ collapsed, onToggle, mobileOpen, onNavigate }) {
   const location = useLocation();
   const [open, setOpen] = useState(() => ({
     cars: true,
@@ -91,7 +91,11 @@ function AdminSidebar({ collapsed, onToggle }) {
   }
 
   return (
-    <aside className={`wp-sidebar${collapsed ? " collapsed" : ""}`}>
+    <aside
+      className={`wp-sidebar${collapsed ? " collapsed" : ""}${
+        mobileOpen ? " mobile-open" : ""
+      }`}
+    >
       <div className="wp-sidebar-brand">
         <img src={SITE_LOGO} alt="AutoMarket" />
         {!collapsed ? <span>AutoMarket</span> : null}
@@ -109,6 +113,7 @@ function AdminSidebar({ collapsed, onToggle }) {
                   `wp-menu-item${isActive ? " current" : ""}`
                 }
                 title={item.label}
+                onClick={() => onNavigate?.()}
               >
                 <span>{item.label}</span>
               </NavLink>
@@ -139,6 +144,7 @@ function AdminSidebar({ collapsed, onToggle }) {
                       className={({ isActive }) =>
                         `wp-submenu-item${isActive ? " current" : ""}`
                       }
+                      onClick={() => onNavigate?.()}
                     >
                       {child.label}
                     </NavLink>
@@ -154,7 +160,7 @@ function AdminSidebar({ collapsed, onToggle }) {
         {collapsed ? "»" : "Collapse menu"}
       </button>
       {!collapsed ? (
-        <NavLink to="/" className="wp-view-site">
+        <NavLink to="/" className="wp-view-site" onClick={() => onNavigate?.()}>
           View site
         </NavLink>
       ) : null}

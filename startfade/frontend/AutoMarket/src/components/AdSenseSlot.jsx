@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useCookieConsent } from "../consent/CookieConsentContext";
-import { ADSENSE_CLIENT, ADSENSE_SLOT_SIDEBAR, adsenseReady } from "../config/site";
+import { ADSENSE_CLIENT, adsenseReady } from "../config/site";
 
-export function AdSenseSlot({ slot = ADSENSE_SLOT_SIDEBAR, className = "" }) {
+export function AdSenseSlot({ slot, className = "" }) {
   const { adsAllowed } = useCookieConsent();
   const pushed = useRef(false);
 
@@ -23,6 +23,7 @@ export function AdSenseSlot({ slot = ADSENSE_SLOT_SIDEBAR, className = "" }) {
 
   return (
     <ins
+      key={slot}
       className={`adsbygoogle ${className}`.trim()}
       style={{ display: "block" }}
       data-ad-client={ADSENSE_CLIENT}

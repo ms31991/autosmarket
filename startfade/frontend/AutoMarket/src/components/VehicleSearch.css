@@ -1,3 +1,9 @@
+.vehicle-search-container {
+  position: relative;
+  z-index: 20;
+  overflow: visible;
+}
+
 .vehicle-search { 
   width: min(1100px, calc(100% - 32px)); 
   margin: 10px auto 0; 
@@ -7,7 +13,7 @@
   background: transparent; 
   border: 0; 
   box-shadow: none; 
-
+  overflow: visible;
 } 
  
 .search-main { 

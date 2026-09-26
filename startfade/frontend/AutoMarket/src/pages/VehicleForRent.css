@@ -67,11 +67,9 @@
 .listing-page-search {
   max-width: 1400px;
   margin: 0 auto 30px;
-}
-
-.listing-page-search .vehicle-search,
-.listing-page-search .vehicle-search-links {
-  width: 100%;
+  overflow: visible;
+  position: relative;
+  z-index: 20;
 }
 
 
@@ -117,7 +115,7 @@
   align-items: center;
 }
 
-.search-icon {
+.vehicle-filter .search-icon {
   position: absolute;
   left: 13px;
 

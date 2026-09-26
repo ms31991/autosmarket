@@ -24,6 +24,8 @@ export const ADSENSE_CLIENT = env(
 );
 
 export const ADSENSE_SLOT_SIDEBAR = env("VITE_ADSENSE_SLOT_SIDEBAR");
+export const ADSENSE_SLOT_HOME = env("VITE_ADSENSE_SLOT_HOME");
+export const ADSENSE_SLOT_DETAIL = env("VITE_ADSENSE_SLOT_DETAIL");
 
 export function adsenseReady() {
   if (!ADSENSE_CLIENT.startsWith("ca-pub-")) return false;

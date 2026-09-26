@@ -30,9 +30,10 @@ import { useAuth } from "../context/AuthContext";
 import { SeoHead } from "../seo/SeoHead";
 import { mediaUrl } from "../utils/mediaUrl";
 import { API_BASE, API_ORIGIN } from "../config/api";
-import { SITE_LOGO } from "../config/site";
+import { SITE_LOGO, ADSENSE_SLOT_DETAIL } from "../config/site";
 import { apiFetch } from "../services/api";
 import { useLanguage } from "../i18n/LanguageContext";
+import { AdSenseBanner } from "../components/AdSenseBanner";
 import "./VehicleDetails.css";
 
 export const VehicleDetails = () => {
@@ -828,6 +829,8 @@ export const VehicleDetails = () => {
             )}
 
           </section>
+
+          <AdSenseBanner slot={ADSENSE_SLOT_DETAIL} className="adsense-banner--detail" />
 
           {/* ========================================
               TITLE / HEADER
