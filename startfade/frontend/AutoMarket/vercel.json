@@ -1,7 +1,11 @@
 {
   "rewrites": [
     {
-      "source": "/((?!ads\\.txt|robots\\.txt|sitemap\\.xml).*)",
+      "source": "/sitemap-vehicles.xml",
+      "destination": "https://api.autosmarket.me/api/sitemap.xml"
+    },
+    {
+      "source": "/((?!ads\\.txt|robots\\.txt|sitemap\\.xml|sitemap-static\\.xml|sitemap-vehicles\\.xml).*)",
       "destination": "/index.html"
     }
   ]

@@ -40,6 +40,7 @@ import {
 } from "./routes/companyBanners.js";
 import { adPackagesRouter, ensureAdPackagesTable } from "./routes/adPackages.js";
 import { adminRouter } from "./routes/admin.js";
+import { vehicleSitemap } from "./routes/sitemap.js";
 import { ensureUploadDirs, publicDir } from "./paths.js";
 import { ensureListingReportsTable } from "./listingReports.js";
 import { ensureSiteSettingsTable, getSiteSettings } from "./siteSettings.js";
@@ -117,6 +118,8 @@ app.get(/^\/uploads\/.+/, (_req, res) => {
 });
 
 app.get("/health", (_req, res) => res.json({ ok: true, engine: "node" }));
+app.get("/api/sitemap.xml", vehicleSitemap);
+app.get("/sitemap.xml", vehicleSitemap);
 app.get("/api/SiteSettings", async (_req, res) => {
   try {
     res.json(await getSiteSettings());

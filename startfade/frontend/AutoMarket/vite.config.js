@@ -49,8 +49,12 @@ function writePublicMeta(root, env) {
       }</changefreq></url>`
   ).join("\n");
   fs.writeFileSync(
-    path.join(publicDir, "sitemap.xml"),
+    path.join(publicDir, "sitemap-static.xml"),
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`
+  );
+  fs.writeFileSync(
+    path.join(publicDir, "sitemap.xml"),
+    `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <sitemap><loc>${site}/sitemap-static.xml</loc></sitemap>\n  <sitemap><loc>${site}/sitemap-vehicles.xml</loc></sitemap>\n</sitemapindex>\n`
   );
 
   const robots = `User-agent: *\nAllow: /\nDisallow: /login\nDisallow: /register\nDisallow: /admin\nDisallow: /messages\nDisallow: /settings\nDisallow: /add-vehicle\nDisallow: /edit-vehicle\nDisallow: /my-vehicles\nDisallow: /userprofile\nDisallow: /select-vehicle\nDisallow: /payment\n\nSitemap: ${site}/sitemap.xml\n`;
