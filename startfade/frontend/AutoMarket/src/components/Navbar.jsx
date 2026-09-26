@@ -55,6 +55,14 @@ return () => mq.removeEventListener("change", sync);
 
 }, []);
 
+useEffect(() => {
+  setNotificationsOpen(false);
+}, [location.pathname]);
+
+useEffect(() => {
+  setNotificationsOpen(false);
+}, [location.pathname]);
+
 async function handleLogout() {
 await signOut();
 navigate("/login");
@@ -203,6 +211,7 @@ return (
         className={() =>
           `mobile-nav-item${isHome ? " active" : ""}`
         }
+        onClick={() => setNotificationsOpen(false)}
       >
         <svg
           className="mobile-nav-icon"
@@ -227,6 +236,7 @@ return (
         className={() =>
           `mobile-nav-item${isInbox ? " active" : ""}`
         }
+        onClick={() => setNotificationsOpen(false)}
       >
         <svg
           className="mobile-nav-icon"
@@ -258,6 +268,7 @@ return (
           `mobile-nav-center${isAdd ? " active" : ""}`
         }
         aria-label={t("navAdd")}
+        onClick={() => setNotificationsOpen(false)}
       >
         <span className="mobile-nav-center-btn">
           <svg
@@ -321,6 +332,7 @@ return (
         className={() =>
           `mobile-nav-item${isProfile ? " active" : ""}`
         }
+        onClick={() => setNotificationsOpen(false)}
       >
         <svg
           className="mobile-nav-icon"
