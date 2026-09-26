@@ -459,7 +459,6 @@ export function advertisementsRouter() {
         })
       )
     );
-    );
   });
 
   router.get("/my", requireAuth, async (req, res) => {
