@@ -18,7 +18,10 @@ export const LEGAL_NAME = env("VITE_LEGAL_NAME", "Automarket");
 
 export const LEGAL_ADDRESS = env("VITE_LEGAL_ADDRESS");
 
-export const ADSENSE_CLIENT = env("VITE_ADSENSE_CLIENT");
+export const ADSENSE_CLIENT = env(
+  "VITE_ADSENSE_CLIENT",
+  "ca-pub-3011113512288631"
+);
 
 export const ADSENSE_SLOT_SIDEBAR = env("VITE_ADSENSE_SLOT_SIDEBAR");
 

@@ -56,7 +56,9 @@ function writePublicMeta(root, env) {
   const robots = `User-agent: *\nAllow: /\nDisallow: /login\nDisallow: /register\nDisallow: /admin\nDisallow: /messages\nDisallow: /settings\nDisallow: /add-vehicle\nDisallow: /edit-vehicle\nDisallow: /my-vehicles\nDisallow: /userprofile\nDisallow: /select-vehicle\nDisallow: /payment\n\nSitemap: ${site}/sitemap.xml\n`;
   fs.writeFileSync(path.join(publicDir, "robots.txt"), robots);
 
-  const client = String(env.VITE_ADSENSE_CLIENT || "");
+  const client = String(
+    env.VITE_ADSENSE_CLIENT || "ca-pub-3011113512288631"
+  );
   const pub = client.startsWith("ca-pub-") ? client.replace("ca-", "") : "";
   const adsTxt = pub
     ? `google.com, ${pub}, DIRECT, f08c47fec0942fa0\n`
