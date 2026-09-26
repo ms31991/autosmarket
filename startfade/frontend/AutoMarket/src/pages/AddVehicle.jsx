@@ -971,12 +971,8 @@ export const AddVehicle = () => {
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => pickCity(city)}
                     >
-                      <span>{city.name}</span>
-                      {city.countryName ? (
-                        <span className="city-suggest-country">
-                          {city.countryName}
-                        </span>
-                      ) : null}
+                      {city.name}
+                      {city.countryName ? ` - ${city.countryName}` : ""}
                     </button>
                   </li>
                 ))}
