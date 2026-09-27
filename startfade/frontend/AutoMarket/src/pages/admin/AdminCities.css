@@ -1,6 +1,10 @@
 /* admin-cities-page */
 .admin-cities-sync {
   margin: 0 0 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
 }
 
 .admin-cities-sync button {
@@ -19,6 +23,7 @@
 }
 
 .admin-cities-sync p {
+  flex-basis: 100%;
   margin: 10px 0 0;
   color: var(--muted);
 }

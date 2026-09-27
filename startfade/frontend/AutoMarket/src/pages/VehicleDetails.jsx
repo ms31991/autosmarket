@@ -344,9 +344,17 @@ export const VehicleDetails = () => {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
+      const responseText = await response.text();
 
       if (!response.ok) {
-        throw new Error("The vehicle could not be deleted.");
+        let message = "The vehicle could not be deleted.";
+        try {
+          const errorData = JSON.parse(responseText);
+          if (errorData.message) message = errorData.message;
+        } catch {
+          if (responseText) message = responseText;
+        }
+        throw new Error(message);
       }
 
       navigate("/userprofile");

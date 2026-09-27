@@ -5,6 +5,7 @@ import { requireAdmin } from "../auth.js";
 import { toPublicUrl } from "../paths.js";
 import { listAllAdPackages, updateAdPackage } from "./adPackages.js";
 import { getSiteSettings, updateSiteSettings } from "../siteSettings.js";
+import { deleteVehicleById } from "../deleteVehicle.js";
 
 export function adminRouter() {
   const router = Router();
@@ -90,28 +91,10 @@ export function adminRouter() {
   });
 
   router.delete("/vehicles/:id", async (req, res) => {
-    const id = Number(req.params.id);
-    const existing = await queryOne(`SELECT Id FROM Vehicles WHERE Id = @id`, { id });
-    if (!existing) return res.status(404).json({ message: "Vehicle not found." });
-    const cleanup = [
-      `DELETE FROM VehicleImages WHERE VehicleId = @id`,
-      `DELETE FROM Favourites WHERE VehicleId = @id`,
-      `DELETE FROM Advertisements WHERE VehicleId = @id`,
-      `DELETE FROM ListingReports WHERE VehicleId = @id`,
-    ];
-    for (const sql of cleanup) {
-      try {
-        await query(sql, { id });
-      } catch {
-        /* related table may not exist */
-      }
+    const result = await deleteVehicleById(req.params.id);
+    if (result.status !== 204) {
+      return res.status(result.status).json({ message: result.message });
     }
-    try {
-      await query(`DELETE FROM RentalDetails WHERE VehicleId = @id`, { id });
-    } catch {
-      /* optional */
-    }
-    await query(`DELETE FROM Vehicles WHERE Id = @id`, { id });
     res.status(204).end();
   });
 

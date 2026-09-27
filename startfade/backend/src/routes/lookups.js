@@ -2,6 +2,7 @@ import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { camel, pick, slugify } from "../camel.js";
 import { requireAdmin } from "../auth.js";
+import { SEED_CITIES, SEED_COUNTRIES } from "../citySeed.js";
 
 export function lookupRouter(table, columns, options = {}) {
   const router = Router();
@@ -274,19 +275,9 @@ export function citiesRouter() {
     ];
 
     try {
-      let removed = 0;
       let inserted = 0;
       let countriesReady = 0;
       const failed = [];
-
-      await query(`
-        DELETE FROM Cities
-        WHERE NOT EXISTS (
-          SELECT 1 FROM Vehicles v WHERE v.CityId = Cities.Id
-        )
-      `);
-      const gone = await queryOne(`SELECT @@ROWCOUNT AS n`);
-      removed = Number(gone?.n || gone?.N || 0);
 
       async function ensureCountry(names, code) {
         for (const name of names) {
@@ -360,7 +351,7 @@ export function citiesRouter() {
 
       res.json({
         ok: true,
-        removedUnused: removed,
+        removedUnused: 0,
         inserted,
         countries: countriesReady,
         failed,
@@ -368,6 +359,50 @@ export function citiesRouter() {
     } catch (err) {
       console.error("Cities sync-api:", err);
       res.status(500).json({ message: err.message || "City sync failed." });
+    }
+  });
+
+  router.post("/seed-europe", requireAdmin, async (_req, res) => {
+    try {
+      let countriesInserted = 0;
+      let citiesInserted = 0;
+      for (const country of SEED_COUNTRIES) {
+        const exists = await queryOne(
+          `SELECT Id FROM Country
+           WHERE Code = @code OR LOWER(LTRIM(RTRIM(Name))) = LOWER(@name)`,
+          { code: country.code, name: country.name }
+        );
+        if (exists?.Id ?? exists?.id) continue;
+        await query(`INSERT INTO Country (Name, Code) VALUES (@name, @code)`, {
+          name: country.name,
+          code: country.code,
+        });
+        countriesInserted += 1;
+      }
+      for (const [name, code] of SEED_CITIES) {
+        const country = await queryOne(
+          `SELECT Id FROM Country WHERE Code = @code`,
+          { code }
+        );
+        const countryId = country?.Id ?? country?.id;
+        if (!countryId) continue;
+        const existsCity = await queryOne(
+          `SELECT Id FROM Cities
+           WHERE CountryId = @countryId
+             AND LOWER(LTRIM(RTRIM(Name))) = LOWER(@name)`,
+          { countryId, name }
+        );
+        if (existsCity?.Id ?? existsCity?.id) continue;
+        await query(
+          `INSERT INTO Cities (Name, CountryId) VALUES (@name, @countryId)`,
+          { name, countryId }
+        );
+        citiesInserted += 1;
+      }
+      res.json({ ok: true, countriesInserted, citiesInserted });
+    } catch (err) {
+      console.error("Cities seed-europe:", err);
+      res.status(500).json({ message: err.message || "City seed failed." });
     }
   });
 

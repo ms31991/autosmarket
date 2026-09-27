@@ -157,9 +157,14 @@ export const MyVehicles = () => {
       )
 
       if (!response.ok) {
-        throw new Error(
-          `Vetura nuk u fshi. Status: ${response.status}`
-        )
+        let message = `Vetura nuk u fshi. Status: ${response.status}`
+        try {
+          const errorData = JSON.parse(responseText)
+          if (errorData.message) message = errorData.message
+        } catch {
+          if (responseText) message = responseText
+        }
+        throw new Error(message)
       }
 
       // Largoje menjëherë nga UI

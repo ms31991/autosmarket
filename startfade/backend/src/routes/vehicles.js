@@ -5,6 +5,7 @@ import { requireAuth } from "../auth.js";
 import { toPublicUrl } from "../paths.js";
 import { withPublicOwnerNames } from "../personName.js";
 import { keysFromAuth, ownsRecord, requireDbUser, resolveUserKeys, userMatchSql } from "../identity.js";
+import { deleteVehicleById } from "../deleteVehicle.js";
 
 const VEHICLE_SELECT = `
   SELECT
@@ -329,7 +330,10 @@ export function vehiclesRouter() {
     if (!ownsRecord(existing.OwnerId, req.user) && req.user.roleName !== "Admin") {
       return res.status(403).json({ message: "Forbidden" });
     }
-    await query(`DELETE FROM Vehicles WHERE Id = @id`, { id });
+    const result = await deleteVehicleById(id);
+    if (result.status !== 204) {
+      return res.status(result.status).json({ message: result.message });
+    }
     res.status(204).end();
   });
 
