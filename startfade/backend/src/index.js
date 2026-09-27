@@ -26,6 +26,7 @@ import { vehiclesRouter } from "./routes/vehicles.js";
 import { vehicleImagesRouter } from "./routes/vehicleImages.js";
 import { usersRouter } from "./routes/users.js";
 import { chatRouter } from "./routes/chat.js";
+import { startExpiryMailJob } from "./mail.js";
 import { favouritesRouter, notificationsRouter } from "./routes/social.js";
 import {
   reviewsRouter,
@@ -178,6 +179,7 @@ async function start() {
   server.listen(port, "0.0.0.0", () => {
     console.log(`AutoMarket Node API running on http://localhost:${port}`);
     console.log(`LAN: http://<PC-IP>:${port}  (same WiFi as the phone)`);
+    startExpiryMailJob();
   });
 }
 

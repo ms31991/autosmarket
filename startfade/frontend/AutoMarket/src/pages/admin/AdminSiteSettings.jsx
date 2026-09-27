@@ -10,6 +10,7 @@ export function AdminSiteSettings() {
     legalAddress: "",
     supportEmail: "",
     privacyEmail: "",
+    mailFrom: "",
   });
   const [updatedAt, setUpdatedAt] = useState("");
   const [error, setError] = useState("");
@@ -25,6 +26,7 @@ export function AdminSiteSettings() {
         legalAddress: data.legalAddress || "",
         supportEmail: data.supportEmail || "",
         privacyEmail: data.privacyEmail || "",
+        mailFrom: data.mailFrom || "",
       });
       setUpdatedAt(data.updatedAt || "");
     } catch (err) {
@@ -51,9 +53,10 @@ export function AdminSiteSettings() {
         legalAddress: data.legalAddress || "",
         supportEmail: data.supportEmail || "",
         privacyEmail: data.privacyEmail || "",
+        mailFrom: data.mailFrom || "",
       });
       setUpdatedAt(data.updatedAt || "");
-      setSaved("Saved. Contact and Privacy pages use these emails.");
+      setSaved("Saved. Contact, Privacy, and outgoing notification emails use these values.");
       await refresh();
     } catch (err) {
       setError(err.message);
@@ -69,7 +72,7 @@ export function AdminSiteSettings() {
   return (
     <div className="admin-manage-page">
       <h1>Site settings</h1>
-      <p>Legal name, address and emails shown on Contact, Privacy and the footer. Change them here anytime.</p>
+      <p>Legal name, address, contact emails, and the From address for message/expiry notifications. Change them here anytime.</p>
       {error ? <p className="admin-manage-error">{error}</p> : null}
       {saved ? <p>{saved}</p> : null}
       {updatedAt ? <p>Last updated: {formatDate(updatedAt)}</p> : null}
@@ -108,6 +111,17 @@ export function AdminSiteSettings() {
             required
           />
         </label>
+        <label>
+          Mail from (notifications)
+          <input
+            value={form.mailFrom}
+            onChange={(e) => setField("mailFrom", e.target.value)}
+            placeholder="AutoMarket <support@autosmarket.me>"
+          />
+        </label>
+        <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+          What users see as the sender of chat and expiry emails. Leave empty to use support email. Domain must be verified with Resend/SMTP.
+        </p>
         <button type="submit" disabled={saving}>
           {saving ? "Saving..." : "Save"}
         </button>

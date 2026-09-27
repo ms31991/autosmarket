@@ -6,7 +6,15 @@ const DEFAULTS = {
   legalAddress: "",
   supportEmail: "support@autosmarket.me",
   privacyEmail: "privacy@autosmarket.me",
+  mailFrom: "",
 };
+
+function emailInFrom(value) {
+  const raw = String(value || "").trim();
+  const angled = raw.match(/<([^>]+)>/);
+  const addr = (angled ? angled[1] : raw).trim();
+  return addr.includes("@") ? addr : "";
+}
 
 function rowToSettings(row) {
   if (!row) return { ...DEFAULTS };
@@ -16,6 +24,7 @@ function rowToSettings(row) {
     legalAddress: mapped.legalAddress || "",
     supportEmail: mapped.supportEmail || DEFAULTS.supportEmail,
     privacyEmail: mapped.privacyEmail || DEFAULTS.privacyEmail,
+    mailFrom: String(mapped.mailFrom || "").trim(),
     updatedAt: mapped.updatedAt || null,
   };
 }
@@ -30,9 +39,14 @@ export async function ensureSiteSettingsTable() {
         LegalAddress NVARCHAR(300) NULL,
         SupportEmail NVARCHAR(200) NOT NULL,
         PrivacyEmail NVARCHAR(200) NOT NULL,
+        MailFrom NVARCHAR(200) NULL,
         UpdatedAt DATETIME2 NOT NULL CONSTRAINT DF_SiteSettings_UpdatedAt DEFAULT SYSUTCDATETIME()
       );
     END
+  `);
+  await query(`
+    IF COL_LENGTH(N'dbo.SiteSettings', N'MailFrom') IS NULL
+      ALTER TABLE dbo.SiteSettings ADD MailFrom NVARCHAR(200) NULL;
   `);
   const existing = await queryOne(`SELECT Id FROM dbo.SiteSettings WHERE Id = 1`);
   if (!existing) {
@@ -60,9 +74,13 @@ export async function updateSiteSettings(input) {
   const legalAddress = String(input.legalAddress ?? current.legalAddress).trim().slice(0, 300);
   const supportEmail = String(input.supportEmail ?? current.supportEmail).trim().slice(0, 200);
   const privacyEmail = String(input.privacyEmail ?? current.privacyEmail).trim().slice(0, 200);
+  const mailFrom = String(input.mailFrom ?? current.mailFrom).trim().slice(0, 200);
   if (!legalName) throw new Error("Legal name is required.");
   if (!supportEmail.includes("@") || !privacyEmail.includes("@")) {
     throw new Error("Enter valid support and privacy emails.");
+  }
+  if (mailFrom && !emailInFrom(mailFrom)) {
+    throw new Error("Mail from must be an email, e.g. AutoMarket <support@autosmarket.me>.");
   }
   await query(
     `UPDATE dbo.SiteSettings
@@ -70,9 +88,24 @@ export async function updateSiteSettings(input) {
          LegalAddress = @legalAddress,
          SupportEmail = @supportEmail,
          PrivacyEmail = @privacyEmail,
+         MailFrom = @mailFrom,
          UpdatedAt = SYSUTCDATETIME()
      WHERE Id = 1`,
-    { legalName, legalAddress, supportEmail, privacyEmail }
+    { legalName, legalAddress, supportEmail, privacyEmail, mailFrom }
   );
   return getSiteSettings();
+}
+
+export async function resolveMailFrom() {
+  const settings = await getSiteSettings();
+  const custom = String(settings.mailFrom || "").trim();
+  if (emailInFrom(custom)) {
+    return custom.includes("<")
+      ? custom
+      : `${settings.legalName || "AutoMarket"} <${custom}>`;
+  }
+  const envFrom = String(process.env.MAIL_FROM || "").trim();
+  if (emailInFrom(envFrom)) return envFrom;
+  const support = String(settings.supportEmail || DEFAULTS.supportEmail).trim();
+  return `AutoMarket <${support}>`;
 }

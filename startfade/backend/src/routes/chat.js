@@ -4,6 +4,7 @@ import { camel, pick } from "../camel.js";
 import { requireAuth } from "../auth.js";
 import { emitToUser } from "../realtime.js";
 import { keysFromAuth, userMatchSql } from "../identity.js";
+import { notifyNewMessage } from "../mail.js";
 
 function conversationAccessSql() {
   return `(
@@ -211,6 +212,13 @@ export function chatRouter() {
       senderId: req.user.id,
       senderName,
     });
+
+    notifyNewMessage({
+      receiverId,
+      senderName,
+      preview: text.trim().slice(0, 200),
+      conversationId,
+    }).catch((err) => console.error("message email:", err.message || err));
 
     res.json({ ...dto, isMine: true });
   });

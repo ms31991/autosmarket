@@ -298,6 +298,7 @@ export function adminRouter() {
           legalAddress: pick(req.body, "LegalAddress"),
           supportEmail: pick(req.body, "SupportEmail"),
           privacyEmail: pick(req.body, "PrivacyEmail"),
+          mailFrom: pick(req.body, "MailFrom"),
         })
       );
     } catch (err) {
