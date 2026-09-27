@@ -226,15 +226,20 @@
     min-height: 56px; 
     padding: 6px 6px 6px 14px; 
     gap: 6px; 
+        padding-left: 20px;
+
   } 
  
   .search-input-wrapper input { 
     height: 42px; 
     font-size: 14px; 
+            padding-left: 20px;
+
   } 
  
   .search-divider { 
     height: 22px; 
+    
   } 
  
   .filter-toggle { 
@@ -246,7 +251,8 @@
     min-width: 86px; 
     height: 42px; 
     padding: 0 14px; 
-    border-radius: 14px; 
+    border-radius: 14px;
+     
     font-size: 14px; 
   } 
  
