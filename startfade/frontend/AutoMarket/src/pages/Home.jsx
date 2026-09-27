@@ -8,12 +8,12 @@ import { AdvertisementCard, AdvertisementOffers, PromotedVehicleCard } from "../
 import { mediaUrl } from "../utils/mediaUrl";
 import { PublisherChip, publisherFrom } from "../components/PublisherChip";
 import { FiArrowRight, FiPlus } from "react-icons/fi";
-import { useAuth } from "@clerk/clerk-react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { CompanyBannerSlot } from "../components/CompanyBannerSlot";
 // import { AdSenseBanner } from "../components/AdSenseBanner";
 // import { ADSENSE_SLOT_HOME } from "../config/site";
 import { API_BASE } from "../config/api";
+import { vehicleImageAlt } from "../seo/generateVehicleSEO";
 
 // =====================================================
 // HELPERS
@@ -51,7 +51,6 @@ function buildAdSlots(promoted) {
 
 export const Home = () => {
   const { t } = useLanguage();
-  const { isSignedIn } = useAuth();
   const [searchResults, setSearchResults] = useState(null);
   const [loadingVehicles, setLoadingVehicles] = useState(true);
   const [showAdOffers, setShowAdOffers] = useState(false);
@@ -395,7 +394,7 @@ export const Home = () => {
       >
         <div className="home-vehicle-image">
           {image ? (
-            <img src={image} alt={title || "Vehicle"} />
+            <img src={image} alt={vehicleImageAlt(vehicle)} />
           ) : (
             <div className="home-no-image">
               No image available
@@ -578,13 +577,7 @@ export const Home = () => {
                 type="button"
                 className="home-add-car-btn"
                 aria-label={t("homePostCar")}
-                onClick={() =>
-                  navigate(
-                    isSignedIn
-                      ? "/add-vehicle"
-                      : "/login?redirect=/add-vehicle"
-                  )
-                }
+                onClick={() => navigate("/add-vehicle")}
               >
                 <span className="home-add-car-copy">
                   <span className="home-add-car-kicker">{t("homePostCarKicker")}</span>

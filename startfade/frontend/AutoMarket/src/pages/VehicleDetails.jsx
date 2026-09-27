@@ -28,6 +28,8 @@ import { ChatWindow } from "./ChatWindow";
 import { personDisplayName } from "../utils/personName";
 import { useAuth } from "../context/AuthContext";
 import { SeoHead } from "../seo/SeoHead";
+import { generateVehicleSEO, vehicleImageAlt } from "../seo/generateVehicleSEO";
+import { ListingRelated, SeoBreadcrumbs } from "../seo/SeoBreadcrumbs";
 import { mediaUrl } from "../utils/mediaUrl";
 import { API_BASE, API_ORIGIN } from "../config/api";
 import { SITE_LOGO } from "../config/site";
@@ -507,7 +509,7 @@ export const VehicleDetails = () => {
   if (loading) {
     return (
       <div className="vehicle-loading">
-        <SeoHead title="Vehicle" description="Vehicle listing on AutoMarket." />
+        <SeoHead title="Vehicle" description="Vehicle listing on AutoMarket." noindex />
         <div className="vehicle-loading-spinner" />
         <span>Loading vehicle...</span>
       </div>
@@ -559,6 +561,12 @@ export const VehicleDetails = () => {
       .join(" ")
       .trim() ||
     "Vehicle";
+
+  const seo = generateVehicleSEO(
+    vehicle,
+    images.map((image) => getImageUrl(image)).filter(Boolean)
+  );
+  const photoAlt = vehicleImageAlt(vehicle);
 
   const ownerKey = String(vehicle.ownerId || vehicle.userId || "");
   const isOwner = Boolean(
@@ -675,36 +683,13 @@ export const VehicleDetails = () => {
   return (
     <div className="vehicle-details-page">
       <SeoHead
-        title={vehicleTitle}
-        description={`${vehicleTitle}${location ? ` in ${location}` : ""}${
-          vehicle.price ? ` · €${formattedPrice}` : ""
-        }. Listed on AutoMarket.`}
-        image={images[0] ? getImageUrl(images[0]) : SITE_LOGO}
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "Car",
-          name: vehicleTitle,
-          brand: vehicle.brandName || vehicle.brand || undefined,
-          model: vehicle.modelName || vehicle.model || undefined,
-          vehicleModelDate: vehicle.year ? String(vehicle.year) : undefined,
-          mileageFromOdometer: vehicle.mileage
-            ? {
-                "@type": "QuantitativeValue",
-                value: Number(vehicle.mileage),
-                unitCode: "KMT",
-              }
-            : undefined,
-          offers: vehicle.price
-            ? {
-                "@type": "Offer",
-                price: Number(vehicle.price),
-                priceCurrency: "EUR",
-                availability: "https://schema.org/InStock",
-              }
-            : undefined,
-          image: images[0] ? getImageUrl(images[0]) : undefined,
-        }}
+        title={seo.title}
+        description={seo.description}
+        image={seo.image}
+        canonicalPath={seo.canonicalPath}
+        jsonLd={seo.jsonLd}
       />
+      <SeoBreadcrumbs items={seo.breadcrumbs} />
        <button
     type="button"
     className="vehicle-back-button"
@@ -741,7 +726,7 @@ export const VehicleDetails = () => {
                       src={getImageUrl(
                         images[activeImage]
                       )}
-                      alt={vehicleTitle}
+                      alt={photoAlt}
                       className="vehicle-main-image"
                     />
                   </button>
@@ -812,9 +797,7 @@ export const VehicleDetails = () => {
                     >
                       <img
                         src={getImageUrl(image)}
-                        alt={`${vehicleTitle} ${
-                          index + 1
-                        }`}
+                        alt={vehicleImageAlt(vehicle, String(index + 1))}
                       />
                     </button>
                   )
@@ -852,6 +835,13 @@ export const VehicleDetails = () => {
               <div className="vehicle-title-info">
 
                 <h1>{vehicleTitle}</h1>
+                <ListingRelated
+                  collection={seo.collection}
+                  brand={seo.brand}
+                  brandSlug={seo.brandSlug}
+                  city={seo.city}
+                  citySlug={seo.citySlug}
+                />
 
                 <div className="vehicle-badges">
 
@@ -1189,7 +1179,7 @@ export const VehicleDetails = () => {
             src={getImageUrl(
               images[activeImage]
             )}
-            alt={vehicleTitle}
+            alt={photoAlt}
             className="fullscreen-image"
           />
 

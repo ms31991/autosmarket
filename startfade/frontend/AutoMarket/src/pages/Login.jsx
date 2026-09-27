@@ -4,17 +4,18 @@ import { useAuthViewportLock } from "./useAuthViewportLock";
 import { useLanguage } from "../i18n/LanguageContext";
 import { CLERK_AUTH_APPEARANCE } from "./clerkAuthAppearance";
 import { SITE_LOGO } from "../config/site";
+import { safeAppPath } from "../utils/pendingListingDraft";
 import "./Login.css";
 
 export function Login() {
   useAuthViewportLock();
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
-  const redirect = searchParams.get("redirect");
-  const afterLogin =
-    redirect && redirect.startsWith("/") && !redirect.startsWith("//")
-      ? redirect
-      : "/";
+  const afterLogin = safeAppPath(searchParams.get("redirect"));
+  const signUpUrl =
+    afterLogin === "/"
+      ? "/register"
+      : `/register?redirect=${encodeURIComponent(afterLogin)}`;
 
   return (
     <div className="auth-page">
@@ -27,8 +28,9 @@ export function Login() {
           routing="virtual"
           withSignUp={false}
           transferable={false}
-          signUpUrl="/register"
+          signUpUrl={signUpUrl}
           fallbackRedirectUrl={afterLogin}
+          forceRedirectUrl={afterLogin}
           appearance={CLERK_AUTH_APPEARANCE}
         />
       </div>

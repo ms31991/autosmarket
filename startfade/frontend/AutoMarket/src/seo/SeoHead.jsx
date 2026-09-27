@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
-import { SITE_LOGO, SITE_NAME } from "../config/site";
+import { SITE_LOGO, SITE_NAME, SITE_URL } from "../config/site";
+import { canonicalUrl } from "./canonical";
 
 const SITE = SITE_NAME;
 const DEFAULT_IMAGE = SITE_LOGO;
@@ -46,8 +47,7 @@ function upsertJsonLd(data) {
 function absoluteUrl(path) {
   if (!path) return undefined;
   if (/^https?:\/\//i.test(path)) return path;
-  if (typeof window === "undefined") return path;
-  return `${window.location.origin}${path.startsWith("/") ? path : `/${path}`}`;
+  return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 export function SeoHead({
@@ -56,8 +56,13 @@ export function SeoHead({
   image,
   noindex = false,
   jsonLd,
+  canonicalPath,
 }) {
+  const jsonText = JSON.stringify(jsonLd ?? null);
   useEffect(() => {
+    const path =
+      canonicalPath ||
+      (typeof window !== "undefined" ? window.location.pathname : "/");
     const fullTitle = title
       ? title.includes(SITE)
         ? title
@@ -65,52 +70,82 @@ export function SeoHead({
       : SITE;
     const desc =
       description ||
-      "Buy, sell and rent vehicles on AutoMarket.";
+      "AutoMarket is an online marketplace for buying, selling and renting vehicles.";
     const imageUrl = absoluteUrl(image || DEFAULT_IMAGE);
-    const canonical =
-      typeof window !== "undefined"
-        ? `${window.location.origin}${window.location.pathname}`
-        : undefined;
+    const canonical = canonicalUrl(path);
 
     document.title = fullTitle;
     upsertMeta("name", "description", desc);
-    upsertMeta("name", "robots", noindex ? "noindex, nofollow" : "index, follow");
+    upsertMeta(
+      "name",
+      "robots",
+      noindex ? "noindex, nofollow" : "index, follow"
+    );
     upsertMeta("property", "og:site_name", SITE);
-    upsertMeta("property", "og:type", jsonLd?.["@type"] === "Vehicle" ? "website" : "website");
+    upsertMeta("property", "og:type", "website");
+    upsertMeta("property", "og:locale", "sq_AL");
     upsertMeta("property", "og:title", fullTitle);
     upsertMeta("property", "og:description", desc);
     upsertMeta("property", "og:image", imageUrl);
+    upsertMeta("property", "og:url", canonical);
     upsertMeta("name", "twitter:card", "summary_large_image");
     upsertMeta("name", "twitter:title", fullTitle);
     upsertMeta("name", "twitter:description", desc);
     upsertMeta("name", "twitter:image", imageUrl);
     upsertLink("canonical", canonical);
     upsertJsonLd(jsonLd);
-  }, [title, description, image, noindex, JSON.stringify(jsonLd)]);
+  }, [title, description, image, noindex, canonicalPath, jsonText, jsonLd]);
 
   return null;
 }
 
 export function organizationJsonLd(settings = {}) {
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : "";
   const email = settings.supportEmail;
   const privacy = settings.privacyEmail;
   return {
     "@context": "https://schema.org",
-    "@type": "AutoDealer",
-    name: settings.legalName || SITE,
-    url: origin || undefined,
-    logo: absoluteUrl(SITE_LOGO),
-    email: email || undefined,
-    description:
-      "Marketplace for buying, selling and renting vehicles.",
-    contactPoint: privacy
-      ? {
-          "@type": "ContactPoint",
-          email: privacy,
-          contactType: "customer support",
-        }
-      : undefined,
+    "@graph": [
+      {
+        "@type": "Organization",
+        name: settings.legalName || SITE,
+        url: SITE_URL,
+        logo: absoluteUrl(SITE_LOGO),
+        email: email || undefined,
+        description:
+          "Online vehicle marketplace for buying, selling and renting cars.",
+        contactPoint: privacy
+          ? {
+              "@type": "ContactPoint",
+              email: privacy,
+              contactType: "customer support",
+            }
+          : undefined,
+      },
+      {
+        "@type": "WebSite",
+        name: SITE,
+        url: SITE_URL,
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${SITE_URL}/vehicles?q={search_term_string}`,
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
+  };
+}
+
+export function breadcrumbJsonLd(items = []) {
+  const list = Array.isArray(items) ? items.filter((item) => item?.name) : [];
+  if (!list.length) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: list.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: item.path ? canonicalUrl(item.path) : undefined,
+    })),
   };
 }

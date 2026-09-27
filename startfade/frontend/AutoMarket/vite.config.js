@@ -54,10 +54,10 @@ function writePublicMeta(root, env) {
   );
   fs.writeFileSync(
     path.join(publicDir, "sitemap.xml"),
-    `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <sitemap><loc>${site}/sitemap-static.xml</loc></sitemap>\n  <sitemap><loc>${site}/sitemap-vehicles.xml</loc></sitemap>\n</sitemapindex>\n`
+    `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <sitemap><loc>${site}/sitemap-static.xml</loc></sitemap>\n  <sitemap><loc>${site}/sitemap-vehicles.xml</loc></sitemap>\n  <sitemap><loc>${site}/sitemap-taxonomy.xml</loc></sitemap>\n</sitemapindex>\n`
   );
 
-  const robots = `User-agent: *\nAllow: /\nDisallow: /login\nDisallow: /register\nDisallow: /admin\nDisallow: /messages\nDisallow: /settings\nDisallow: /add-vehicle\nDisallow: /edit-vehicle\nDisallow: /my-vehicles\nDisallow: /userprofile\nDisallow: /select-vehicle\nDisallow: /payment\n\nSitemap: ${site}/sitemap.xml\n`;
+  const robots = `User-agent: *\nAllow: /\nDisallow: /login\nDisallow: /register\nDisallow: /admin\nDisallow: /messages\nDisallow: /settings\nDisallow: /add-vehicle\nDisallow: /edit-vehicle\nDisallow: /my-vehicles\nDisallow: /userprofile\nDisallow: /select-vehicle\nDisallow: /payment\n\nUser-agent: Googlebot\nAllow: /\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nSitemap: ${site}/sitemap.xml\n`;
   fs.writeFileSync(path.join(publicDir, "robots.txt"), robots);
 
   const client = String(

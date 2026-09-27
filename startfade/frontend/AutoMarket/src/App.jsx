@@ -102,7 +102,7 @@ function App() {
     isAdminPage ||
     location.pathname.startsWith('/login') ||
     location.pathname.startsWith('/register')
-  const pageSeo = getRouteSeo(location.pathname, t)
+  const pageSeo = getRouteSeo(location.pathname, t, location.search)
 
   return (
     <div className="app-root">
@@ -115,6 +115,7 @@ function App() {
           title={pageSeo.title}
           description={pageSeo.description}
           noindex={pageSeo.noindex}
+          canonicalPath={pageSeo.canonicalPath}
           jsonLd={pageSeo.noindex ? null : organizationJsonLd(site)}
         />
       )}
@@ -168,9 +169,25 @@ function App() {
           path="/vehicles-for-sale"
           element={<VehicleForSale />}
         />
+        <Route
+          path="/vehicles-for-sale/brand/:brandSlug"
+          element={<VehicleForSale />}
+        />
+        <Route
+          path="/vehicles-for-sale/city/:citySlug"
+          element={<VehicleForSale />}
+        />
 
         <Route
           path="/vehicles-for-rent"
+          element={<VehicleForRent />}
+        />
+        <Route
+          path="/vehicles-for-rent/brand/:brandSlug"
+          element={<VehicleForRent />}
+        />
+        <Route
+          path="/vehicles-for-rent/city/:citySlug"
           element={<VehicleForRent />}
         />
 
@@ -185,11 +202,7 @@ function App() {
 
         <Route
           path="/add-vehicle"
-          element={
-            <ProtectedRoute>
-              <AddVehicle />
-            </ProtectedRoute>
-          }
+          element={<AddVehicle />}
         />
 
         <Route

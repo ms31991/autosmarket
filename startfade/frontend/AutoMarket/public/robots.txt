@@ -12,4 +12,10 @@ Disallow: /userprofile
 Disallow: /select-vehicle
 Disallow: /payment
 
+User-agent: Googlebot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
 Sitemap: https://autosmarket.me/sitemap.xml

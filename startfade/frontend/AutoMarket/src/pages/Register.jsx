@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { SignUp } from "@clerk/clerk-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   AccountConsentText,
   LegalConsent,
@@ -9,6 +9,7 @@ import { useAuthViewportLock } from "./useAuthViewportLock";
 import { useLanguage } from "../i18n/LanguageContext";
 import { CLERK_AUTH_APPEARANCE } from "./clerkAuthAppearance";
 import { SITE_LOGO } from "../config/site";
+import { safeAppPath } from "../utils/pendingListingDraft";
 import "./Register.css";
 
 function isRegisterAction(target) {
@@ -25,6 +26,12 @@ export function Register() {
   const [accepted, setAccepted] = useState(false);
   const [consentError, setConsentError] = useState(false);
   const { t } = useLanguage();
+  const [searchParams] = useSearchParams();
+  const afterAuth = safeAppPath(searchParams.get("redirect"));
+  const signInUrl =
+    afterAuth === "/"
+      ? "/login"
+      : `/login?redirect=${encodeURIComponent(afterAuth)}`;
 
   function requireConsent(event) {
     if (accepted) return;
@@ -51,8 +58,9 @@ export function Register() {
       >
         <SignUp
           routing="virtual"
-          signInUrl="/login"
-          fallbackRedirectUrl="/"
+          signInUrl={signInUrl}
+          fallbackRedirectUrl={afterAuth}
+          forceRedirectUrl={afterAuth}
           appearance={CLERK_AUTH_APPEARANCE}
         />
       </div>
@@ -74,7 +82,7 @@ export function Register() {
 
       <div className="auth-banner">
         <span>{t("alreadyAccount")}</span>
-        <Link to="/login">{t("navLogin")}</Link>
+        <Link to={signInUrl}>{t("navLogin")}</Link>
       </div>
     </div>
   );

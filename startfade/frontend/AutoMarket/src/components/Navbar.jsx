@@ -263,7 +263,7 @@ return (
 
       {/* Add Vehicle */}
       <NavLink
-        to={isSignedIn ? "/add-vehicle" : "/login"}
+        to="/add-vehicle"
         className={() =>
           `mobile-nav-center${isAdd ? " active" : ""}`
         }

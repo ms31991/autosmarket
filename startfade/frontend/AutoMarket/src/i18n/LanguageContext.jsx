@@ -18,7 +18,8 @@ export function LanguageProvider({ children }) {
   });
 
   useEffect(() => {
-    document.documentElement.lang = lang;
+    document.documentElement.lang =
+      lang === "sq" ? "sq-AL" : lang === "de" ? "de-DE" : "en";
     window.localStorage.setItem(STORAGE_KEY, lang);
   }, [lang]);
 

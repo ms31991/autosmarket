@@ -8,6 +8,7 @@ import { personDisplayName } from "../utils/personName";
 import { mediaUrl, PLACEHOLDER_IMAGE } from "../utils/mediaUrl";
 import { isPromotedVehicle } from "../utils/promotedSearch";
 import { API_BASE } from "../config/api";
+import { vehicleImageAlt } from "../seo/generateVehicleSEO";
 
 export const VehicleCard = ({
   vehicle,
@@ -257,7 +258,7 @@ export const VehicleCard = ({
           <div className="vehicle-card-main-photo">
             <img
               src={mainImage}
-              alt={title}
+              alt={vehicleImageAlt(vehicle)}
               onError={(e) => {
                 if (
                   e.currentTarget.src !==

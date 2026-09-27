@@ -1,16 +1,21 @@
 import "./VehicleForSale.css";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { SearchVehicleItem } from "../components/SearchVehicleItem";
 import { ListingAdsSidebar } from "../components/ListingAdsSidebar";
-// import { AdSenseBanner } from "../components/AdSenseBanner";
 import { VehicleSearch } from "../components/VehicleSearch";
 import { getClerkToken } from "../services/clerkToken";
 import { useRankedSearchVehicles } from "../hooks/useRankedSearchVehicles";
 import { API_BASE } from "../config/api";
-// import { ADSENSE_SLOT_HOME } from "../config/site";
 import { isSaleListing } from "../utils/listingType";
+import { useLanguage } from "../i18n/LanguageContext";
+import { SeoHead } from "../seo/SeoHead";
+import { listingCollectionSeo, useListingScope, scopeVehicles } from "../seo/listingSeo";
+import { ListingRelated, SeoBreadcrumbs } from "../seo/SeoBreadcrumbs";
 
 export const VehicleForSale = () => {
+  const { brandSlug, citySlug } = useParams();
+  const { t } = useLanguage();
   const [vehicles, setVehicles] = useState([]);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [searchActive, setSearchActive] = useState(false);
@@ -18,11 +23,24 @@ export const VehicleForSale = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [token, setToken] = useState(null);
+  const scoped = useListingScope(vehicles, brandSlug, citySlug);
   const rankedVehicles = useRankedSearchVehicles(filteredVehicles);
+  const seo = listingCollectionSeo({
+    kind: "sale",
+    brandSlug,
+    citySlug,
+    vehicles: scoped,
+    t,
+    searchActive,
+  });
 
   useEffect(() => {
     fetchVehicles();
   }, []);
+
+  useEffect(() => {
+    if (!searchActive) setFilteredVehicles(scoped);
+  }, [scoped, searchActive]);
 
   async function fetchVehicles() {
     try {
@@ -41,7 +59,7 @@ export const VehicleForSale = () => {
       const saleVehicles = data.filter(isSaleListing);
 
       setVehicles(saleVehicles);
-      setFilteredVehicles(saleVehicles);
+      setFilteredVehicles(scopeVehicles(saleVehicles, brandSlug, citySlug));
     } catch (err) {
       console.error("VEHICLES ERROR:", err);
       setError(err.message || "Something went wrong while loading vehicles.");
@@ -53,20 +71,37 @@ export const VehicleForSale = () => {
   function handleSearchResults(data) {
     if (data === null) {
       setSearchActive(false);
-      setFilteredVehicles(vehicles);
+      setFilteredVehicles(scoped);
       return;
     }
     setSearchActive(true);
-    setFilteredVehicles(data);
+    setFilteredVehicles(scopeVehicles(data, brandSlug, citySlug));
   }
 
   return (
     <div className="vehicle-for-sale-page">
+      <SeoHead
+        title={seo.title}
+        description={seo.description}
+        canonicalPath={seo.canonicalPath}
+        noindex={seo.noindex || loading}
+        jsonLd={loading ? null : seo.jsonLd}
+      />
+      <SeoBreadcrumbs items={seo.breadcrumbs} />
       <div className="vehicle-page-header">
         <div>
           <span className="vehicle-page-label">AUTOMARKET</span>
-          <h1>Vehicles For Sale</h1>
-          <p>Find your next vehicle</p>
+          <h1>{seo.h1}</h1>
+          <p>{seo.lead}</p>
+          {(brandSlug || citySlug) && (
+            <ListingRelated
+              collection={seo.related.collection}
+              brand={seo.related.brand}
+              brandSlug={seo.related.brandSlug}
+              city={seo.related.city}
+              citySlug={seo.related.citySlug}
+            />
+          )}
         </div>
       </div>
 
@@ -77,8 +112,6 @@ export const VehicleForSale = () => {
           activeLink="sale"
         />
       </div>
-
-      {/* <AdSenseBanner slot={ADSENSE_SLOT_HOME} className="adsense-banner--listing" /> */}
 
       {error ? (
         <div className="vehicle-page-message">

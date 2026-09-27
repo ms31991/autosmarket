@@ -1,20 +1,31 @@
 import "./AddVehicle.css";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getClerkToken } from "../services/clerkToken";
 import {
   LegalConsent,
   ListingConsentText,
 } from "../components/LegalConsent";
 import { useLanguage } from "../i18n/LanguageContext";
+import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../config/api";
 import { compressImageFile } from "../utils/compressImage";
+import {
+  clearPendingListing,
+  endListingPublish,
+  loadPendingListing,
+  savePendingListing,
+  tryBeginListingPublish,
+} from "../utils/pendingListingDraft";
 
 const MAX_VEHICLE_PHOTOS = 10;
 
 export const AddVehicle = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useLanguage();
+  const { isLoaded, isSignedIn, dbUser, loadingDbUser } = useAuth();
+  const [pendingAuto, setPendingAuto] = useState(false);
 
   const [listingTypes, setListingTypes] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -74,20 +85,34 @@ export const AddVehicle = () => {
   const [listingConsent, setListingConsent] = useState(false);
 
   useEffect(() => {
-    checkAuthAndFetch();
-  }, []);
+    let cancelled = false;
 
-  async function checkAuthAndFetch() {
-    const token = await getClerkToken();
-
-    if (!token) {
-      setError(t("notLoggedIn"));
-      setLoading(false);
-      return;
+    async function boot() {
+      await fetchDropdownData();
+      if (cancelled) return;
+      try {
+        const draft = await loadPendingListing();
+        if (cancelled || !draft) return;
+        if (draft.formData) setFormData((previous) => ({ ...previous, ...draft.formData }));
+        if (draft.cityQuery) setCityQuery(draft.cityQuery);
+        if (draft.brandQuery) setBrandQuery(draft.brandQuery);
+        if (draft.modelQuery) setModelQuery(draft.modelQuery);
+        if (draft.catalogVariantId) setCatalogVariantId(draft.catalogVariantId);
+        if (typeof draft.listingConsent === "boolean") {
+          setListingConsent(draft.listingConsent);
+        }
+        if (draft.images?.length) setImages(draft.images);
+        if (searchParams.get("publish") === "1") setPendingAuto(true);
+      } catch (err) {
+        console.error("PENDING LISTING LOAD:", err);
+      }
     }
 
-    fetchDropdownData();
-  }
+    boot();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function fetchDropdownData() {
     try {
@@ -662,17 +687,10 @@ export const AddVehicle = () => {
   }
 
   async function handleSubmit(e) {
-    e.preventDefault();
+    e?.preventDefault?.();
 
     setError("");
     setSuccess("");
-
-    const token = await getClerkToken();
-
-    if (!token) {
-      setError(t("notLoggedIn"));
-      return;
-    }
 
     if (images.length < 2) {
       setError(t("photosMin"));
@@ -713,6 +731,32 @@ export const AddVehicle = () => {
       setError(t("listingConsentErr"));
       return;
     }
+
+    const token = await getClerkToken();
+
+    if (!token) {
+      try {
+        await savePendingListing({
+          formData,
+          cityQuery,
+          brandQuery,
+          modelQuery,
+          catalogVariantId,
+          listingConsent,
+          images,
+        });
+      } catch (err) {
+        console.error("PENDING LISTING SAVE:", err);
+        setError(t("notLoggedIn"));
+        return;
+      }
+      navigate(
+        `/login?redirect=${encodeURIComponent("/add-vehicle?publish=1")}`
+      );
+      return;
+    }
+
+    if (!tryBeginListingPublish()) return;
 
     try {
       setSaving(true);
@@ -811,6 +855,7 @@ export const AddVehicle = () => {
           setSuccess(
             "Vehicle u krijua, por disa foto nuk u uploaduan."
           );
+          await clearPendingListing();
 
           setTimeout(() => {
             navigate("/my-vehicles");
@@ -825,6 +870,7 @@ export const AddVehicle = () => {
           ? "Vehicle dhe fotot u ruajtën me sukses!"
           : "Vehicle u krijua me sukses!"
       );
+      await clearPendingListing();
 
       setFormData({
         listingTypeId: "",
@@ -866,8 +912,24 @@ export const AddVehicle = () => {
       setVerifying(false);
     } finally {
       setSaving(false);
+      endListingPublish();
     }
   }
+
+  useEffect(() => {
+    if (!pendingAuto || loading || saving) return;
+    if (!isLoaded || !isSignedIn || loadingDbUser || !dbUser) return;
+    setPendingAuto(false);
+    handleSubmit();
+  }, [
+    pendingAuto,
+    loading,
+    saving,
+    isLoaded,
+    isSignedIn,
+    loadingDbUser,
+    dbUser,
+  ]);
 
   if (loading) {
     return (
