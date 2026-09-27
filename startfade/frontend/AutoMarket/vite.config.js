@@ -86,6 +86,17 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   return {
     plugins: [react(), publicMetaPlugin(env)],
+    resolve: {
+      alias: {
+        "@vercel/speed-insights/react": path.resolve(
+          process.cwd(),
+          "node_modules/@vercel/speed-insights/dist/react/index.mjs"
+        ),
+      },
+    },
+    optimizeDeps: {
+      include: ["@vercel/speed-insights"],
+    },
     server: {
       host: true,
       port: 5173,

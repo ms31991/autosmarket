@@ -1,6 +1,6 @@
 .banner {
   position: relative;
-  height: 540px;
+  height: 430px;
   overflow: hidden;
 
   background:
@@ -39,7 +39,7 @@
   width: min(1250px, calc(100% - 48px));
   height: 100%;
   margin: auto;
-  padding: 48px 24px;
+  padding: 28px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -66,7 +66,7 @@
   min-width: 0;
   overflow: hidden;
   box-sizing: border-box;
-  padding: 14px 14px 12px;
+  padding: 11px 12px 10px;
   border-radius: 18px;
   background:
     linear-gradient(165deg, rgba(18, 28, 48, 0.72), rgba(8, 12, 22, 0.58));
@@ -165,6 +165,14 @@
   border-bottom-right-radius: 4px;
 }
 
+.banner-features-mobile {
+  display: none;
+}
+
+.banner-chat-mobile {
+  display: none;
+}
+
 
 /* LOGO */
 
@@ -174,11 +182,11 @@
   gap: 12px;
 
   text-decoration: none;
-  margin-bottom: 25px;
+  margin-bottom: 10px;
 }
 
 .banner-logo img {
-  height: 72px;
+  height: 48px;
   width: auto;
   display: block;
   object-fit: contain;
@@ -251,9 +259,9 @@
 
   color: white;
 
-  font-size: clamp(45px, 5vw, 68px);
+  font-size: clamp(32px, 3.8vw, 50px);
   line-height: 1;
-  letter-spacing: -3px;
+  letter-spacing: -2px;
   font-weight: 800;
 }
 
@@ -265,18 +273,18 @@
 /* TEXT */
 
 .banner-subtitle {
-  margin: 18px 0 0;
+  margin: 12px 0 0;
 
   color: rgba(255,255,255,.8);
 
-  font-size: 16px;
+  font-size: 15px;
 }
 
 
 /* SELL QUOTE */
 
 .banner-sell-quote {
-  margin-top: 14px;
+  margin-top: 10px;
   padding-left: 12px;
 
   border-left: 3px solid #3b82f6;
@@ -298,13 +306,13 @@
   display: flex;
   gap: 12px;
 
-  margin-top: 24px;
+  margin-top: 12px;
 }
 
 .banner-primary,
 .banner-secondary {
-  min-height: 46px;
-  padding: 0 18px;
+  min-height: 42px;
+  padding: 0 16px;
 
   display: flex;
   align-items: center;
@@ -376,8 +384,8 @@
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    gap: 14px;
-    padding: 40px 20px 28px;
+    gap: 0;
+    padding: 18px 20px 16px;
   }
 
   .banner-content {
@@ -387,9 +395,95 @@
   }
 
   .banner-story {
-    flex: 0 0 auto;
+    display: none;
+  }
+
+  .banner-features-mobile {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
     width: 100%;
-    max-width: none;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .banner-features-mobile li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-height: 64px;
+    padding: 10px;
+    border-radius: 16px;
+    background: rgba(8, 12, 22, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #fff;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .banner-features-mobile span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);
+  }
+
+  .banner-features-mobile svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .banner-features-mobile strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .banner-features-mobile p {
+    margin: 4px 0 0;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .banner-chat-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .banner-chat-mobile span {
+    max-width: 88%;
+    padding: 8px 12px;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .banner-chat-mobile span:first-child {
+    align-self: flex-start;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-bottom-left-radius: 4px;
+  }
+
+  .banner-chat-mobile span:last-child {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    border-bottom-right-radius: 4px;
   }
 }
 
@@ -406,16 +500,16 @@
   }
 
   .banner-inner {
-    padding: 32px 16px 96px;
+    padding: 16px 16px 84px;
     gap: 16px;
   }
 
   .banner-logo {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
   }
 
   .banner-title {
-    font-size: 44px;
+    font-size: 32px;
   }
 
   .banner-subtitle {
@@ -430,23 +524,5 @@
   .banner-primary,
   .banner-secondary {
     width: 100%;
-  }
-
-  .banner-story {
-    padding: 12px 12px 10px;
-    border-radius: 16px;
-  }
-
-  .banner-story-steps {
-    gap: 6px;
-  }
-
-  .banner-chat {
-    margin-top: 8px;
-    padding-top: 8px;
-  }
-
-  .banner-chat-bubble {
-    max-width: 92%;
   }
 }

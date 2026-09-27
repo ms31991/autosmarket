@@ -11,6 +11,7 @@ import { LanguageProvider } from "./i18n/LanguageContext";
 import { CookieConsentProvider } from "./consent/CookieConsentContext";
 import { SiteSettingsProvider } from "./context/SiteSettingsContext";
 import { BrowserRouter } from "react-router-dom";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -33,6 +34,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <AuthProvider>
           <SiteSettingsProvider>
           <App />
+          <SpeedInsights />
           </SiteSettingsProvider>
         </AuthProvider>
       </ClerkTokenProvider>

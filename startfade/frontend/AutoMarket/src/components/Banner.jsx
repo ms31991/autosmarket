@@ -53,6 +53,25 @@ export const Banner = () => {
             </Link>
           </div>
 
+          <ul className="banner-features-mobile" aria-label={t("bannerStoryKicker")}>
+            {features.map((item) => {
+              const Icon = item.icon
+              return (
+                <li key={`m-${item.title}`}>
+                  <span aria-hidden="true"><Icon /></span>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>{item.text}</p>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+          <div className="banner-chat-mobile" aria-hidden="true">
+            <span>{t("bannerChatBuyer")}</span>
+            <span>{t("bannerChatSeller")}</span>
+          </div>
+
         </div>
 
         <aside className="banner-story" aria-label={t("bannerStoryKicker")}>
