@@ -11,8 +11,8 @@ import { FiArrowRight, FiPlus } from "react-icons/fi";
 import { useAuth } from "@clerk/clerk-react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { CompanyBannerSlot } from "../components/CompanyBannerSlot";
-import { AdSenseBanner } from "../components/AdSenseBanner";
-import { ADSENSE_SLOT_HOME } from "../config/site";
+// import { AdSenseBanner } from "../components/AdSenseBanner";
+// import { ADSENSE_SLOT_HOME } from "../config/site";
 import { API_BASE } from "../config/api";
 
 // =====================================================
@@ -614,7 +614,7 @@ export const Home = () => {
             </div>
           </section>
 
-          <AdSenseBanner slot={ADSENSE_SLOT_HOME} className="adsense-banner--home" />
+          {/* <AdSenseBanner slot={ADSENSE_SLOT_HOME} className="adsense-banner--home" /> */}
 
           {/* BMW */}
           <VehicleSection

@@ -4,10 +4,10 @@ import { FiArrowLeft } from "react-icons/fi";
 import "./VehicleResults.css";
 import { SearchVehicleItem } from "./SearchVehicleItem";
 import { ListingAdsSidebar } from "./ListingAdsSidebar";
-import { AdSenseBanner } from "./AdSenseBanner";
+// import { AdSenseBanner } from "./AdSenseBanner";
 import { useLanguage } from "../i18n/LanguageContext";
 import { useRankedSearchVehicles } from "../hooks/useRankedSearchVehicles";
-import { ADSENSE_SLOT_HOME } from "../config/site";
+// import { ADSENSE_SLOT_HOME } from "../config/site";
 
 export const VehicleResults = ({ data, onBack }) => {
   const { t } = useLanguage();
@@ -60,7 +60,7 @@ export const VehicleResults = ({ data, onBack }) => {
         </div>
       </div>
 
-      <AdSenseBanner slot={ADSENSE_SLOT_HOME} className="adsense-banner--listing" />
+      {/* <AdSenseBanner slot={ADSENSE_SLOT_HOME} className="adsense-banner--listing" /> */}
 
       {/* =================================================
           RESULTS CONTENT + ADS

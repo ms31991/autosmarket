@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SearchVehicleItem } from "../components/SearchVehicleItem";
 import { ListingAdsSidebar } from "../components/ListingAdsSidebar";
-import { AdSenseBanner } from "../components/AdSenseBanner";
+// import { AdSenseBanner } from "../components/AdSenseBanner";
 import { getClerkToken } from "../services/clerkToken";
 import { useLanguage } from "../i18n/LanguageContext";
 import { useRankedSearchVehicles } from "../hooks/useRankedSearchVehicles";
 import { API_BASE } from "../config/api";
-import { ADSENSE_SLOT_HOME } from "../config/site";
+// import { ADSENSE_SLOT_HOME } from "../config/site";
 
 export const Vehicles = () => {
   const { t } = useLanguage();
@@ -602,7 +602,7 @@ export const Vehicles = () => {
           VEHICLES + ADS
       ========================================= */}
 
-      <AdSenseBanner slot={ADSENSE_SLOT_HOME} className="adsense-banner--listing" />
+      {/* <AdSenseBanner slot={ADSENSE_SLOT_HOME} className="adsense-banner--listing" /> */}
 
       <div className="vehicles-content-layout">
 
