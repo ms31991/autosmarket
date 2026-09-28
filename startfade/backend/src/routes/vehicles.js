@@ -355,8 +355,18 @@ export function vehiclesRouter() {
     }
 
     const p = await resolveBrandAndModel(req.body);
-    if (!p.categoryId || !p.brandId || !p.modelId || !p.listingTypeId || !p.price || !p.year) {
-      return res.status(400).json({ message: "Fushat e detyrueshme mungojnë." });
+    const missing = [];
+    if (!p.listingTypeId) missing.push("listingTypeId");
+    if (!p.categoryId) missing.push("categoryId");
+    if (!p.brandId) missing.push("brand");
+    if (!p.modelId) missing.push("model");
+    if (!p.price) missing.push("price");
+    if (!p.year) missing.push("year");
+    if (missing.length) {
+      return res.status(400).json({
+        message: "Fushat e detyrueshme mungojnë.",
+        missing,
+      });
     }
 
     const userIdColumn = await queryOne(
@@ -405,8 +415,18 @@ export function vehiclesRouter() {
       return res.status(403).json({ message: "Forbidden" });
     }
     const p = await resolveBrandAndModel(req.body);
-    if (!p.brandId || !p.modelId) {
-      return res.status(400).json({ message: "Fushat e detyrueshme mungojnë." });
+    const missing = [];
+    if (!p.listingTypeId) missing.push("listingTypeId");
+    if (!p.categoryId) missing.push("categoryId");
+    if (!p.brandId) missing.push("brand");
+    if (!p.modelId) missing.push("model");
+    if (!p.price) missing.push("price");
+    if (!p.year) missing.push("year");
+    if (missing.length) {
+      return res.status(400).json({
+        message: "Fushat e detyrueshme mungojnë.",
+        missing,
+      });
     }
     await query(
       `UPDATE Vehicles SET

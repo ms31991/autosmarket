@@ -1,11 +1,23 @@
 import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { camel, pick, slugify } from "../camel.js";
-import { requireAdmin } from "../auth.js";
+import { requireAdmin, requireAuth } from "../auth.js";
 import { SEED_CITIES, SEED_COUNTRIES } from "../citySeed.js";
+
+async function uniqueSlug(table, base) {
+  const root = slugify(base) || "item";
+  let slug = root;
+  let n = 2;
+  while (await queryOne(`SELECT Id FROM ${table} WHERE Slug = @slug`, { slug })) {
+    slug = `${root}-${n}`;
+    n += 1;
+  }
+  return slug;
+}
 
 export function lookupRouter(table, columns, options = {}) {
   const router = Router();
+  const createGuard = options.userCreate ? requireAuth : requireAdmin;
 
   router.get("/", async (_req, res) => {
     const rows = await query(`SELECT * FROM ${table}`);
@@ -21,12 +33,26 @@ export function lookupRouter(table, columns, options = {}) {
     res.json(camel(row));
   });
 
-  router.post("/", requireAdmin, async (req, res) => {
+  router.post("/", createGuard, async (req, res) => {
+    const name = String(pick(req.body, "Name") || "").trim();
+    if (options.userCreate) {
+      if (!name) {
+        return res.status(400).json({ message: "Name is required." });
+      }
+      const existing = await queryOne(
+        `SELECT TOP 1 * FROM ${table}
+         WHERE LOWER(LTRIM(RTRIM(Name))) = LOWER(@name)`,
+        { name }
+      );
+      if (existing) return res.json(camel(existing));
+    }
+
     const values = {};
     for (const col of columns) {
       let value = pick(req.body, col);
-      if (col === "Slug" && !value && pick(req.body, "Name")) {
-        value = slugify(pick(req.body, "Name"));
+      if (col === "Name" && name) value = name;
+      if (col === "Slug" && !value && name) {
+        value = await uniqueSlug(table, name);
       }
       if (col === "IsActive" && value === undefined) value = true;
       values[col] = value;
@@ -478,14 +504,21 @@ export function vehicleModelsRouter() {
     res.json(camel(row));
   });
 
-  router.post("/", requireAdmin, async (req, res) => {
-    const name = pick(req.body, "Name");
+  router.post("/", requireAuth, async (req, res) => {
+    const name = String(pick(req.body, "Name") || "").trim();
     const brandId = pick(req.body, "BrandId");
-    const slug = pick(req.body, "Slug") || slugify(name);
+    if (!name) return res.status(400).json({ message: "Name is required." });
     const brand = await queryOne(`SELECT Id FROM Brands WHERE Id = @id`, {
       id: brandId,
     });
     if (!brand) return res.status(400).json({ message: "BrandId does not exist." });
+    const existing = await queryOne(
+      `SELECT TOP 1 * FROM VehicleModels
+       WHERE BrandId = @brandId AND LOWER(LTRIM(RTRIM(Name))) = LOWER(@name)`,
+      { brandId, name }
+    );
+    if (existing) return res.json(camel(existing));
+    const slug = pick(req.body, "Slug") || (await uniqueSlug("VehicleModels", name));
     const result = await query(
       `INSERT INTO VehicleModels (Name, Slug, BrandId)
        OUTPUT INSERTED.* VALUES (@name, @slug, @brandId)`,

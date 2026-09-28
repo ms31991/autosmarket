@@ -133,7 +133,10 @@ app.get("/api/SiteSettings", async (_req, res) => {
 app.use("/api/Admin", adminRouter());
 app.use("/api/AdPackages", adPackagesRouter());
 
-app.use("/api/Brands", lookupRouter("Brands", ["Name", "Slug"]));
+app.use(
+  "/api/Brands",
+  lookupRouter("Brands", ["Name", "Slug"], { userCreate: true })
+);
 app.use("/api/BodyTypes", lookupRouter("BodyTypes", ["Name"]));
 app.use("/api/FuelTypes", lookupRouter("FuelTypes", ["Name"]));
 app.use("/api/Transmissions", lookupRouter("Transmissions", ["Name"]));
