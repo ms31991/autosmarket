@@ -1,20 +1,21 @@
 .banner {
   position: relative;
-  height: 430px;
+  height: 460px;
   overflow: hidden;
 
   background:
     linear-gradient(
       90deg,
-      rgba(10, 15, 25, 1) 0%,
-      rgba(10, 15, 25, .92) 38%,
-      rgba(10, 15, 25, .45) 75%,
-      rgba(10, 15, 25, .25) 100%
+      rgba(8, 12, 20, 1) 0%,
+      rgba(8, 12, 20, 0.9) 32%,
+      rgba(8, 12, 20, 0.28) 54%,
+      rgba(8, 12, 20, 0.04) 78%,
+      transparent 100%
     ),
-    url("https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=2000&q=85");
+    url("https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=2200&q=90");
 
   background-size: cover;
-  background-position: center;
+  background-position: 78% 38%;
 }
 
 .banner-overlay {
@@ -23,11 +24,10 @@
   background:
     linear-gradient(
     to bottom,
-    transparent 45%,
-    rgba(10, 15, 25, 0.15) 55%,
-    rgba(10, 15, 25, 0.40) 68%,
-    rgba(10, 15, 25, 0.70) 80%,
-    rgba(10, 15, 25, 0.90) 90%,
+    transparent 58%,
+    rgba(10, 15, 25, 0.12) 70%,
+    rgba(10, 15, 25, 0.38) 84%,
+    rgba(10, 15, 25, 0.72) 94%,
     #000000 100%
   );
 }
@@ -260,43 +260,67 @@
   color: white;
 
   font-size: clamp(32px, 3.8vw, 50px);
-  line-height: 1;
+  line-height: 1.08;
   letter-spacing: -2px;
   font-weight: 800;
+  text-shadow:
+    0 2px 8px rgba(8, 12, 20, 0.85),
+    0 10px 28px rgba(8, 12, 20, 0.7);
 }
 
 .banner-title span {
-  color: #60a5fa;
+  display: block;
+  color: #93c5fd;
+  text-shadow:
+    0 2px 8px rgba(8, 12, 20, 0.85),
+    0 10px 28px rgba(8, 12, 20, 0.7);
 }
 
 
 /* TEXT */
 
 .banner-subtitle {
-  margin: 12px 0 0;
+  margin: 14px 0 0;
+  max-width: 46ch;
 
   color: rgba(255,255,255,.8);
 
   font-size: 15px;
+  line-height: 1.5;
+  text-shadow:
+    0 1px 6px rgba(8, 12, 20, 0.9),
+    0 8px 22px rgba(8, 12, 20, 0.65);
 }
 
 
-/* SELL QUOTE */
+/* TRUST */
 
-.banner-sell-quote {
-  margin-top: 10px;
-  padding-left: 12px;
+.banner-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
 
-  border-left: 3px solid #3b82f6;
-
-  color: rgba(255,255,255,.75);
-
-  font-size: 13px;
+.banner-trust li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
   font-weight: 600;
 }
 
-.banner-sell-quote span {
-  color: #60a5fa;
+.banner-trust svg {
+  width: 13px;
+  height: 13px;
+  color: #93c5fd;
 }
 
 
@@ -377,6 +401,7 @@
   .banner {
     height: auto;
     min-height: 0;
+    background-position: 78% 40%;
   }
 
   .banner-inner {
@@ -392,98 +417,6 @@
     max-width: none;
     height: auto;
     flex: 0 0 auto;
-  }
-
-  .banner-story {
-    display: none;
-  }
-
-  .banner-features-mobile {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    width: 100%;
-    margin: 12px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .banner-features-mobile li {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    min-height: 64px;
-    padding: 10px;
-    border-radius: 16px;
-    background: rgba(8, 12, 22, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: #fff;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-
-  .banner-features-mobile span {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    flex-shrink: 0;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    color: #fff;
-    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);
-  }
-
-  .banner-features-mobile svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  .banner-features-mobile strong {
-    display: block;
-    font-size: 13px;
-    font-weight: 800;
-    line-height: 1.2;
-  }
-
-  .banner-features-mobile p {
-    margin: 4px 0 0;
-    font-size: 11px;
-    font-weight: 500;
-    line-height: 1.35;
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  .banner-chat-mobile {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    width: 100%;
-    margin-top: 10px;
-  }
-
-  .banner-chat-mobile span {
-    max-width: 88%;
-    padding: 8px 12px;
-    border-radius: 14px;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1.35;
-  }
-
-  .banner-chat-mobile span:first-child {
-    align-self: flex-start;
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
-    border-bottom-left-radius: 4px;
-  }
-
-  .banner-chat-mobile span:last-child {
-    align-self: flex-end;
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    color: #fff;
-    border-bottom-right-radius: 4px;
   }
 }
 
