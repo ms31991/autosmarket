@@ -393,11 +393,20 @@ export const EditVehicle = () => {
   // FILTER MODELS
   // =====================================================
 
-  const filteredModels = formData.brandId
+  const matchedBrand =
+    brands.find((brand) => Number(brand.id) === Number(formData.brandId)) ||
+    brands.find(
+      (brand) =>
+        String(brand.name || '').trim().toLowerCase() ===
+        brandQuery.trim().toLowerCase()
+    )
+  const matchedBrandId = matchedBrand?.id || formData.brandId
+
+  const filteredModels = matchedBrandId
     ? models.filter(
         (model) =>
           Number(model.brandId) ===
-          Number(formData.brandId)
+          Number(matchedBrandId)
       )
     : []
 
@@ -456,7 +465,7 @@ export const EditVehicle = () => {
   }
 
   const modelSuggestions = (() => {
-    if (!formData.brandId) return []
+    if (!matchedBrandId && !brandQuery.trim()) return []
     const needle = normalizePlace(modelQuery)
     if (needle.length < 1) return []
     return filteredModels
@@ -811,12 +820,12 @@ export const EditVehicle = () => {
       return
     }
 
-    if (!formData.brandId) {
+    if (!brandQuery.trim()) {
       setError('Zgjidh Brand.')
       return
     }
 
-    if (!formData.modelId) {
+    if (!modelQuery.trim()) {
       setError('Zgjidh Model.')
       return
     }
@@ -851,11 +860,10 @@ export const EditVehicle = () => {
         categoryId:
           Number(formData.categoryId),
 
-        brandId:
-          Number(formData.brandId),
-
-        modelId:
-          Number(formData.modelId),
+        brandId: formData.brandId ? Number(formData.brandId) : null,
+        modelId: formData.modelId ? Number(formData.modelId) : null,
+        brandName: brandQuery.trim(),
+        modelName: modelQuery.trim(),
 
         bodyTypeId:
           getNumberOrNull(
@@ -1277,14 +1285,14 @@ export const EditVehicle = () => {
               id="modelSearch"
               type="text"
               autoComplete="off"
-              placeholder={formData.brandId ? t("typeModel") : t("firstBrand")}
+              placeholder={brandQuery.trim() ? t("typeModel") : t("firstBrand")}
               value={modelQuery}
               onChange={handleModelQueryChange}
-              onFocus={() => formData.brandId && setModelOpen(true)}
+              onFocus={() => brandQuery.trim() && setModelOpen(true)}
               onBlur={() => {
                 window.setTimeout(() => setModelOpen(false), 160)
               }}
-              disabled={!formData.brandId || saving}
+              disabled={!brandQuery.trim() || saving}
             />
             {modelOpen && modelSuggestions.length > 0 ? (
               <ul className="city-suggest-list" role="listbox">

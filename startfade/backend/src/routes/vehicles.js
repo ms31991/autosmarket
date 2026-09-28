@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { query, queryOne } from "../db.js";
-import { camel, pick } from "../camel.js";
+import { camel, pick, slugify } from "../camel.js";
 import { requireAuth } from "../auth.js";
 import { toPublicUrl } from "../paths.js";
 import { withPublicOwnerNames } from "../personName.js";
@@ -76,6 +76,101 @@ async function withImages(vehicles) {
       ownerProfileImage: toPublicUrl(v.ownerProfileImage) || null,
     })
   );
+}
+
+function asId(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+async function uniqueSlug(table, base) {
+  const root = slugify(base) || "item";
+  let slug = root;
+  let n = 2;
+  while (await queryOne(`SELECT Id FROM ${table} WHERE Slug = @slug`, { slug })) {
+    slug = `${root}-${n}`;
+    n += 1;
+  }
+  return slug;
+}
+
+async function findOrCreateBrand(name) {
+  const trimmed = String(name || "").trim().slice(0, 80);
+  if (!trimmed) return null;
+  const existing = await queryOne(
+    `SELECT TOP 1 Id FROM Brands WHERE LOWER(LTRIM(RTRIM(Name))) = LOWER(@name)`,
+    { name: trimmed }
+  );
+  if (existing?.Id ?? existing?.id) return existing.Id ?? existing.id;
+  const slug = await uniqueSlug("Brands", trimmed);
+  const rows = await query(
+    `INSERT INTO Brands (Name, Slug) OUTPUT INSERTED.Id VALUES (@name, @slug)`,
+    { name: trimmed, slug }
+  );
+  return rows[0]?.Id ?? rows[0]?.id;
+}
+
+async function findOrCreateModel(name, brandId) {
+  const trimmed = String(name || "").trim().slice(0, 80);
+  if (!trimmed || !brandId) return null;
+  const existing = await queryOne(
+    `SELECT TOP 1 Id FROM VehicleModels
+     WHERE BrandId = @brandId AND LOWER(LTRIM(RTRIM(Name))) = LOWER(@name)`,
+    { brandId, name: trimmed }
+  );
+  if (existing?.Id ?? existing?.id) return existing.Id ?? existing.id;
+  const slug = await uniqueSlug("VehicleModels", trimmed);
+  const rows = await query(
+    `INSERT INTO VehicleModels (Name, Slug, BrandId)
+     OUTPUT INSERTED.Id VALUES (@name, @slug, @brandId)`,
+    { name: trimmed, slug, brandId }
+  );
+  return rows[0]?.Id ?? rows[0]?.id;
+}
+
+async function resolveBrandAndModel(body) {
+  const p = vehicleParams(body);
+  const brandName = String(pick(body, "BrandName") || "").trim();
+  const modelName = String(pick(body, "ModelName") || "").trim();
+  let brandId = asId(p.brandId);
+  let modelId = asId(p.modelId);
+
+  if (brandName) {
+    if (brandId) {
+      const row = await queryOne(`SELECT Name FROM Brands WHERE Id = @id`, {
+        id: brandId,
+      });
+      const same =
+        row &&
+        String(row.Name ?? row.name || "").toLowerCase() ===
+          brandName.toLowerCase();
+      if (!same) {
+        brandId = await findOrCreateBrand(brandName);
+        modelId = null;
+      }
+    } else {
+      brandId = await findOrCreateBrand(brandName);
+    }
+  }
+
+  if (modelName && brandId) {
+    if (modelId) {
+      const row = await queryOne(
+        `SELECT Name, BrandId FROM VehicleModels WHERE Id = @id`,
+        { id: modelId }
+      );
+      const same =
+        row &&
+        Number(row.BrandId ?? row.brandId) === Number(brandId) &&
+        String(row.Name ?? row.name || "").toLowerCase() ===
+          modelName.toLowerCase();
+      if (!same) modelId = await findOrCreateModel(modelName, brandId);
+    } else {
+      modelId = await findOrCreateModel(modelName, brandId);
+    }
+  }
+
+  return { ...p, brandId, modelId };
 }
 
 function vehicleParams(body) {
@@ -259,7 +354,7 @@ export function vehiclesRouter() {
       return res.status(401).json({ message: "User nuk u gjet. Kyçu përsëri." });
     }
 
-    const p = vehicleParams(req.body);
+    const p = await resolveBrandAndModel(req.body);
     if (!p.categoryId || !p.brandId || !p.modelId || !p.listingTypeId || !p.price || !p.year) {
       return res.status(400).json({ message: "Fushat e detyrueshme mungojnë." });
     }
@@ -309,7 +404,10 @@ export function vehiclesRouter() {
     if (!ownsRecord(existing.OwnerId, req.user) && req.user.roleName !== "Admin") {
       return res.status(403).json({ message: "Forbidden" });
     }
-    const p = vehicleParams(req.body);
+    const p = await resolveBrandAndModel(req.body);
+    if (!p.brandId || !p.modelId) {
+      return res.status(400).json({ message: "Fushat e detyrueshme mungojnë." });
+    }
     await query(
       `UPDATE Vehicles SET
         CategoryId=@categoryId, BrandId=@brandId, ModelId=@modelId, ListingTypeId=@listingTypeId,

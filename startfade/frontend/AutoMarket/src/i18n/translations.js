@@ -55,8 +55,8 @@ const en = {
   golfTitle: "Volkswagen Golf",
   golfDesc: "Browse Volkswagen Golf vehicles available for sale.",
   seoEyebrow: "BUY & SELL CARS",
-  seoTitle: "Find Your Next Car on AutoMarket",
-  seoP1: "Browse new and used vehicles from private sellers and dealerships in Albania, Kosovo and Europe. Find BMW, Mercedes-Benz, Volkswagen Golf and many other cars in one place.",
+  seoTitle: "Autosmarket (AutoMarket) – find your next car",
+  seoP1: "Autosmarket, also known as AutoMarket, is the online marketplace for buying, selling and renting vehicles in Albania, Kosovo and Europe. Find BMW, Mercedes-Benz, Volkswagen Golf and many other cars in one place.",
   seoP2: "Search vehicles by brand, model, year, price, mileage and fuel type. AutoMarket helps buyers find the right vehicle and sellers reach more potential customers.",
 
   footerTagline: "The car marketplace for Albania, Kosovo and Europe.",
@@ -436,8 +436,8 @@ const de = {
   golfTitle: "Volkswagen Golf",
   golfDesc: "Durchsuche Volkswagen Golf Fahrzeuge zum Verkauf.",
   seoEyebrow: "AUTOS KAUFEN & VERKAUFEN",
-  seoTitle: "Finde dein nächstes Auto auf AutoMarket",
-  seoP1: "Durchsuche neue und gebrauchte Fahrzeuge von Privatverkäufern und Händlern in Albanien, Kosovo und Europa. Finde BMW, Mercedes-Benz, Volkswagen Golf und viele andere Autos an einem Ort.",
+  seoTitle: "Autosmarket (AutoMarket) – finde dein nächstes Auto",
+  seoP1: "Autosmarket, auch bekannt als AutoMarket, ist der Online-Marktplatz für Kauf, Verkauf und Miete von Fahrzeugen in Albanien, Kosovo und Europa. Finde BMW, Mercedes-Benz, Volkswagen Golf und viele andere Autos an einem Ort.",
   seoP2: "Suche nach Marke, Modell, Jahr, Preis, Kilometerstand und Kraftstoff. AutoMarket hilft Käufern und Verkäufern.",
 
   footerTagline: "Der Automarktplatz für Albanien, Kosovo und Europa.",
@@ -812,8 +812,8 @@ const sq = {
   golfTitle: "Volkswagen Golf",
   golfDesc: "Shfleto veturat Volkswagen Golf në shitje.",
   seoEyebrow: "BLI & SHIT VETURA",
-  seoTitle: "Gjej veturën tënde të ardhshme në AutoMarket",
-  seoP1: "Shfleto vetura të reja dhe të përdorura nga shitës privatë dhe tregtarë në Shqipëri, Kosovë dhe Evropë. Gjej BMW, Mercedes-Benz, Volkswagen Golf dhe shumë të tjera në një vend.",
+  seoTitle: "Autosmarket (AutoMarket) – gjej veturën tënde",
+  seoP1: "Autosmarket, i njohur edhe si AutoMarket, është tregu online për shitje dhe qira të veturave në Shqipëri, Kosovë dhe Evropë. Gjej BMW, Mercedes-Benz, Volkswagen Golf dhe shumë të tjera në një vend.",
   seoP2: "Kërko sipas markës, modelit, vitit, çmimit, kilometrazhit dhe karburantit. AutoMarket ndihmon blerësit dhe shitësit.",
 
   footerTagline: "Tregu i veturave për Shqipërinë, Kosovën dhe Evropën.",

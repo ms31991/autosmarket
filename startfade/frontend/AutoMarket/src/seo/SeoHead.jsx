@@ -1,9 +1,8 @@
 import { useEffect } from "react";
 
-import { SITE_LOGO, SITE_NAME, SITE_URL } from "../config/site";
+import { SITE_ALT_NAME, SITE_BRAND, SITE_LOGO, SITE_URL } from "../config/site";
 import { canonicalUrl } from "./canonical";
 
-const SITE = SITE_NAME;
 const DEFAULT_IMAGE = SITE_LOGO;
 
 function upsertMeta(attr, key, content) {
@@ -64,13 +63,13 @@ export function SeoHead({
       canonicalPath ||
       (typeof window !== "undefined" ? window.location.pathname : "/");
     const fullTitle = title
-      ? title.includes(SITE)
+      ? title.includes(SITE_BRAND) || title.includes(SITE_ALT_NAME)
         ? title
-        : `${title} | ${SITE}`
-      : SITE;
+        : `${title} | ${SITE_BRAND}`
+      : `${SITE_BRAND} (${SITE_ALT_NAME})`;
     const desc =
       description ||
-      "AutoMarket is an online marketplace for buying, selling and renting vehicles.";
+      `${SITE_BRAND} (${SITE_ALT_NAME}) is an online marketplace for buying, selling and renting vehicles.`;
     const imageUrl = absoluteUrl(image || DEFAULT_IMAGE);
     const canonical = canonicalUrl(path);
 
@@ -81,7 +80,7 @@ export function SeoHead({
       "robots",
       noindex ? "noindex, nofollow" : "index, follow"
     );
-    upsertMeta("property", "og:site_name", SITE);
+    upsertMeta("property", "og:site_name", SITE_BRAND);
     upsertMeta("property", "og:type", "website");
     upsertMeta("property", "og:locale", "sq_AL");
     upsertMeta("property", "og:title", fullTitle);
@@ -107,12 +106,13 @@ export function organizationJsonLd(settings = {}) {
     "@graph": [
       {
         "@type": "Organization",
-        name: settings.legalName || SITE,
+        name: SITE_BRAND,
+        alternateName: [SITE_ALT_NAME, "autosmarket.me"],
+        legalName: settings.legalName || undefined,
         url: SITE_URL,
         logo: absoluteUrl(SITE_LOGO),
         email: email || undefined,
-        description:
-          "Online vehicle marketplace for buying, selling and renting cars.",
+        description: `${SITE_BRAND}, also known as ${SITE_ALT_NAME}, is an online vehicle marketplace for buying, selling and renting cars.`,
         contactPoint: privacy
           ? {
               "@type": "ContactPoint",
@@ -123,11 +123,12 @@ export function organizationJsonLd(settings = {}) {
       },
       {
         "@type": "WebSite",
-        name: SITE,
+        name: SITE_BRAND,
+        alternateName: SITE_ALT_NAME,
         url: SITE_URL,
         potentialAction: {
           "@type": "SearchAction",
-          target: `${SITE_URL}/vehicles?q={search_term_string}`,
+          target: `${SITE_URL}/vehicles?search={search_term_string}`,
           "query-input": "required name=search_term_string",
         },
       },

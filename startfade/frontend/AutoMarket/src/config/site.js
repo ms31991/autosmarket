@@ -3,6 +3,8 @@ function env(name, fallback = "") {
 }
 
 export const SITE_NAME = "AutoMarket";
+export const SITE_BRAND = "Autosmarket";
+export const SITE_ALT_NAME = "AutoMarket";
 export const SITE_LOGO = "/asd.png?v=3";
 
 export const SITE_URL = env("VITE_PUBLIC_SITE_URL", "https://autosmarket.me").replace(
