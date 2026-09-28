@@ -20,8 +20,8 @@ const en = {
   closeLanguages: "Close languages",
 
   bannerBadge: "Marketplace · sale & rent",
-  bannerTitle1: "List your car.",
-  bannerTitle2: "The buyer writes you here.",
+  bannerTitle1: "Find Your",
+  bannerTitle2: "Perfect Ride.",
   bannerSub: "Autosmarket is an online marketplace. You set the price, you meet — we do not buy the car.",
   bannerTrust1: "Chat on the platform",
   bannerTrust2: "No middleman",
@@ -404,8 +404,8 @@ const de = {
   closeLanguages: "Sprachen schließen",
 
   bannerBadge: "Marktplatz · Kauf & Miete",
-  bannerTitle1: "Inseriere dein Auto.",
-  bannerTitle2: "Der Käufer schreibt dir hier.",
+  bannerTitle1: "Finde deine",
+  bannerTitle2: "perfekte Fahrt.",
   bannerSub: "Autosmarket ist ein Online-Marktplatz. Du setzt den Preis, ihr trefft euch — wir kaufen das Auto nicht.",
   bannerTrust1: "Chat auf der Plattform",
   bannerTrust2: "Kein Zwischenhändler",
@@ -783,8 +783,8 @@ const sq = {
   closeLanguages: "Mbyll gjuhët",
 
   bannerBadge: "Treg online · shitje & qira",
-  bannerTitle1: "Shpall makinën.",
-  bannerTitle2: "Blerësi të shkruan këtu.",
+  bannerTitle1: "Gjej",
+  bannerTitle2: "veturën tënde.",
   bannerSub: "Autosmarket është treg online. Ju vendosni çmimin, ju takoheni — ne nuk e blejmë veturën.",
   bannerTrust1: "Biseda në platformë",
   bannerTrust2: "Pa ndërmjetës",

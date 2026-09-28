@@ -21,8 +21,7 @@ export const Banner = () => {
           <span className="banner-badge">{t("bannerBadge")}</span>
 
           <h1 className="banner-title">
-            {t("bannerTitle1")}
-            <span>{t("bannerTitle2")}</span>
+            {t("bannerTitle1")} <span>{t("bannerTitle2")}</span>
           </h1>
 
           <p className="banner-subtitle">{t("bannerSub")}</p>
