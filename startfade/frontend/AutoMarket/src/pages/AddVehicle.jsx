@@ -83,6 +83,7 @@ export const AddVehicle = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [listingConsent, setListingConsent] = useState(false);
+  const [missing, setMissing] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -202,8 +203,42 @@ export const AddVehicle = () => {
       [name]: value,
     }));
 
+    markFilled(name);
     setError("");
     setSuccess("");
+  }
+
+  function markFilled(key) {
+    setMissing((prev) => (prev.includes(key) ? prev.filter((item) => item !== key) : prev));
+  }
+
+  function fieldClass(key, extra = "") {
+    return ["form-field", extra, missing.includes(key) ? "form-field--invalid" : ""]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  function revealMissing(keys) {
+    setMissing(keys);
+    setError(t("fillRedFields"));
+    window.requestAnimationFrame(() => {
+      document
+        .querySelector(`[data-field="${keys[0]}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+
+  function collectMissing() {
+    const keys = [];
+    if (images.length < 2) keys.push("photos");
+    if (!formData.listingTypeId) keys.push("listingTypeId");
+    if (!formData.categoryId) keys.push("categoryId");
+    if (!brandQuery.trim()) keys.push("brand");
+    if (!modelQuery.trim()) keys.push("model");
+    if (!formData.year) keys.push("year");
+    if (!formData.price) keys.push("price");
+    if (!listingConsent) keys.push("consent");
+    return keys;
   }
 
   function handleBrandQueryChange(e) {
@@ -222,6 +257,7 @@ export const AddVehicle = () => {
     setCatalogVariants([]);
     setCatalogVariantId("");
     setCatalogStatus("");
+    if (value.trim()) markFilled("brand");
     setError("");
     setSuccess("");
   }
@@ -239,6 +275,7 @@ export const AddVehicle = () => {
     setCatalogVariants([]);
     setCatalogVariantId("");
     setCatalogStatus("");
+    markFilled("brand");
     setError("");
     setSuccess("");
   }
@@ -257,6 +294,7 @@ export const AddVehicle = () => {
     setCatalogVariants([]);
     setCatalogVariantId("");
     setCatalogStatus("");
+    if (value.trim()) markFilled("model");
     setError("");
     setSuccess("");
   }
@@ -271,6 +309,7 @@ export const AddVehicle = () => {
     setCatalogVariants([]);
     setCatalogVariantId("");
     setCatalogStatus("");
+    markFilled("model");
     setError("");
     setSuccess("");
   }
@@ -629,7 +668,9 @@ export const AddVehicle = () => {
       if (validFiles.length > room) {
         setError(t("photosMax"));
       }
-      return [...previous, ...validFiles.slice(0, room)];
+      const next = [...previous, ...validFiles.slice(0, room)];
+      if (next.length >= 2) markFilled("photos");
+      return next;
     });
     e.target.value = "";
   }
@@ -699,44 +740,11 @@ export const AddVehicle = () => {
 
     setError("");
     setSuccess("");
+    setMissing([]);
 
-    if (images.length < 2) {
-      setError(t("photosMin"));
-      return;
-    }
-
-    if (!formData.listingTypeId) {
-      setError(t("pickSaleRent"));
-      return;
-    }
-
-    if (!formData.categoryId) {
-      setError(t("pickCategory"));
-      return;
-    }
-
-    if (!brandQuery.trim()) {
-      setError(t("pickBrand"));
-      return;
-    }
-
-    if (!modelQuery.trim()) {
-      setError(t("pickModel"));
-      return;
-    }
-
-    if (!formData.price) {
-      setError(t("priceRequired"));
-      return;
-    }
-
-    if (!formData.year) {
-      setError(t("yearRequired"));
-      return;
-    }
-
-    if (!listingConsent) {
-      setError(t("listingConsentErr"));
+    const required = collectMissing();
+    if (required.length) {
+      revealMissing(required);
       return;
     }
 
@@ -819,6 +827,7 @@ export const AddVehicle = () => {
       if (!response.ok) {
         let message =
           `Vehicle nuk u krijua. Status: ${response.status}`;
+        let serverMissing = [];
 
         try {
           const errorData =
@@ -827,10 +836,19 @@ export const AddVehicle = () => {
           if (errorData.message) {
             message = errorData.message;
           }
+          if (Array.isArray(errorData.missing)) {
+            serverMissing = errorData.missing;
+          }
         } catch {
           if (responseText) {
             message = responseText;
           }
+        }
+
+        if (serverMissing.length) {
+          setVerifying(false);
+          revealMissing(serverMissing);
+          return;
         }
 
         throw new Error(message);
@@ -1001,7 +1019,7 @@ export const AddVehicle = () => {
             <p>{t("photosHint")}</p>
           </div>
 
-          <label className={`photo-add-circle-wrap${images.length < 2 ? " photo-add-needed" : ""}`}>
+          <label className={`photo-add-circle-wrap${images.length < 2 ? " photo-add-needed" : ""}${missing.includes("photos") ? " photo-add-invalid" : ""}`} data-field="photos">
             <input
               type="file"
               accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
@@ -1057,7 +1075,7 @@ export const AddVehicle = () => {
 
         <div className="form-grid">
 
-          <div className="form-field">
+          <div className={fieldClass("listingTypeId")} data-field="listingTypeId">
             <label htmlFor="listingTypeId">Listing Type</label>
 
             <select
@@ -1081,7 +1099,7 @@ export const AddVehicle = () => {
             </select>
           </div>
 
-          <div className="form-field">
+          <div className={fieldClass("categoryId")} data-field="categoryId">
             <label htmlFor="categoryId">Category</label>
 
             <select
@@ -1151,7 +1169,7 @@ export const AddVehicle = () => {
 
         <div className="form-grid">
 
-          <div className="form-field city-autocomplete">
+          <div className={fieldClass("brand", "city-autocomplete")} data-field="brand">
             <label htmlFor="brandSearch">{t("brand")}</label>
             <input
               id="brandSearch"
@@ -1184,7 +1202,7 @@ export const AddVehicle = () => {
             ) : null}
           </div>
 
-          <div className="form-field city-autocomplete">
+          <div className={fieldClass("model", "city-autocomplete")} data-field="model">
             <label htmlFor="modelSearch">{t("model")}</label>
             <input
               id="modelSearch"
@@ -1492,7 +1510,7 @@ export const AddVehicle = () => {
 
         <div className="form-grid">
 
-          <div className="form-field">
+          <div className={fieldClass("year")} data-field="year">
             <label htmlFor="year">Year</label>
 
             <input
@@ -1525,7 +1543,7 @@ export const AddVehicle = () => {
             </div>
           </div>
 
-          <div className="form-field price-field">
+          <div className={fieldClass("price", "price-field")} data-field="price">
             <label htmlFor="price">Price</label>
 
             <div className="input-with-unit">
@@ -1547,8 +1565,13 @@ export const AddVehicle = () => {
 
         <LegalConsent
           id="listing-consent"
+          className={missing.includes("consent") ? "legal-consent--invalid" : ""}
+          data-field="consent"
           checked={listingConsent}
-          onChange={setListingConsent}
+          onChange={(checked) => {
+            setListingConsent(checked);
+            if (checked) markFilled("consent");
+          }}
         >
           <ListingConsentText />
         </LegalConsent>
@@ -1571,7 +1594,7 @@ export const AddVehicle = () => {
             type="submit"
             className="submit-button"
             disabled={
-              saving || uploadingImages || !listingConsent
+              saving || uploadingImages
             }
           >
             {saving

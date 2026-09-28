@@ -365,6 +365,27 @@
   border-color: var(--gold);
 }
 
+.form-field--invalid input,
+.form-field--invalid select {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.35);
+}
+
+.form-field--invalid label {
+  color: #f87171;
+}
+
+.photo-add-circle-wrap.photo-add-invalid {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.35);
+}
+
+.legal-consent--invalid {
+  outline: 1px solid #ef4444;
+  outline-offset: 4px;
+  border-radius: 10px;
+}
+
 .form-field select:disabled {
   opacity: 0.5;
   cursor: not-allowed;

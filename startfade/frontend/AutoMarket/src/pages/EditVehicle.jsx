@@ -82,9 +82,11 @@ export const EditVehicle = () => {
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [verifying, setVerifying] = useState(false)
 
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [missing, setMissing] = useState([])
 
   // =====================================================
   // INITIAL LOAD
@@ -350,8 +352,41 @@ export const EditVehicle = () => {
       [name]: value,
     }))
 
+    markFilled(name)
     setError('')
     setSuccess('')
+  }
+
+  function markFilled(key) {
+    setMissing((prev) => (prev.includes(key) ? prev.filter((item) => item !== key) : prev))
+  }
+
+  function fieldClass(key, extra = '') {
+    return ['form-field', extra, missing.includes(key) ? 'form-field--invalid' : '']
+      .filter(Boolean)
+      .join(' ')
+  }
+
+  function revealMissing(keys) {
+    setMissing(keys)
+    setError(t('fillRedFields'))
+    window.requestAnimationFrame(() => {
+      document
+        .querySelector(`[data-field="${keys[0]}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+  }
+
+  function collectMissing() {
+    const keys = []
+    if (images.length < 2) keys.push('photos')
+    if (!formData.listingTypeId) keys.push('listingTypeId')
+    if (!formData.categoryId) keys.push('categoryId')
+    if (!brandQuery.trim()) keys.push('brand')
+    if (!modelQuery.trim()) keys.push('model')
+    if (!formData.year) keys.push('year')
+    if (!formData.price) keys.push('price')
+    return keys
   }
 
   // =====================================================
@@ -371,6 +406,7 @@ export const EditVehicle = () => {
     })
     setModelQuery('')
     setModelOpen(false)
+    if (value.trim()) markFilled('brand')
     setError('')
     setSuccess('')
   }
@@ -385,6 +421,7 @@ export const EditVehicle = () => {
     setBrandOpen(false)
     setModelQuery('')
     setModelOpen(false)
+    markFilled('brand')
     setError('')
     setSuccess('')
   }
@@ -484,6 +521,7 @@ export const EditVehicle = () => {
       if (current && current.name === value) return previous
       return { ...previous, modelId: '' }
     })
+    if (value.trim()) markFilled('model')
     setError('')
   }
 
@@ -494,6 +532,7 @@ export const EditVehicle = () => {
     }))
     setModelQuery(model.name)
     setModelOpen(false)
+    markFilled('model')
     setError('')
   }
 
@@ -580,16 +619,20 @@ export const EditVehicle = () => {
           throw new Error(message)
         }
         const newImage = JSON.parse(responseText)
-        setImages((previous) => [
-          ...previous,
-          {
-            id: newImage.imageId,
-            vehicleId: newImage.vehicleId,
-            imageUrl: newImage.imageUrl,
-            isPrimary: newImage.isPrimary,
-            sortOrder: newImage.sortOrder,
-          },
-        ])
+        setImages((previous) => {
+          const next = [
+            ...previous,
+            {
+              id: newImage.imageId,
+              vehicleId: newImage.vehicleId,
+              imageUrl: newImage.imageUrl,
+              isPrimary: newImage.isPrimary,
+              sortOrder: newImage.sortOrder,
+            },
+          ]
+          if (next.length >= 2) markFilled('photos')
+          return next
+        })
       }
       setSuccess('Fotoja u uploadua me sukses.')
     } catch (err) {
@@ -803,6 +846,7 @@ export const EditVehicle = () => {
 
     setError('')
     setSuccess('')
+    setMissing([])
 
     const token = await getClerkToken()
 
@@ -811,46 +855,15 @@ export const EditVehicle = () => {
       return
     }
 
-    // -------------------------------------------------
-    // VALIDATION
-    // -------------------------------------------------
-
-    if (!formData.categoryId) {
-      setError('Zgjidh Category.')
-      return
-    }
-
-    if (!brandQuery.trim()) {
-      setError('Zgjidh Brand.')
-      return
-    }
-
-    if (!modelQuery.trim()) {
-      setError('Zgjidh Model.')
-      return
-    }
-
-    if (!formData.listingTypeId) {
-      setError('Zgjidh Listing Type.')
-      return
-    }
-
-    if (!formData.price) {
-      setError(
-        'Price është i detyrueshëm.'
-      )
-      return
-    }
-
-    if (!formData.year) {
-      setError(
-        'Year është i detyrueshëm.'
-      )
+    const required = collectMissing()
+    if (required.length) {
+      revealMissing(required)
       return
     }
 
     try {
       setSaving(true)
+      setVerifying(true)
 
       // -------------------------------------------------
       // BODY
@@ -1019,6 +1032,7 @@ export const EditVehicle = () => {
       if (!response.ok) {
         let message =
           `Vehicle nuk u ndryshua. Status: ${response.status}`
+        let serverMissing = []
 
         try {
           const errorData =
@@ -1028,11 +1042,20 @@ export const EditVehicle = () => {
             message =
               errorData.message
           }
+          if (Array.isArray(errorData.missing)) {
+            serverMissing = errorData.missing
+          }
         } catch {
           if (responseText) {
             message =
               responseText
           }
+        }
+
+        if (serverMissing.length) {
+          setVerifying(false)
+          revealMissing(serverMissing)
+          return
         }
 
         throw new Error(message)
@@ -1059,6 +1082,7 @@ export const EditVehicle = () => {
         err.message ||
           'Ndodhi një gabim gjatë ndryshimit të veturës.'
       )
+      setVerifying(false)
     } finally {
       setSaving(false)
     }
@@ -1078,6 +1102,16 @@ export const EditVehicle = () => {
 
   return (
     <div className="add-vehicle-page">
+      {verifying ? (
+        <div className="publish-verify-overlay" role="status" aria-live="polite">
+          <div className="verify-spinner" aria-hidden="true">
+            {Array.from({ length: 12 }, (_, i) => (
+              <span key={i} style={{ transform: `rotate(${i * 30}deg)` }} />
+            ))}
+          </div>
+          <p>{t("verifying")}</p>
+        </div>
+      ) : null}
       <div className="add-vehicle-heading">
         <div>
           <span className="form-eyebrow">AUTOTRADE</span>
@@ -1107,7 +1141,7 @@ export const EditVehicle = () => {
             <p>{t("photosHint")}</p>
           </div>
 
-          <label className={`photo-add-circle-wrap${images.length < 2 ? " photo-add-needed" : ""}`}>
+          <label className={`photo-add-circle-wrap${images.length < 2 ? " photo-add-needed" : ""}${missing.includes("photos") ? " photo-add-invalid" : ""}`} data-field="photos">
             <input
               id="vehicle-image-input"
               type="file"
@@ -1168,7 +1202,7 @@ export const EditVehicle = () => {
         </div>
 
         <div className="form-grid">
-          <div className="form-field">
+          <div className={fieldClass('listingTypeId')} data-field="listingTypeId">
             <label htmlFor="listingTypeId">{t("listingType")}</label>
             <select
               id="listingTypeId"
@@ -1185,7 +1219,7 @@ export const EditVehicle = () => {
             </select>
           </div>
 
-          <div className="form-field">
+          <div className={fieldClass('categoryId')} data-field="categoryId">
             <label htmlFor="categoryId">{t("category")}</label>
             <select
               id="categoryId"
@@ -1246,7 +1280,7 @@ export const EditVehicle = () => {
         </div>
 
         <div className="form-grid">
-          <div className="form-field city-autocomplete">
+          <div className={fieldClass('brand', 'city-autocomplete')} data-field="brand">
             <label htmlFor="brandSearch">{t("brand")}</label>
             <input
               id="brandSearch"
@@ -1279,7 +1313,7 @@ export const EditVehicle = () => {
             ) : null}
           </div>
 
-          <div className="form-field city-autocomplete">
+          <div className={fieldClass('model', 'city-autocomplete')} data-field="model">
             <label htmlFor="modelSearch">{t("model")}</label>
             <input
               id="modelSearch"
@@ -1541,7 +1575,7 @@ export const EditVehicle = () => {
         </div>
 
         <div className="form-grid">
-          <div className="form-field">
+          <div className={fieldClass('year')} data-field="year">
             <label htmlFor="year">{t("year")}</label>
             <input
               id="year"
@@ -1571,7 +1605,7 @@ export const EditVehicle = () => {
             </div>
           </div>
 
-          <div className="form-field price-field">
+          <div className={fieldClass('price', 'price-field')} data-field="price">
             <label htmlFor="price">{t("price")}</label>
             <div className="input-with-unit">
               <input

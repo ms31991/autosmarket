@@ -6,8 +6,10 @@ export const LegalConsent = ({
   checked,
   onChange,
   children,
+  className = "",
+  ...rest
 }) => (
-  <label className="legal-consent" htmlFor={id}>
+  <label className={`legal-consent${className ? ` ${className}` : ""}`} htmlFor={id} {...rest}>
     <input
       id={id}
       type="checkbox"
