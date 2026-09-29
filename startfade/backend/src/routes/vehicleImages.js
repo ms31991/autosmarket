@@ -119,6 +119,15 @@ export function vehicleImagesRouter() {
     if (!image) return res.status(404).json({ message: "Not found." });
     const access = await assertCanEditVehicle(req, image.VehicleId);
     if (access.status) return res.status(access.status).json({ message: access.message });
+    const countRow = await queryOne(
+      `SELECT COUNT(*) AS n FROM VehicleImages WHERE VehicleId = @vehicleId`,
+      { vehicleId: image.VehicleId }
+    );
+    if (Number(countRow?.n ?? countRow?.N ?? 0) <= 2) {
+      return res.status(400).json({
+        message: "Duhet të mbeten të paktën 2 foto. Shto një foto tjetër para se ta fshish këtë.",
+      });
+    }
     const filePath = publicFilePath(image.ImageUrl);
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     await query(`DELETE FROM VehicleImages WHERE Id = @id`, { id: image.Id });

@@ -535,6 +535,18 @@
         border:
             1px solid
             rgba(255, 255, 255, 0.45);
+
+        transition:
+            opacity 0.18s ease,
+            transform 0.18s ease,
+            visibility 0.18s ease;
+    }
+
+    .mobile-bottom-nav.mobile-bottom-nav--hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateX(-50%) translateY(calc(100% + 32px));
     }
 
 

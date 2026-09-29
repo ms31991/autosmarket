@@ -48,6 +48,7 @@ export async function vehicleSitemap(_req, res) {
     const rows = await query(`
       SELECT TOP 45000 Id, CreatedDate
       FROM Vehicles
+      WHERE (SELECT COUNT(*) FROM VehicleImages vi WHERE vi.VehicleId = Vehicles.Id) >= 2
       ORDER BY CreatedDate DESC
     `);
     const origin = siteOrigin();

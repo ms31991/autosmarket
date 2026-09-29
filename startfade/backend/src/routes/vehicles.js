@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { camel, pick, slugify } from "../camel.js";
-import { requireAuth } from "../auth.js";
+import { optionalAuth, requireAuth } from "../auth.js";
 import { toPublicUrl } from "../paths.js";
 import { withPublicOwnerNames } from "../personName.js";
 import { keysFromAuth, ownsRecord, requireDbUser, resolveUserKeys, userMatchSql } from "../identity.js";
@@ -49,6 +49,10 @@ const VEHICLE_SELECT = `
   LEFT JOIN Colors col ON col.Id = v.ColorId
   LEFT JOIN Cities city ON city.Id = v.CityId
 `;
+
+const HAS_MIN_PHOTOS = `(
+  SELECT COUNT(*) FROM VehicleImages vi WHERE vi.VehicleId = v.Id
+) >= 2`;
 
 async function withImages(vehicles) {
   const list = camel(vehicles);
@@ -204,7 +208,9 @@ export function vehiclesRouter() {
   const router = Router();
 
   router.get("/", async (_req, res) => {
-    const rows = await query(`${VEHICLE_SELECT} ORDER BY v.CreatedDate DESC`);
+    const rows = await query(
+      `${VEHICLE_SELECT} WHERE ${HAS_MIN_PHOTOS} ORDER BY v.CreatedDate DESC`
+    );
     res.json(await withImages(rows));
   });
 
@@ -222,6 +228,7 @@ export function vehiclesRouter() {
     const keys = await resolveUserKeys(req.params.ownerId);
     const rows = await query(
       `${VEHICLE_SELECT} WHERE ${userMatchSql("v.OwnerId", "ownerId", "clerkUserId")}
+        AND ${HAS_MIN_PHOTOS}
        ORDER BY v.CreatedDate DESC`,
       { ownerId: keys.id, clerkUserId: keys.clerkUserId || keys.id }
     );
@@ -275,7 +282,8 @@ export function vehiclesRouter() {
     add("minMileage", "v.Mileage >= @minMileage", q.minMileage);
     add("maxMileage", "v.Mileage <= @maxMileage", q.maxMileage);
 
-    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+    where.push(HAS_MIN_PHOTOS);
+    const whereSql = `WHERE ${where.join(" AND ")}`;
     const sortMap = {
       priceasc: "v.Price ASC",
       pricedesc: "v.Price DESC",
@@ -319,12 +327,18 @@ export function vehiclesRouter() {
     });
   });
 
-  router.get("/:id", async (req, res) => {
+  router.get("/:id", optionalAuth, async (req, res) => {
     const row = await queryOne(`${VEHICLE_SELECT} WHERE v.Id = @id`, {
       id: Number(req.params.id),
     });
     if (!row) return res.status(404).json({ message: "Vehicle nuk u gjet." });
     const [vehicle] = await withImages([row]);
+    const photoCount = Array.isArray(vehicle.images) ? vehicle.images.length : 0;
+    const canSeeIncomplete =
+      ownsRecord(row.OwnerId, req.user) || req.user?.roleName === "Admin";
+    if (photoCount < 2 && !canSeeIncomplete) {
+      return res.status(404).json({ message: "Vehicle nuk u gjet." });
+    }
     res.json(vehicle);
   });
 
@@ -422,6 +436,11 @@ export function vehiclesRouter() {
     if (!p.modelId) missing.push("model");
     if (!p.price) missing.push("price");
     if (!p.year) missing.push("year");
+    const photoRow = await queryOne(
+      `SELECT COUNT(*) AS n FROM VehicleImages WHERE VehicleId = @id`,
+      { id }
+    );
+    if (Number(photoRow?.n ?? photoRow?.N ?? 0) < 2) missing.push("photos");
     if (missing.length) {
       return res.status(400).json({
         message: "Fushat e detyrueshme mungojnë.",

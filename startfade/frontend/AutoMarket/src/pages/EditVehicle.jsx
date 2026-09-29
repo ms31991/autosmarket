@@ -750,6 +750,11 @@ export const EditVehicle = () => {
       return
     }
 
+    if (images.length <= 2) {
+      setError(t('photosMinKeep'))
+      return
+    }
+
     const confirmed =
       window.confirm(
         'A jeni i sigurt që dëshironi ta fshini këtë foto?'

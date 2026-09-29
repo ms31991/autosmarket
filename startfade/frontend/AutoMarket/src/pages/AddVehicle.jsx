@@ -683,9 +683,23 @@ export const AddVehicle = () => {
     );
   }
 
-  async function uploadVehicleImages(vehicleId) {
-    if (images.length === 0) return;
+  async function discardUnpublishedVehicle(vehicleId) {
+    const token = await getClerkToken();
+    if (!token || !vehicleId) return;
+    try {
+      await fetch(`${API_BASE}/Vehicles/${vehicleId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (err) {
+      console.error("DISCARD VEHICLE:", err);
+    }
+  }
 
+  async function uploadVehicleImages(vehicleId) {
+    if (images.length === 0) return 0;
+
+    let uploaded = 0;
     try {
       setUploadingImages(true);
 
@@ -708,31 +722,25 @@ export const AddVehicle = () => {
           }
         );
 
-        const responseText = await response.text();
-
-        if (!response.ok) {
-          let message =
-            `Fotoja ${file.name} nuk u uploadua.`;
-
-          try {
-            const errorData =
-              JSON.parse(responseText);
-
-            if (errorData.message) {
-              message = errorData.message;
-            }
-          } catch {
-            if (responseText) {
-              message = responseText;
-            }
-          }
-
-          throw new Error(message);
+        if (response.ok) {
+          uploaded += 1;
+          continue;
         }
+
+        const responseText = await response.text();
+        let message = `Fotoja ${file.name} nuk u uploadua.`;
+        try {
+          const errorData = JSON.parse(responseText);
+          if (errorData.message) message = errorData.message;
+        } catch {
+          if (responseText) message = responseText;
+        }
+        console.error("IMAGE UPLOAD ERROR:", message);
       }
     } finally {
       setUploadingImages(false);
     }
+    return uploaded;
   }
 
   async function handleSubmit(e) {
@@ -871,33 +879,21 @@ export const AddVehicle = () => {
         );
       }
 
-      if (images.length > 0) {
-        try {
-          await uploadVehicleImages(vehicleId);
-        } catch (imageError) {
-          console.error(
-            "IMAGE UPLOAD ERROR:",
-            imageError
-          );
-
-          setSuccess(
-            "Vehicle u krijua, por disa foto nuk u uploaduan."
-          );
-          await clearPendingListing();
-
-          setTimeout(() => {
-            navigate("/my-vehicles");
-          }, 1500);
-
-          return;
-        }
+      let uploaded = 0;
+      try {
+        uploaded = await uploadVehicleImages(vehicleId);
+      } catch (imageError) {
+        console.error("IMAGE UPLOAD ERROR:", imageError);
+        await discardUnpublishedVehicle(vehicleId);
+        throw new Error(t("photosPublishFail"));
       }
 
-      setSuccess(
-        images.length > 0
-          ? "Vehicle dhe fotot u ruajtën me sukses!"
-          : "Vehicle u krijua me sukses!"
-      );
+      if (uploaded < 2) {
+        await discardUnpublishedVehicle(vehicleId);
+        throw new Error(t("photosPublishFail"));
+      }
+
+      setSuccess(t("createdOk"));
       await clearPendingListing();
 
       setFormData({

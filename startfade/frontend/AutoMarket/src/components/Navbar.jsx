@@ -44,6 +44,8 @@ typeof window !== "undefined" &&
 window.matchMedia("(max-width: 768px)").matches
 );
 
+const [keyboardOpen, setKeyboardOpen] = useState(false);
+
 useEffect(() => {
 const mq = window.matchMedia("(max-width: 768px)");
 
@@ -54,6 +56,43 @@ mq.addEventListener("change", sync);
 return () => mq.removeEventListener("change", sync);
 
 }, []);
+
+useEffect(() => {
+  if (!isMobile) {
+    setKeyboardOpen(false);
+    return;
+  }
+
+  let timer = 0;
+
+  const isTypingField = (el) => {
+    if (!el || el === document.body) return false;
+    const tag = el.tagName;
+    if (tag === "TEXTAREA" || tag === "SELECT") return true;
+    if (tag === "INPUT") {
+      const type = String(el.type || "text").toLowerCase();
+      return !["checkbox", "radio", "button", "submit", "reset", "file", "hidden", "range", "color"].includes(type);
+    }
+    return Boolean(el.isContentEditable);
+  };
+
+  const sync = () => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      setKeyboardOpen(isTypingField(document.activeElement));
+    }, 60);
+  };
+
+  window.addEventListener("focusin", sync);
+  window.addEventListener("focusout", sync);
+  sync();
+
+  return () => {
+    window.clearTimeout(timer);
+    window.removeEventListener("focusin", sync);
+    window.removeEventListener("focusout", sync);
+  };
+}, [isMobile]);
 
 useEffect(() => {
   setNotificationsOpen(false);
@@ -200,8 +239,9 @@ return (
   {/* MOBILE NAVIGATION */}
   {isMobile && (
     <nav
-      className="mobile-bottom-nav"
+      className={`mobile-bottom-nav${keyboardOpen ? " mobile-bottom-nav--hidden" : ""}`}
       aria-label="Mobile navigation"
+      aria-hidden={keyboardOpen}
     >
 
       {/* Home */}
