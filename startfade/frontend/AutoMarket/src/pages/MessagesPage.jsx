@@ -15,7 +15,10 @@ import { getFriends, onFriendshipChanged } from "../services/friendService";
 import { mediaUrl } from "../utils/mediaUrl";
 import { isPlaceholderName, personDisplayName } from "../utils/personName";
 
-import { createChatConnection } from "../services/signalRService";
+import {
+  createChatConnection,
+  subscribeRealtimeWake,
+} from "../services/signalRService";
 import { ChatWindow } from "./ChatWindow";
 
 import { getClerkToken } from "../services/clerkToken";
@@ -280,9 +283,9 @@ export const MessagesPage = () => {
   // LOAD CONVERSATIONS
   // =====================================================
 
-  const loadConversations = async () => {
+  const loadConversations = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
 
       const token = await getClerkToken();
 
@@ -302,9 +305,14 @@ export const MessagesPage = () => {
         error
       );
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+
+  const loadConversationsRef = useRef(loadConversations);
+  loadConversationsRef.current = loadConversations;
+  const selectedConversationRef = useRef(selectedConversation);
+  selectedConversationRef.current = selectedConversation;
 
   // =====================================================
   // INITIAL LOAD
@@ -321,104 +329,51 @@ export const MessagesPage = () => {
   // =====================================================
 
   useEffect(() => {
-    let connection;
+    if (!user) return undefined;
 
-    const startConnection = async () => {
-      try {
-        const token = await getClerkToken();
+    let cancelled = false;
+    const connection = createChatConnection();
 
-        if (!token) {
-          return;
+    const onMessage = async (message) => {
+      const open = selectedConversationRef.current;
+      const incomingId = message?.conversationId ?? message?.ConversationId;
+      if (open && Number(incomingId) === Number(open.id)) {
+        try {
+          await markAsRead(open.id);
+        } catch (error) {
+          console.error("Mark as read error:", error);
         }
-
-        connection = createChatConnection(
-          async () => {
-            const freshToken =
-              await getClerkToken();
-
-            return freshToken || "";
-          }
-        );
-
-        connection.on(
-          "ReceiveMessage",
-          async (message) => {
-            console.log(
-              "Received message:",
-              message
-            );
-
-            if (
-              selectedConversation &&
-              Number(message.conversationId) ===
-                Number(selectedConversation.id)
-            ) {
-              setMessages((prev) => {
-                const exists = prev.some(
-                  (item) =>
-                    item.id === message.id
-                );
-
-                if (exists) {
-                  return prev;
-                }
-
-                return [...prev, message];
-              });
-
-              try {
-                const freshToken =
-                  await getClerkToken();
-
-                if (freshToken) {
-                  await markAsRead(
-                    selectedConversation.id,
-                    freshToken
-                  );
-                }
-              } catch (error) {
-                console.error(
-                  "Mark as read error:",
-                  error
-                );
-              }
-            }
-
-            await loadConversations();
-          }
-        );
-
-        await connection.start();
-        setChatConnection(connection);
-
-        console.log(
-          "Chat SignalR connected"
-        );
-      } catch (error) {
-        console.error(
-          "SignalR connection error:",
-          error
-        );
       }
+      await loadConversationsRef.current(true);
     };
 
-    if (user) {
-      startConnection();
-    }
+    const refreshList = () => {
+      loadConversationsRef.current(true);
+    };
+
+    connection.on("ReceiveMessage", onMessage);
+    connection.on("MessageSent", refreshList);
+    connection.on("reconnected", refreshList);
+
+    setChatConnection(connection);
+    connection.start().catch((error) => {
+      if (!cancelled) {
+        console.error("SignalR connection error:", error);
+      }
+    });
+
+    const stopWake = subscribeRealtimeWake(refreshList);
 
     return () => {
-      if (connection) {
-        connection.off(
-          "ReceiveMessage"
-        );
-
-        connection.stop();
-      }
+      cancelled = true;
+      stopWake();
+      connection.off("ReceiveMessage", onMessage);
+      connection.off("MessageSent", refreshList);
+      connection.off("reconnected", refreshList);
+      connection.stop();
+      setChatConnection(null);
     };
-  }, [
-    user,
-    selectedConversation?.id,
-  ]);
+  }, [user]);
 
   // =====================================================
   // OPEN CONVERSATION

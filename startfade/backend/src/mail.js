@@ -30,22 +30,42 @@ export async function emailForUserId(userId) {
   return email;
 }
 
-async function sendWithResend({ to, subject, text, html }) {
+function fromAddressOnly(from) {
+  const raw = String(from || "").trim();
+  const angled = raw.match(/<([^>]+)>/);
+  const addr = (angled ? angled[1] : raw).trim();
+  return addr.includes("@") ? addr : "";
+}
+
+function fromWithDisplayName(baseFrom, displayName) {
+  const addr = fromAddressOnly(baseFrom);
+  if (!addr) return baseFrom;
+  const name = String(displayName || "Someone")
+    .replace(/[<>\r\n"]/g, "")
+    .trim()
+    .slice(0, 80);
+  if (!name) return `AutoMarket <${addr}>`;
+  return `${name} via AutoMarket <${addr}>`;
+}
+
+async function sendWithResend({ to, subject, text, html, from, replyTo }) {
   const key = String(process.env.RESEND_API_KEY || "").trim();
   if (!key) return false;
+  const payload = {
+    from: from || (await resolveMailFrom()),
+    to: [to],
+    subject,
+    text,
+    html,
+  };
+  if (replyTo) payload.reply_to = replyTo;
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      from: await resolveMailFrom(),
-      to: [to],
-      subject,
-      text,
-      html,
-    }),
+    body: JSON.stringify(payload),
   });
   if (!response.ok) {
     const body = await response.text();
@@ -54,7 +74,7 @@ async function sendWithResend({ to, subject, text, html }) {
   return true;
 }
 
-async function sendWithSmtp({ to, subject, text, html }) {
+async function sendWithSmtp({ to, subject, text, html, from, replyTo }) {
   const host = String(process.env.SMTP_HOST || "").trim();
   if (!host) return false;
   const nodemailer = await import("nodemailer");
@@ -72,7 +92,8 @@ async function sendWithSmtp({ to, subject, text, html }) {
         : undefined,
   });
   await transporter.sendMail({
-    from: await resolveMailFrom(),
+    from: from || (await resolveMailFrom()),
+    replyTo: replyTo || undefined,
     to,
     subject,
     text,
@@ -81,16 +102,18 @@ async function sendWithSmtp({ to, subject, text, html }) {
   return true;
 }
 
-export async function sendMail({ to, subject, text, html }) {
+export async function sendMail({ to, subject, text, html, from, replyTo }) {
   if (!to || !isMailConfigured()) return false;
+  const payload = { to, subject, text, html, from, replyTo };
   if (String(process.env.RESEND_API_KEY || "").trim()) {
-    return sendWithResend({ to, subject, text, html });
+    return sendWithResend(payload);
   }
-  return sendWithSmtp({ to, subject, text, html });
+  return sendWithSmtp(payload);
 }
 
 export async function notifyNewMessage({
   receiverId,
+  senderId,
   senderName,
   preview,
   conversationId,
@@ -111,14 +134,29 @@ export async function notifyNewMessage({
   addTo(await emailForUserId(receiverId));
   addTo(settings.messageNotifyEmail);
   if (!recipients.length) return;
+  const who = String(senderName || "Dikush").trim() || "Dikush";
+  const replyTo = await emailForUserId(senderId);
+  const hasSenderMail = Boolean(replyTo);
   const url = `${frontendUrl()}/messages/${conversationId}`;
-  const subject = `${senderName} të shkroi në AutoMarket`;
-  const text = `${senderName}: ${preview}\n\nHape bisedën: ${url}`;
-  const html = `<p><strong>${escapeHtml(senderName)}</strong> të dërgoi një mesazh:</p>
+  const from = fromWithDisplayName(await resolveMailFrom(), who);
+  const subject = hasSenderMail
+    ? `${who} (${replyTo}) të shkroi në AutoMarket`
+    : `${who} të shkroi në AutoMarket`;
+  const text = `${hasSenderMail ? `${who} <${replyTo}>` : who} të dërgoi një mesazh:\n\n${preview}\n\nHape bisedën: ${url}`;
+  const html = `<p><strong>${escapeHtml(who)}</strong>${
+    hasSenderMail ? ` (${escapeHtml(replyTo)})` : ""
+  } të dërgoi një mesazh:</p>
 <p>${escapeHtml(preview)}</p>
 <p><a href="${url}">Hape bisedën</a></p>`;
   for (const to of recipients) {
-    await sendMail({ to, subject, text, html });
+    await sendMail({
+      to,
+      subject,
+      text,
+      html,
+      from,
+      replyTo: hasSenderMail ? replyTo : undefined,
+    });
   }
 }
 

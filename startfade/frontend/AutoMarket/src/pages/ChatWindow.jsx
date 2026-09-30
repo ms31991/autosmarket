@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../i18n/LanguageContext";
 import { getMessages, sendMessage } from "../services/chatService";
+import { subscribeRealtimeWake } from "../services/signalRService";
 
 function parseChatDate(value) {
   if (!value) return null;
@@ -57,26 +58,26 @@ export const ChatWindow = ({
     });
   }
 
-  async function fetchMessages() {
+  async function fetchMessages(silent = false) {
     if (!conversationId) return;
 
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const data = await getMessages(conversationId);
       setMessages(sortMessages((Array.isArray(data) ? data : []).map(normalize)));
     } catch (err) {
       console.error("FETCH MESSAGES ERROR:", err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchMessages();
+    fetchMessages(false);
   }, [conversationId]);
 
   useEffect(() => {
-    if (!connection || !conversationId) return;
+    if (!conversationId) return undefined;
 
     function handleIncoming(message) {
       const incoming = normalize(message);
@@ -90,12 +91,20 @@ export const ChatWindow = ({
       });
     }
 
-    connection.on("ReceiveMessage", handleIncoming);
-    connection.on("MessageSent", handleIncoming);
+    function refreshQuietly() {
+      fetchMessages(true);
+    }
+
+    connection?.on("ReceiveMessage", handleIncoming);
+    connection?.on("MessageSent", handleIncoming);
+    connection?.on("reconnected", refreshQuietly);
+    const stopWake = subscribeRealtimeWake(refreshQuietly);
 
     return () => {
-      connection.off("ReceiveMessage", handleIncoming);
-      connection.off("MessageSent", handleIncoming);
+      connection?.off("ReceiveMessage", handleIncoming);
+      connection?.off("MessageSent", handleIncoming);
+      connection?.off("reconnected", refreshQuietly);
+      stopWake();
     };
   }, [connection, conversationId, dbUser?.id, dbUser?.clerkUserId]);
 

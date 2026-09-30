@@ -215,6 +215,7 @@ export function chatRouter() {
 
     notifyNewMessage({
       receiverId,
+      senderId: req.user.id,
       senderName,
       preview: text.trim().slice(0, 200),
       conversationId,
