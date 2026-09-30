@@ -299,6 +299,7 @@ export function adminRouter() {
           supportEmail: pick(req.body, "SupportEmail"),
           privacyEmail: pick(req.body, "PrivacyEmail"),
           mailFrom: pick(req.body, "MailFrom"),
+          messageNotifyEmail: pick(req.body, "MessageNotifyEmail"),
         })
       );
     } catch (err) {

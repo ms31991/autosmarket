@@ -7,6 +7,7 @@ const DEFAULTS = {
   supportEmail: "support@autosmarket.me",
   privacyEmail: "privacy@autosmarket.me",
   mailFrom: "",
+  messageNotifyEmail: "combackseassion@gmail.com",
 };
 
 function emailInFrom(value) {
@@ -25,6 +26,8 @@ function rowToSettings(row) {
     supportEmail: mapped.supportEmail || DEFAULTS.supportEmail,
     privacyEmail: mapped.privacyEmail || DEFAULTS.privacyEmail,
     mailFrom: String(mapped.mailFrom || "").trim(),
+    messageNotifyEmail:
+      String(mapped.messageNotifyEmail || "").trim() || DEFAULTS.messageNotifyEmail,
     updatedAt: mapped.updatedAt || null,
   };
 }
@@ -48,17 +51,30 @@ export async function ensureSiteSettingsTable() {
     IF COL_LENGTH(N'dbo.SiteSettings', N'MailFrom') IS NULL
       ALTER TABLE dbo.SiteSettings ADD MailFrom NVARCHAR(200) NULL;
   `);
+  await query(`
+    IF COL_LENGTH(N'dbo.SiteSettings', N'MessageNotifyEmail') IS NULL
+      ALTER TABLE dbo.SiteSettings ADD MessageNotifyEmail NVARCHAR(200) NULL;
+  `);
   const existing = await queryOne(`SELECT Id FROM dbo.SiteSettings WHERE Id = 1`);
   if (!existing) {
     await query(
-      `INSERT INTO dbo.SiteSettings (Id, LegalName, LegalAddress, SupportEmail, PrivacyEmail)
-       VALUES (1, @legalName, @legalAddress, @supportEmail, @privacyEmail)`,
+      `INSERT INTO dbo.SiteSettings (Id, LegalName, LegalAddress, SupportEmail, PrivacyEmail, MessageNotifyEmail)
+       VALUES (1, @legalName, @legalAddress, @supportEmail, @privacyEmail, @messageNotifyEmail)`,
       {
         legalName: DEFAULTS.legalName,
         legalAddress: DEFAULTS.legalAddress,
         supportEmail: DEFAULTS.supportEmail,
         privacyEmail: DEFAULTS.privacyEmail,
+        messageNotifyEmail: DEFAULTS.messageNotifyEmail,
       }
+    );
+  } else {
+    await query(
+      `UPDATE dbo.SiteSettings
+       SET MessageNotifyEmail = @messageNotifyEmail
+       WHERE Id = 1
+         AND (MessageNotifyEmail IS NULL OR LTRIM(RTRIM(MessageNotifyEmail)) = '')`,
+      { messageNotifyEmail: DEFAULTS.messageNotifyEmail }
     );
   }
 }
@@ -75,12 +91,20 @@ export async function updateSiteSettings(input) {
   const supportEmail = String(input.supportEmail ?? current.supportEmail).trim().slice(0, 200);
   const privacyEmail = String(input.privacyEmail ?? current.privacyEmail).trim().slice(0, 200);
   const mailFrom = String(input.mailFrom ?? current.mailFrom).trim().slice(0, 200);
+  const messageNotifyEmail = String(
+    input.messageNotifyEmail ?? current.messageNotifyEmail
+  )
+    .trim()
+    .slice(0, 200);
   if (!legalName) throw new Error("Legal name is required.");
   if (!supportEmail.includes("@") || !privacyEmail.includes("@")) {
     throw new Error("Enter valid support and privacy emails.");
   }
   if (mailFrom && !emailInFrom(mailFrom)) {
     throw new Error("Mail from must be an email, e.g. AutoMarket <support@autosmarket.me>.");
+  }
+  if (messageNotifyEmail && !messageNotifyEmail.includes("@")) {
+    throw new Error("Message notify email must be a valid address.");
   }
   await query(
     `UPDATE dbo.SiteSettings
@@ -89,9 +113,17 @@ export async function updateSiteSettings(input) {
          SupportEmail = @supportEmail,
          PrivacyEmail = @privacyEmail,
          MailFrom = @mailFrom,
+         MessageNotifyEmail = @messageNotifyEmail,
          UpdatedAt = SYSUTCDATETIME()
      WHERE Id = 1`,
-    { legalName, legalAddress, supportEmail, privacyEmail, mailFrom }
+    {
+      legalName,
+      legalAddress,
+      supportEmail,
+      privacyEmail,
+      mailFrom,
+      messageNotifyEmail,
+    }
   );
   return getSiteSettings();
 }

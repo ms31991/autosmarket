@@ -11,6 +11,7 @@ export function AdminSiteSettings() {
     supportEmail: "",
     privacyEmail: "",
     mailFrom: "",
+    messageNotifyEmail: "combackseassion@gmail.com",
   });
   const [updatedAt, setUpdatedAt] = useState("");
   const [error, setError] = useState("");
@@ -27,6 +28,7 @@ export function AdminSiteSettings() {
         supportEmail: data.supportEmail || "",
         privacyEmail: data.privacyEmail || "",
         mailFrom: data.mailFrom || "",
+        messageNotifyEmail: data.messageNotifyEmail || "combackseassion@gmail.com",
       });
       setUpdatedAt(data.updatedAt || "");
     } catch (err) {
@@ -54,6 +56,7 @@ export function AdminSiteSettings() {
         supportEmail: data.supportEmail || "",
         privacyEmail: data.privacyEmail || "",
         mailFrom: data.mailFrom || "",
+        messageNotifyEmail: data.messageNotifyEmail || "combackseassion@gmail.com",
       });
       setUpdatedAt(data.updatedAt || "");
       setSaved("Saved. Contact, Privacy, and outgoing notification emails use these values.");
@@ -72,7 +75,7 @@ export function AdminSiteSettings() {
   return (
     <div className="admin-manage-page">
       <h1>Site settings</h1>
-      <p>Legal name, address, contact emails, and the From address for message/expiry notifications. Change them here anytime.</p>
+      <p>Legal name, address, contact emails, the From address, and where to notify when someone sends a chat message.</p>
       {error ? <p className="admin-manage-error">{error}</p> : null}
       {saved ? <p>{saved}</p> : null}
       {updatedAt ? <p>Last updated: {formatDate(updatedAt)}</p> : null}
@@ -121,6 +124,18 @@ export function AdminSiteSettings() {
         </label>
         <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
           What users see as the sender of chat and expiry emails. Leave empty to use support email. Domain must be verified with Resend/SMTP.
+        </p>
+        <label>
+          Notify email (new messages)
+          <input
+            type="email"
+            value={form.messageNotifyEmail}
+            onChange={(e) => setField("messageNotifyEmail", e.target.value)}
+            placeholder="combackseassion@gmail.com"
+          />
+        </label>
+        <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+          This address always gets an email when someone writes a chat message. You can change it anytime. The seller also gets one if their account has a real email.
         </p>
         <button type="submit" disabled={saving}>
           {saving ? "Saving..." : "Save"}

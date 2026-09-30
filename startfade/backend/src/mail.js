@@ -1,5 +1,5 @@
 import { query, queryOne } from "./db.js";
-import { resolveMailFrom } from "./siteSettings.js";
+import { getSiteSettings, resolveMailFrom } from "./siteSettings.js";
 
 function frontendUrl() {
   return String(process.env.FRONTEND_URL || "https://www.autosmarket.me").replace(
@@ -96,15 +96,30 @@ export async function notifyNewMessage({
   conversationId,
 }) {
   if (!isMailConfigured()) return;
-  const to = await emailForUserId(receiverId);
-  if (!to) return;
+  const settings = await getSiteSettings();
+  const recipients = [];
+  const seen = new Set();
+  function addTo(email) {
+    const to = String(email || "").trim();
+    if (!to.includes("@")) return;
+    if (to.toLowerCase().includes("@users.autosmarket.me")) return;
+    const key = to.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    recipients.push(to);
+  }
+  addTo(await emailForUserId(receiverId));
+  addTo(settings.messageNotifyEmail);
+  if (!recipients.length) return;
   const url = `${frontendUrl()}/messages/${conversationId}`;
   const subject = `${senderName} të shkroi në AutoMarket`;
   const text = `${senderName}: ${preview}\n\nHape bisedën: ${url}`;
   const html = `<p><strong>${escapeHtml(senderName)}</strong> të dërgoi një mesazh:</p>
 <p>${escapeHtml(preview)}</p>
 <p><a href="${url}">Hape bisedën</a></p>`;
-  await sendMail({ to, subject, text, html });
+  for (const to of recipients) {
+    await sendMail({ to, subject, text, html });
+  }
 }
 
 function escapeHtml(value) {

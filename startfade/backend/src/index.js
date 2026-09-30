@@ -125,7 +125,13 @@ app.get("/api/sitemap-taxonomy.xml", taxonomySitemap);
 app.get("/sitemap-taxonomy.xml", taxonomySitemap);
 app.get("/api/SiteSettings", async (_req, res) => {
   try {
-    res.json(await getSiteSettings());
+    const settings = await getSiteSettings();
+    res.json({
+      legalName: settings.legalName,
+      legalAddress: settings.legalAddress,
+      supportEmail: settings.supportEmail,
+      privacyEmail: settings.privacyEmail,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message || "Site settings unavailable." });
   }
