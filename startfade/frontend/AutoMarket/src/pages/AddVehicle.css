@@ -456,6 +456,12 @@
   -webkit-text-fill-color: #ffffff;
 }
 
+.add-vehicle-page .city-suggest-custom {
+  color: #ffc42d;
+  -webkit-text-fill-color: #ffc42d;
+  font-style: italic;
+}
+
 /* =========================
    COLOR
 ========================= */

@@ -7,6 +7,7 @@ import { PublisherChip } from "../components/PublisherChip";
 import { personDisplayName } from "../utils/personName";
 import { mediaUrl, PLACEHOLDER_IMAGE } from "../utils/mediaUrl";
 import { isPromotedVehicle } from "../utils/promotedSearch";
+import { formatEuro } from "../utils/formatEuro";
 import { API_BASE } from "../config/api";
 import { vehicleImageAlt } from "../seo/generateVehicleSEO";
 
@@ -200,8 +201,7 @@ export const VehicleCard = ({
     .filter((part) => part && part !== "-")
     .join(", ");
 
-  const price =
-    Number(vehicle?.price || 0).toLocaleString();
+  const price = formatEuro(vehicle?.price);
 
   const transmission =
     vehicle?.transmissionName ||
@@ -383,7 +383,7 @@ export const VehicleCard = ({
           </div>
 
           <div className="vehicle-card-price">
-            €{price}
+            {price}
           </div>
 
           {specs.length > 0 && (

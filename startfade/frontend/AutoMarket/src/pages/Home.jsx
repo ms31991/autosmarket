@@ -13,6 +13,7 @@ import { CompanyBannerSlot } from "../components/CompanyBannerSlot";
 // import { AdSenseBanner } from "../components/AdSenseBanner";
 // import { ADSENSE_SLOT_HOME } from "../config/site";
 import { API_BASE } from "../config/api";
+import { formatEuro } from "../utils/formatEuro";
 import { vehicleImageAlt } from "../seo/generateVehicleSEO";
 
 // =====================================================
@@ -430,7 +431,7 @@ export const Home = () => {
 
           <div className="home-vehicle-price">
             {vehicle.price
-              ? `€${Number(vehicle.price).toLocaleString()}`
+              ? formatEuro(vehicle.price)
               : "Price on request"}
           </div>
         </div>

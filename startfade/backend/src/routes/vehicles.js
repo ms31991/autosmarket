@@ -107,11 +107,36 @@ async function findOrCreateBrand(name) {
   );
   if (existing?.Id ?? existing?.id) return existing.Id ?? existing.id;
   const slug = await uniqueSlug("Brands", trimmed);
-  const rows = await query(
-    `INSERT INTO Brands (Name, Slug) OUTPUT INSERTED.Id VALUES (@name, @slug)`,
-    { name: trimmed, slug }
+  const activeCol = await queryOne(
+    `SELECT COL_LENGTH('dbo.Brands', 'IsActive') AS len`
   );
-  return rows[0]?.Id ?? rows[0]?.id;
+  const hasActive = Boolean(activeCol?.len ?? activeCol?.Len);
+  try {
+    const rows = hasActive
+      ? await query(
+          `INSERT INTO Brands (Name, Slug, IsActive) OUTPUT INSERTED.Id
+           VALUES (@name, @slug, 1)`,
+          { name: trimmed, slug }
+        )
+      : await query(
+          `INSERT INTO Brands (Name, Slug) OUTPUT INSERTED.Id VALUES (@name, @slug)`,
+          { name: trimmed, slug }
+        );
+    const id = rows[0]?.Id ?? rows[0]?.id;
+    if (id) return id;
+  } catch (err) {
+    const again = await queryOne(
+      `SELECT TOP 1 Id FROM Brands WHERE LOWER(LTRIM(RTRIM(Name))) = LOWER(@name)`,
+      { name: trimmed }
+    );
+    if (again?.Id ?? again?.id) return again.Id ?? again.id;
+    throw err;
+  }
+  const again = await queryOne(
+    `SELECT TOP 1 Id FROM Brands WHERE LOWER(LTRIM(RTRIM(Name))) = LOWER(@name)`,
+    { name: trimmed }
+  );
+  return again?.Id ?? again?.id ?? null;
 }
 
 async function findOrCreateModel(name, brandId) {
@@ -124,12 +149,29 @@ async function findOrCreateModel(name, brandId) {
   );
   if (existing?.Id ?? existing?.id) return existing.Id ?? existing.id;
   const slug = await uniqueSlug("VehicleModels", trimmed);
-  const rows = await query(
-    `INSERT INTO VehicleModels (Name, Slug, BrandId)
-     OUTPUT INSERTED.Id VALUES (@name, @slug, @brandId)`,
-    { name: trimmed, slug, brandId }
+  try {
+    const rows = await query(
+      `INSERT INTO VehicleModels (Name, Slug, BrandId)
+       OUTPUT INSERTED.Id VALUES (@name, @slug, @brandId)`,
+      { name: trimmed, slug, brandId }
+    );
+    const id = rows[0]?.Id ?? rows[0]?.id;
+    if (id) return id;
+  } catch (err) {
+    const again = await queryOne(
+      `SELECT TOP 1 Id FROM VehicleModels
+       WHERE BrandId = @brandId AND LOWER(LTRIM(RTRIM(Name))) = LOWER(@name)`,
+      { brandId, name: trimmed }
+    );
+    if (again?.Id ?? again?.id) return again.Id ?? again.id;
+    throw err;
+  }
+  const again = await queryOne(
+    `SELECT TOP 1 Id FROM VehicleModels
+     WHERE BrandId = @brandId AND LOWER(LTRIM(RTRIM(Name))) = LOWER(@name)`,
+    { brandId, name: trimmed }
   );
-  return rows[0]?.Id ?? rows[0]?.id;
+  return again?.Id ?? again?.id ?? null;
 }
 
 async function resolveBrandAndModel(body) {
@@ -368,7 +410,15 @@ export function vehiclesRouter() {
       return res.status(401).json({ message: "User nuk u gjet. Kyçu përsëri." });
     }
 
-    const p = await resolveBrandAndModel(req.body);
+    let p;
+    try {
+      p = await resolveBrandAndModel(req.body);
+    } catch (err) {
+      return res.status(400).json({
+        message: err.message || "Brand ose modeli nuk u ruajt.",
+        missing: ["brand", "model"],
+      });
+    }
     const missing = [];
     if (!p.listingTypeId) missing.push("listingTypeId");
     if (!p.categoryId) missing.push("categoryId");
@@ -428,7 +478,15 @@ export function vehiclesRouter() {
     if (!ownsRecord(existing.OwnerId, req.user) && req.user.roleName !== "Admin") {
       return res.status(403).json({ message: "Forbidden" });
     }
-    const p = await resolveBrandAndModel(req.body);
+    let p;
+    try {
+      p = await resolveBrandAndModel(req.body);
+    } catch (err) {
+      return res.status(400).json({
+        message: err.message || "Brand ose modeli nuk u ruajt.",
+        missing: ["brand", "model"],
+      });
+    }
     const missing = [];
     if (!p.listingTypeId) missing.push("listingTypeId");
     if (!p.categoryId) missing.push("categoryId");

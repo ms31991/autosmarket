@@ -231,7 +231,7 @@ export function paymentsRouter() {
 
       const vehicleId = pick(req.body, "VehicleId");
       const name = String(pick(req.body, "Name") || "Promotion");
-      const currency = String(pick(req.body, "Currency") || "eur").toLowerCase();
+      const currency = "eur";
       const days = parseOfferDays(name, pick(req.body, "Days"));
       const pack = await findAdPackage("listing", days, name);
       const amount = pack ? Number(pack.price) : 0;
@@ -302,7 +302,7 @@ export function paymentsRouter() {
       }
 
       const name = String(pick(req.body, "Name") || "Company banner");
-      const currency = String(pick(req.body, "Currency") || "eur").toLowerCase();
+      const currency = "eur";
       const companyName = String(pick(req.body, "CompanyName") || "").trim();
       const imageUrl = String(pick(req.body, "ImageUrl") || "").trim();
       const targetUrl = String(pick(req.body, "TargetUrl") || "").trim();
@@ -425,7 +425,7 @@ export function paymentsRouter() {
         {
           quantity: 1,
           price_data: {
-            currency: String(purchase.Currency || "eur").toLowerCase(),
+            currency: "eur",
             unit_amount: Math.round(Number(purchase.Amount) * 100),
             product_data: { name: "AutoMarket payment" },
           },

@@ -1180,7 +1180,7 @@ export const AddVehicle = () => {
               }}
               disabled={saving}
             />
-            {brandOpen && brandSuggestions.length > 0 ? (
+            {brandOpen && brandQuery.trim() ? (
               <ul className="city-suggest-list" role="listbox">
                 {brandSuggestions.map((brand) => (
                   <li key={brand.id}>
@@ -1194,6 +1194,25 @@ export const AddVehicle = () => {
                     </button>
                   </li>
                 ))}
+                {!brandSuggestions.some(
+                  (brand) =>
+                    String(brand.name || "").trim().toLowerCase() ===
+                    brandQuery.trim().toLowerCase()
+                ) ? (
+                  <li>
+                    <button
+                      type="button"
+                      className="city-suggest-item city-suggest-custom"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setBrandOpen(false);
+                        markFilled("brand");
+                      }}
+                    >
+                      {t("useTyped", { name: brandQuery.trim() })}
+                    </button>
+                  </li>
+                ) : null}
               </ul>
             ) : null}
           </div>
@@ -1215,7 +1234,7 @@ export const AddVehicle = () => {
               }}
               disabled={!brandQuery.trim() || saving}
             />
-            {modelOpen && modelSuggestions.length > 0 ? (
+            {modelOpen && modelQuery.trim() ? (
               <ul className="city-suggest-list" role="listbox">
                 {modelSuggestions.map((model) => (
                   <li key={model.id}>
@@ -1229,6 +1248,25 @@ export const AddVehicle = () => {
                     </button>
                   </li>
                 ))}
+                {!modelSuggestions.some(
+                  (model) =>
+                    String(model.name || "").trim().toLowerCase() ===
+                    modelQuery.trim().toLowerCase()
+                ) ? (
+                  <li>
+                    <button
+                      type="button"
+                      className="city-suggest-item city-suggest-custom"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setModelOpen(false);
+                        markFilled("model");
+                      }}
+                    >
+                      {t("useTyped", { name: modelQuery.trim() })}
+                    </button>
+                  </li>
+                ) : null}
               </ul>
             ) : null}
           </div>

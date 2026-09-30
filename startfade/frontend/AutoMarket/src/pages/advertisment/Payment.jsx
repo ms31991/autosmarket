@@ -528,10 +528,9 @@ export const Payment = () => {
             <p>
               Amount:{' '}
               <strong>
-                {Number(
+                €{Number(
                   payment.amount || 0
-                ).toLocaleString()}{' '}
-                {payment.currency || 'EUR'}
+                ).toLocaleString()}
               </strong>
             </p>
 
@@ -660,10 +659,9 @@ export const Payment = () => {
             <strong>
               Amount:
             </strong>{' '}
-            {Number(
+            €{Number(
               purchase.amount
-            ).toLocaleString()}{' '}
-            {purchase.currency || 'EUR'}
+            ).toLocaleString()}
           </p>
         )}
 
@@ -672,10 +670,9 @@ export const Payment = () => {
             <strong>
               Price:
             </strong>{' '}
-            {Number(
+            €{Number(
               purchase.price
-            ).toLocaleString()}{' '}
-            {purchase.currency || 'EUR'}
+            ).toLocaleString()}
           </p>
         )}
 
@@ -792,12 +789,11 @@ export const Payment = () => {
                 fontSize: '24px',
               }}
             >
-              {Number(
+              €{Number(
                 purchase?.amount ??
                   purchase?.price ??
                   0
-              ).toLocaleString()}{' '}
-              {purchase?.currency || 'EUR'}
+              ).toLocaleString()}
             </strong>
           </div>
         </div>

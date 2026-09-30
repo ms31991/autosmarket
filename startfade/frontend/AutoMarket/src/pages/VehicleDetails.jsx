@@ -31,6 +31,7 @@ import { SeoHead } from "../seo/SeoHead";
 import { generateVehicleSEO, vehicleImageAlt } from "../seo/generateVehicleSEO";
 import { ListingRelated, SeoBreadcrumbs } from "../seo/SeoBreadcrumbs";
 import { mediaUrl } from "../utils/mediaUrl";
+import { formatEuro } from "../utils/formatEuro";
 import { API_BASE, API_ORIGIN } from "../config/api";
 import { SITE_LOGO } from "../config/site";
 import { apiFetch } from "../services/api";
@@ -585,9 +586,7 @@ export const VehicleDetails = () => {
     .filter(Boolean)
     .join(", ");
 
-  const formattedPrice = vehicle.price
-    ? Number(vehicle.price).toLocaleString()
-    : "0";
+  const formattedPrice = formatEuro(vehicle.price);
 
   const listedAt = vehicle.createdDate || vehicle.createdAt;
 
@@ -1034,7 +1033,6 @@ export const VehicleDetails = () => {
               <p>Price</p>
 
               <h2>
-                {vehicle.currency || "CHF"}{" "}
                 {formattedPrice}
               </h2>
 

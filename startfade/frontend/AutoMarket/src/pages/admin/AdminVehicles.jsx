@@ -72,7 +72,7 @@ export function AdminVehicles() {
             <tr>
               <th>Vehicle</th>
               <th>Type</th>
-              <th>Price</th>
+              <th>Price (€)</th>
               <th>Year</th>
               <th>Mileage</th>
               <th>Created</th>

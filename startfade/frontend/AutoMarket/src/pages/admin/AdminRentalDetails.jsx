@@ -57,8 +57,8 @@ export function AdminRentalDetails() {
           <thead>
             <tr>
               <th>Car</th>
-              <th>Price / day</th>
-              <th>Deposit</th>
+              <th>Price / day (€)</th>
+              <th>Deposit (€)</th>
               <th></th>
             </tr>
           </thead>

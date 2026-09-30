@@ -31,7 +31,7 @@ export function AdminPayments() {
             {rows.map((row) => (
               <tr key={row.id}>
                 <td>
-                  {row.amount != null ? `€${Number(row.amount).toFixed(2)}` : "—"} {row.currency || ""}
+                  {row.amount != null ? `€${Number(row.amount).toFixed(2)}` : "—"}
                 </td>
                 <td>{row.status === 2 ? "Paid" : row.status}</td>
                 <td>{formatDate(row.paidAt)}</td>
