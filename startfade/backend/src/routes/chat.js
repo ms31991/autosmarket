@@ -171,7 +171,7 @@ export function chatRouter() {
       (String(sender?.UserName || "").trim() &&
       !String(sender.UserName).startsWith("user_")
         ? String(sender.UserName).trim()
-        : "Someone");
+        : "Dikush");
 
     const inserted = await query(
       `INSERT INTO Messages (ConversationId, SenderId, Text, SentAt, IsRead)
@@ -215,7 +215,6 @@ export function chatRouter() {
 
     notifyNewMessage({
       receiverId,
-      senderId: req.user.id,
       senderName,
       preview: text.trim().slice(0, 200),
       conversationId,

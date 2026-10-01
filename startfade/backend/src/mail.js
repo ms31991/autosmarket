@@ -30,24 +30,6 @@ export async function emailForUserId(userId) {
   return email;
 }
 
-function fromAddressOnly(from) {
-  const raw = String(from || "").trim();
-  const angled = raw.match(/<([^>]+)>/);
-  const addr = (angled ? angled[1] : raw).trim();
-  return addr.includes("@") ? addr : "";
-}
-
-function fromWithDisplayName(baseFrom, displayName) {
-  const addr = fromAddressOnly(baseFrom);
-  if (!addr) return baseFrom;
-  const name = String(displayName || "Someone")
-    .replace(/[<>\r\n"]/g, "")
-    .trim()
-    .slice(0, 80);
-  if (!name) return `AutoMarket <${addr}>`;
-  return `${name} via AutoMarket <${addr}>`;
-}
-
 async function sendWithResend({ to, subject, text, html, from, replyTo }) {
   const key = String(process.env.RESEND_API_KEY || "").trim();
   if (!key) return false;
@@ -113,7 +95,6 @@ export async function sendMail({ to, subject, text, html, from, replyTo }) {
 
 export async function notifyNewMessage({
   receiverId,
-  senderId,
   senderName,
   preview,
   conversationId,
@@ -135,17 +116,10 @@ export async function notifyNewMessage({
   addTo(settings.messageNotifyEmail);
   if (!recipients.length) return;
   const who = String(senderName || "Dikush").trim() || "Dikush";
-  const replyTo = await emailForUserId(senderId);
-  const hasSenderMail = Boolean(replyTo);
   const url = `${frontendUrl()}/messages/${conversationId}`;
-  const from = fromWithDisplayName(await resolveMailFrom(), who);
-  const subject = hasSenderMail
-    ? `${who} (${replyTo}) të shkroi në AutoMarket`
-    : `${who} të shkroi në AutoMarket`;
-  const text = `${hasSenderMail ? `${who} <${replyTo}>` : who} të dërgoi një mesazh:\n\n${preview}\n\nHape bisedën: ${url}`;
-  const html = `<p><strong>${escapeHtml(who)}</strong>${
-    hasSenderMail ? ` (${escapeHtml(replyTo)})` : ""
-  } të dërgoi një mesazh:</p>
+  const subject = `Të ka shkruar ${who} në AutoMarket`;
+  const text = `Të ka shkruar ${who}.\n\n${preview}\n\nHape bisedën: ${url}`;
+  const html = `<p>Të ka shkruar <strong>${escapeHtml(who)}</strong>.</p>
 <p>${escapeHtml(preview)}</p>
 <p><a href="${url}">Hape bisedën</a></p>`;
   for (const to of recipients) {
@@ -154,8 +128,7 @@ export async function notifyNewMessage({
       subject,
       text,
       html,
-      from,
-      replyTo: hasSenderMail ? replyTo : undefined,
+      from: await resolveMailFrom(),
     });
   }
 }
