@@ -10,6 +10,14 @@ import { useLanguage } from "../i18n/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../config/api";
 import { compressImageFile } from "../utils/compressImage";
+import { ColorSelect } from "../components/ColorSelect";
+import {
+  bodyTypeHintFromModel,
+  filterBrandSuggestions,
+  filterModelSuggestions,
+  lookupLabel,
+  normalizePlace,
+} from "../utils/listingTypeahead";
 import {
   clearPendingListing,
   endListingPublish,
@@ -61,17 +69,11 @@ export const AddVehicle = () => {
     mileage: "",
 
     engine: "",
-    engineCC: "",
     powerHP: "",
     powerKW: "",
     cylinders: "",
     seats: "",
   });
-
-  const [catalogVariants, setCatalogVariants] = useState([]);
-  const [catalogVariantId, setCatalogVariantId] = useState("");
-  const [catalogLoading, setCatalogLoading] = useState(false);
-  const [catalogStatus, setCatalogStatus] = useState("");
 
   const [images, setImages] = useState([]);
 
@@ -98,7 +100,6 @@ export const AddVehicle = () => {
         if (draft.cityQuery) setCityQuery(draft.cityQuery);
         if (draft.brandQuery) setBrandQuery(draft.brandQuery);
         if (draft.modelQuery) setModelQuery(draft.modelQuery);
-        if (draft.catalogVariantId) setCatalogVariantId(draft.catalogVariantId);
         if (typeof draft.listingConsent === "boolean") {
           setListingConsent(draft.listingConsent);
         }
@@ -160,6 +161,11 @@ export const AddVehicle = () => {
       setColors(data[8]);
       setCities(data[9]);
 
+      const sale = data[0].find((item) => {
+        const name = String(item.name || "").toLowerCase();
+        const slug = String(item.slug || "").toLowerCase();
+        return slug === "sale" || name === "sale";
+      });
       const carCategory = data[1].find((item) => {
         const name = String(item.name || "").toLowerCase();
         const slug = String(item.slug || "").toLowerCase();
@@ -170,21 +176,40 @@ export const AddVehicle = () => {
         const slug = String(item.slug || "").toLowerCase();
         return slug === "sedan" || name === "sedan" || name === "limousine";
       });
-      if (carCategory || sedan) {
-        setFormData((previous) => ({
-          ...previous,
-          categoryId: previous.categoryId
-            ? previous.categoryId
-            : carCategory
-              ? String(carCategory.id)
-              : previous.categoryId,
-          bodyTypeId: previous.bodyTypeId
-            ? previous.bodyTypeId
-            : sedan
-              ? String(sedan.id)
-              : previous.bodyTypeId,
-        }));
-      }
+      const petrol = data[5].find((item) =>
+        /petrol|gasoline|benzin/.test(String(item.name || "").toLowerCase())
+      );
+      const manual = data[6].find((item) =>
+        /manual/.test(String(item.name || "").toLowerCase())
+      );
+      setFormData((previous) => ({
+        ...previous,
+        listingTypeId: previous.listingTypeId
+          ? previous.listingTypeId
+          : sale
+            ? String(sale.id)
+            : previous.listingTypeId,
+        categoryId: previous.categoryId
+          ? previous.categoryId
+          : carCategory
+            ? String(carCategory.id)
+            : previous.categoryId,
+        bodyTypeId: previous.bodyTypeId
+          ? previous.bodyTypeId
+          : sedan
+            ? String(sedan.id)
+            : previous.bodyTypeId,
+        fuelTypeId: previous.fuelTypeId
+          ? previous.fuelTypeId
+          : petrol
+            ? String(petrol.id)
+            : previous.fuelTypeId,
+        transmissionId: previous.transmissionId
+          ? previous.transmissionId
+          : manual
+            ? String(manual.id)
+            : previous.transmissionId,
+      }));
 
       fillCityFromLocation();
     } catch (err) {
@@ -230,14 +255,11 @@ export const AddVehicle = () => {
 
   function collectMissing() {
     const keys = [];
-    if (images.length < 2) keys.push("photos");
-    if (!formData.listingTypeId) keys.push("listingTypeId");
-    if (!formData.categoryId) keys.push("categoryId");
+    if (images.length < 1) keys.push("photos");
     if (!brandQuery.trim()) keys.push("brand");
     if (!modelQuery.trim()) keys.push("model");
     if (!formData.year) keys.push("year");
     if (!formData.price) keys.push("price");
-    if (!listingConsent) keys.push("consent");
     return keys;
   }
 
@@ -254,9 +276,6 @@ export const AddVehicle = () => {
     });
     setModelQuery("");
     setModelOpen(false);
-    setCatalogVariants([]);
-    setCatalogVariantId("");
-    setCatalogStatus("");
     if (value.trim()) markFilled("brand");
     setError("");
     setSuccess("");
@@ -272,9 +291,6 @@ export const AddVehicle = () => {
     setBrandOpen(false);
     setModelQuery("");
     setModelOpen(false);
-    setCatalogVariants([]);
-    setCatalogVariantId("");
-    setCatalogStatus("");
     markFilled("brand");
     setError("");
     setSuccess("");
@@ -291,163 +307,63 @@ export const AddVehicle = () => {
       if (current && current.name === value) return previous;
       return { ...previous, modelId: "" };
     });
-    setCatalogVariants([]);
-    setCatalogVariantId("");
-    setCatalogStatus("");
     if (value.trim()) markFilled("model");
     setError("");
     setSuccess("");
   }
 
   function pickModel(model) {
+    const brand = brands.find(
+      (item) => Number(item.id) === Number(model.brandId)
+    );
     setFormData((previous) => ({
       ...previous,
+      brandId: model.brandId ? String(model.brandId) : previous.brandId,
       modelId: String(model.id),
     }));
+    if (brand) setBrandQuery(brand.name);
     setModelQuery(model.name);
     setModelOpen(false);
-    setCatalogVariants([]);
-    setCatalogVariantId("");
-    setCatalogStatus("");
+    applyBodyHint(model.name);
+    markFilled("brand");
     markFilled("model");
     setError("");
     setSuccess("");
   }
 
-  useEffect(() => {
-    const brand = brands.find(
-      (item) => Number(item.id) === Number(formData.brandId)
-    );
-    const model = models.find(
-      (item) => Number(item.id) === Number(formData.modelId)
-    );
+  function applyBodyHint(modelName) {
+    const hint = bodyTypeHintFromModel(modelName);
+    if (!hint) return;
+    const matched = bodyTypes.find((item) => {
+      const name = normalizePlace(item.name);
+      return name === hint || name.includes(hint) || hint.includes(name);
+    });
+    if (!matched) return;
+    setFormData((previous) => ({
+      ...previous,
+      bodyTypeId: String(matched.id),
+    }));
+  }
 
-    if (!brand?.name || !model?.name) {
-      return;
-    }
-
-    let cancelled = false;
-
-    async function loadCatalogVariants() {
-      try {
-        setCatalogLoading(true);
-        setCatalogStatus("Po kërkojmë variantet në katalog…");
-
-        const response = await fetch(
-          `${API_BASE}/Catalog/variants?brand=${encodeURIComponent(brand.name)}&model=${encodeURIComponent(model.name)}`
-        );
-        const data = await response.json().catch(() => ({}));
-
-        if (cancelled) return;
-
-        if (!response.ok) {
-          setCatalogVariants([]);
-          setCatalogStatus(
-            data.message || "Katalogu nuk u lexua. Mund t’i plotësosh fushat vetë."
-          );
-          return;
-        }
-
-        const variants = data.variants || [];
-        setCatalogVariants(variants);
-
-        if (!variants.length) {
-          setCatalogStatus(
-            "Nuk u gjet variant në katalog. Plotëso specifikat vetë."
-          );
-          fillBodyTypeFromHints(model.name, []);
-          return;
-        }
-
-        fillBodyTypeFromHints(
-          model.name,
-          variants.map((item) => item.bodyType).filter(Boolean)
-        );
-
-        setCatalogStatus(
-          "Zgjidh variantin (p.sh. 320i) — fushat plotësohen, por mund t’i ndryshosh."
-        );
-      } catch (err) {
-        if (cancelled) return;
-        setCatalogVariants([]);
-        setCatalogStatus(
-          err.message || "Katalogu nuk u lexua. Mund t’i plotësosh fushat vetë."
-        );
-      } finally {
-        if (!cancelled) setCatalogLoading(false);
-      }
-    }
-
-    loadCatalogVariants();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [formData.brandId, formData.modelId, brands, models, bodyTypes]);
-
-  async function handleCatalogVariantChange(e) {
-    const variantId = e.target.value;
-    setCatalogVariantId(variantId);
-
-    if (!variantId) return;
-
-    try {
-      setCatalogLoading(true);
-      const response = await fetch(
-        `${API_BASE}/Catalog/variants/${variantId}`
-      );
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        setError(data.message || "Specifikat e variantit nuk u morën.");
-        return;
-      }
-
-      const fields = data.fields || {};
+  function pickBrandSuggestion(item) {
+    if (item.kind === "model" && item.brand && item.model) {
       setFormData((previous) => ({
         ...previous,
-        bodyTypeId:
-          fields.bodyTypeId != null
-            ? String(fields.bodyTypeId)
-            : previous.bodyTypeId,
-        fuelTypeId:
-          fields.fuelTypeId != null
-            ? String(fields.fuelTypeId)
-            : previous.fuelTypeId,
-        transmissionId:
-          fields.transmissionId != null
-            ? String(fields.transmissionId)
-            : previous.transmissionId,
-        driveTypeId:
-          fields.driveTypeId != null
-            ? String(fields.driveTypeId)
-            : previous.driveTypeId,
-        engine:
-          fields.engine != null && fields.engine !== ""
-            ? String(fields.engine)
-            : previous.engine,
-        engineCC:
-          fields.engineCC != null ? String(fields.engineCC) : previous.engineCC,
-        cylinders:
-          fields.cylinders != null
-            ? String(fields.cylinders)
-            : previous.cylinders,
-        powerHP:
-          fields.powerHP != null ? String(fields.powerHP) : previous.powerHP,
-        powerKW:
-          fields.powerKW != null ? String(fields.powerKW) : previous.powerKW,
-        seats: fields.seats != null ? String(fields.seats) : previous.seats,
-        year: fields.year != null ? String(fields.year) : previous.year,
+        brandId: String(item.brand.id),
+        modelId: String(item.model.id),
       }));
+      setBrandQuery(item.brand.name);
+      setModelQuery(item.model.name);
+      setBrandOpen(false);
+      setModelOpen(false);
+      applyBodyHint(item.model.name);
+      markFilled("brand");
+      markFilled("model");
       setError("");
-      setCatalogStatus(
-        "Specifikat u plotësuan nga katalogu. Mund t’i ndryshosh para publikimit."
-      );
-    } catch (err) {
-      setError(err.message || "Specifikat e variantit nuk u morën.");
-    } finally {
-      setCatalogLoading(false);
+      setSuccess("");
+      return;
     }
+    if (item.brand) pickBrand(item.brand);
   }
 
   const matchedBrand =
@@ -459,38 +375,17 @@ export const AddVehicle = () => {
     );
   const matchedBrandId = matchedBrand?.id || formData.brandId;
 
-  const filteredModels = matchedBrandId
-    ? models.filter(
-        (model) => Number(model.brandId) === Number(matchedBrandId)
-      )
-    : [];
-
-  const selectedColor = colors.find(
-    (color) =>
-      Number(color.id) === Number(formData.colorId)
-  );
-
   function cityLabel(city) {
     if (!city) return "";
     return city.countryName ? `${city.name} - ${city.countryName}` : city.name;
   }
 
-  const brandSuggestions = (() => {
-    const needle = normalizePlace(brandQuery);
-    if (needle.length < 1) return [];
-    return brands
-      .filter((brand) => normalizePlace(brand.name).includes(needle))
-      .slice(0, 15);
-  })();
-
-  const modelSuggestions = (() => {
-    if (!matchedBrandId && !brandQuery.trim()) return [];
-    const needle = normalizePlace(modelQuery);
-    if (needle.length < 1) return [];
-    return filteredModels
-      .filter((model) => normalizePlace(model.name).includes(needle))
-      .slice(0, 15);
-  })();
+  const brandSuggestions = filterBrandSuggestions(brands, models, brandQuery);
+  const modelSuggestions = filterModelSuggestions(
+    models,
+    modelQuery,
+    matchedBrandId
+  );
 
   const citySuggestions = (() => {
     const needle = normalizePlace(cityQuery);
@@ -525,14 +420,6 @@ export const AddVehicle = () => {
     setError("");
   }
 
-  function normalizePlace(value) {
-    return String(value || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "");
-  }
-
   function fillCityFromLocation() {
     if (!navigator.geolocation) return;
 
@@ -560,60 +447,6 @@ export const AddVehicle = () => {
       },
       () => {},
       { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 }
-    );
-  }
-
-  function matchBodyType(bodyTypeList, hints) {
-    if (!bodyTypeList?.length || !hints?.length) return null;
-    const normalizedHints = hints.map(normalizePlace).filter(Boolean);
-    const scored = bodyTypeList
-      .map((item) => {
-        const name = normalizePlace(item.name);
-        let score = 0;
-        for (const hint of normalizedHints) {
-          if (name === hint) score = Math.max(score, 100);
-          else if (name.includes(hint) || hint.includes(name)) {
-            score = Math.max(score, 70);
-          }
-        }
-        return { item, score };
-      })
-      .filter((row) => row.score > 0)
-      .sort((a, b) => b.score - a.score);
-    return scored[0]?.item || null;
-  }
-
-  function fillBodyTypeFromHints(modelName, catalogBodies) {
-    const modelHints = [];
-    const model = normalizePlace(modelName);
-    if (/(suv|crossover|x[1-7]|q[237]|gl[abcse]|touareg|tiguan|sportage|tucson|rav4)/.test(model)) {
-      modelHints.push("suv");
-    }
-    if (/(hatch|golf|polo|fiesta|clio|civic)/.test(model)) modelHints.push("hatchback");
-    if (/(coupe|911|mustang)/.test(model)) modelHints.push("coupe");
-    if (/(cabrio|convertible)/.test(model)) modelHints.push("cabriolet");
-    if (/(touran|sharan|van|transporter)/.test(model)) modelHints.push("van");
-    if (/(sedan|passat|accord|camry|3series|5series|eclass|cclass)/.test(model)) {
-      modelHints.push("sedan");
-    }
-
-    const counts = {};
-    for (const name of catalogBodies) {
-      const key = normalizePlace(name);
-      if (!key) continue;
-      counts[key] = (counts[key] || 0) + 1;
-    }
-    const topCatalog = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
-    const matched = matchBodyType(bodyTypes, [
-      topCatalog,
-      ...catalogBodies,
-      ...modelHints,
-    ]);
-    if (!matched) return;
-    setFormData((previous) =>
-      previous.bodyTypeId
-        ? previous
-        : { ...previous, bodyTypeId: String(matched.id) }
     );
   }
 
@@ -669,7 +502,7 @@ export const AddVehicle = () => {
         setError(t("photosMax"));
       }
       const next = [...previous, ...validFiles.slice(0, room)];
-      if (next.length >= 2) markFilled("photos");
+      if (next.length >= 1) markFilled("photos");
       return next;
     });
     e.target.value = "";
@@ -765,7 +598,6 @@ export const AddVehicle = () => {
           cityQuery,
           brandQuery,
           modelQuery,
-          catalogVariantId,
           listingConsent,
           images,
         });
@@ -810,7 +642,7 @@ export const AddVehicle = () => {
         mileage: getNumberOrNull(formData.mileage),
 
         engine: formData.engine.trim() || null,
-        engineCC: getNumberOrNull(formData.engineCC),
+        engineCC: null,
         powerHP: getNumberOrNull(formData.powerHP),
         powerKW: getNumberOrNull(formData.powerKW),
         cylinders: getNumberOrNull(formData.cylinders),
@@ -888,7 +720,7 @@ export const AddVehicle = () => {
         throw new Error(t("photosPublishFail"));
       }
 
-      if (uploaded < 2) {
+      if (uploaded < 1) {
         await discardUnpublishedVehicle(vehicleId);
         throw new Error(t("photosPublishFail"));
       }
@@ -911,7 +743,6 @@ export const AddVehicle = () => {
         year: "",
         mileage: "",
         engine: "",
-        engineCC: "",
         powerHP: "",
         powerKW: "",
         cylinders: "",
@@ -1015,7 +846,7 @@ export const AddVehicle = () => {
             <p>{t("photosHint")}</p>
           </div>
 
-          <label className={`photo-add-circle-wrap${images.length < 2 ? " photo-add-needed" : ""}${missing.includes("photos") ? " photo-add-invalid" : ""}`} data-field="photos">
+          <label className={`photo-add-circle-wrap${images.length < 1 ? " photo-add-needed" : ""}${missing.includes("photos") ? " photo-add-invalid" : ""}`} data-field="photos">
             <input
               type="file"
               accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
@@ -1096,7 +927,7 @@ export const AddVehicle = () => {
           </div>
 
           <div className={fieldClass("categoryId")} data-field="categoryId">
-            <label htmlFor="categoryId">Category</label>
+            <label htmlFor="categoryId">{t("category")}</label>
 
             <select
               id="categoryId"
@@ -1113,7 +944,7 @@ export const AddVehicle = () => {
                   key={item.id}
                   value={item.id}
                 >
-                  {item.name}
+                  {lookupLabel(t, item)}
                 </option>
               ))}
             </select>
@@ -1182,22 +1013,23 @@ export const AddVehicle = () => {
             />
             {brandOpen && brandQuery.trim() ? (
               <ul className="city-suggest-list" role="listbox">
-                {brandSuggestions.map((brand) => (
-                  <li key={brand.id}>
+                {brandSuggestions.map((item) => (
+                  <li key={item.key}>
                     <button
                       type="button"
                       className="city-suggest-item"
                       onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => pickBrand(brand)}
+                      onClick={() => pickBrandSuggestion(item)}
                     >
-                      {brand.name}
+                      {item.label}
                     </button>
                   </li>
                 ))}
                 {!brandSuggestions.some(
-                  (brand) =>
-                    String(brand.name || "").trim().toLowerCase() ===
-                    brandQuery.trim().toLowerCase()
+                  (item) =>
+                    String(item.brand?.name || item.label || "")
+                      .trim()
+                      .toLowerCase() === brandQuery.trim().toLowerCase()
                 ) ? (
                   <li>
                     <button
@@ -1223,16 +1055,14 @@ export const AddVehicle = () => {
               id="modelSearch"
               type="text"
               autoComplete="off"
-              placeholder={
-                brandQuery.trim() ? t("typeModel") : t("firstBrand")
-              }
+              placeholder={t("typeModel")}
               value={modelQuery}
               onChange={handleModelQueryChange}
-              onFocus={() => brandQuery.trim() && setModelOpen(true)}
+              onFocus={() => setModelOpen(true)}
               onBlur={() => {
                 window.setTimeout(() => setModelOpen(false), 160);
               }}
-              disabled={!brandQuery.trim() || saving}
+              disabled={saving}
             />
             {modelOpen && modelQuery.trim() ? (
               <ul className="city-suggest-list" role="listbox">
@@ -1271,34 +1101,6 @@ export const AddVehicle = () => {
             ) : null}
           </div>
 
-          <div className="form-field form-field-wide">
-            <label htmlFor="catalogVariantId">Variant / trim (optional)</label>
-            <select
-              id="catalogVariantId"
-              value={catalogVariantId}
-              onChange={handleCatalogVariantChange}
-              disabled={!formData.modelId || catalogLoading || !catalogVariants.length}
-            >
-              <option value="">
-                {!formData.modelId
-                  ? "First select Model"
-                  : catalogLoading
-                    ? "Loading catalog…"
-                    : catalogVariants.length
-                      ? "Select variant (optional)"
-                      : "No catalog variants"}
-              </option>
-              {catalogVariants.map((variant) => (
-                <option key={variant.id} value={variant.id}>
-                  {variant.label}
-                </option>
-              ))}
-            </select>
-            {catalogStatus ? (
-              <p className="catalog-hint">{catalogStatus}</p>
-            ) : null}
-          </div>
-
           <div className="form-field">
             <label htmlFor="bodyTypeId">Body Type</label>
 
@@ -1324,39 +1126,16 @@ export const AddVehicle = () => {
           </div>
 
           <div className="form-field">
-            <label htmlFor="colorId">Color</label>
-
-            <select
+            <label htmlFor="colorId">{t("color")}</label>
+            <ColorSelect
               id="colorId"
               name="colorId"
               value={formData.colorId}
+              colors={colors}
+              placeholder={t("selectColor")}
+              disabled={saving}
               onChange={handleChange}
-            >
-              <option value="">
-                Select Color
-              </option>
-
-              {colors.map((color) => (
-                <option
-                  key={color.id}
-                  value={color.id}
-                >
-                  {color.name}
-                </option>
-              ))}
-            </select>
-
-            {selectedColor?.hexCode && (
-              <div className="color-preview">
-                <span
-                  style={{
-                    backgroundColor:
-                      selectedColor.hexCode,
-                  }}
-                />
-                {selectedColor.name}
-              </div>
-            )}
+            />
           </div>
 
         </div>
@@ -1399,7 +1178,7 @@ export const AddVehicle = () => {
           </div>
 
           <div className="form-field">
-            <label htmlFor="transmissionId">Transmission</label>
+            <label htmlFor="transmissionId">{t("transmission")}</label>
 
             <select
               id="transmissionId"
@@ -1416,14 +1195,14 @@ export const AddVehicle = () => {
                   key={item.id}
                   value={item.id}
                 >
-                  {item.name}
+                  {lookupLabel(t, item)}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="form-field">
-            <label htmlFor="driveTypeId">Drive Type</label>
+            <label htmlFor="driveTypeId">{t("driveType")}</label>
 
             <select
               id="driveTypeId"
@@ -1440,7 +1219,7 @@ export const AddVehicle = () => {
                   key={item.id}
                   value={item.id}
                 >
-                  {item.name}
+                  {lookupLabel(t, item)}
                 </option>
               ))}
             </select>
@@ -1456,20 +1235,6 @@ export const AddVehicle = () => {
               value={formData.engine}
               onChange={handleChange}
               placeholder="e.g. 2.0 Diesel"
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="engineCC">Engine CC</label>
-
-            <input
-              id="engineCC"
-              type="number"
-              name="engineCC"
-              value={formData.engineCC}
-              onChange={handleChange}
-              placeholder="e.g. 1995"
-              min="0"
             />
           </div>
 
@@ -1599,8 +1364,6 @@ export const AddVehicle = () => {
 
         <LegalConsent
           id="listing-consent"
-          className={missing.includes("consent") ? "legal-consent--invalid" : ""}
-          data-field="consent"
           checked={listingConsent}
           onChange={(checked) => {
             setListingConsent(checked);

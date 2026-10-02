@@ -1,5 +1,11 @@
 import { query, queryOne } from "./db.js";
 import { getSiteSettings, resolveMailFrom } from "./siteSettings.js";
+import {
+  alreadyMailedWhileAway,
+  clearMailedWhileAway,
+  isChatOpen,
+  markMailedWhileAway,
+} from "./presence.js";
 
 function frontendUrl() {
   return String(process.env.FRONTEND_URL || "https://www.autosmarket.me").replace(
@@ -8,11 +14,21 @@ function frontendUrl() {
   );
 }
 
+function smtpPass() {
+  return String(process.env.SMTP_PASS || "").replace(/\s/g, "");
+}
+
+function smtpHost() {
+  const raw = String(process.env.SMTP_HOST || "").trim();
+  if (!raw || raw === "..." || /^smtp\.example/i.test(raw)) {
+    return smtpPass() ? "smtp.gmail.com" : "";
+  }
+  return raw;
+}
 
 export function isMailConfigured() {
   return Boolean(
-    String(process.env.RESEND_API_KEY || "").trim() ||
-      String(process.env.SMTP_HOST || "").trim()
+    String(process.env.RESEND_API_KEY || "").trim() || smtpHost() || smtpPass()
   );
 }
 
@@ -57,21 +73,17 @@ async function sendWithResend({ to, subject, text, html, from, replyTo }) {
 }
 
 async function sendWithSmtp({ to, subject, text, html, from, replyTo }) {
-  const host = String(process.env.SMTP_HOST || "").trim();
-  if (!host) return false;
+  const host = smtpHost();
+  if (!host && !smtpPass()) return false;
   const nodemailer = await import("nodemailer");
   const port = Number(process.env.SMTP_PORT || 587);
+  const user = String(process.env.SMTP_USER || "").trim();
+  const pass = smtpPass();
   const transporter = nodemailer.createTransport({
-    host,
+    host: host || "smtp.gmail.com",
     port,
     secure: port === 465,
-    auth:
-      process.env.SMTP_USER && process.env.SMTP_PASS
-        ? {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-          }
-        : undefined,
+    auth: user && pass ? { user, pass } : undefined,
   });
   await transporter.sendMail({
     from: from || (await resolveMailFrom()),
@@ -93,13 +105,63 @@ export async function sendMail({ to, subject, text, html, from, replyTo }) {
   return sendWithSmtp(payload);
 }
 
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function chatEmailHtml({ who, preview, link }) {
+  const safePreview = escapeHtml(preview).replace(/\n/g, "<br>");
+  return `<!DOCTYPE html>
+<html lang="sq">
+<body style="margin:0;padding:0;background:#f4f6f8;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f6f8;padding:32px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:#ffffff;border-radius:22px;overflow:hidden;border:1px solid #e5e7eb;">
+          <tr>
+            <td style="background:#0f172a;padding:26px 28px 22px;">
+              <p style="margin:0;font-family:Georgia,serif;font-size:22px;letter-spacing:-0.03em;color:#f8fafc;">AutoMarket</p>
+              <p style="margin:8px 0 0;font-family:Arial,sans-serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#f59e0b;">Inbox</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px;">
+              <h1 style="margin:0;font-family:Georgia,serif;font-size:28px;line-height:1.15;letter-spacing:-0.03em;color:#0f172a;">Dikush të ka shkruar</h1>
+              <p style="margin:14px 0 0;font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#64748b;">${escapeHtml(who)} të dërgoi një mesazh ndërsa inbox ishte i mbyllur.</p>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:18px;">
+                <tr>
+                  <td style="background:#f8fafc;border-radius:16px;padding:16px 18px;font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#0f172a;">${safePreview}</td>
+                </tr>
+              </table>
+              <p style="margin:22px 0 0;">
+                <a href="${escapeHtml(link)}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:14px;font-weight:700;padding:12px 18px;border-radius:999px;">Hape bisedën</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
 export async function notifyNewMessage({
   receiverId,
   senderName,
   preview,
   conversationId,
 }) {
-  if (!isMailConfigured()) return;
+  if (!isMailConfigured()) {
+    console.warn("Email i chatit u kapërcye: SMTP/Resend mungon në .env.");
+    return;
+  }
+  if (isChatOpen(receiverId) || alreadyMailedWhileAway(receiverId)) return;
+  markMailedWhileAway(receiverId);
   const settings = await getSiteSettings();
   const recipients = [];
   const seen = new Set();
@@ -114,31 +176,30 @@ export async function notifyNewMessage({
   }
   addTo(await emailForUserId(receiverId));
   addTo(settings.messageNotifyEmail);
-  if (!recipients.length) return;
+  if (!recipients.length) {
+    clearMailedWhileAway(receiverId);
+    console.warn("Email i chatit u kapërcye: marrësi nuk ka adresë.");
+    return;
+  }
   const who = String(senderName || "Dikush").trim() || "Dikush";
   const url = `${frontendUrl()}/messages/${conversationId}`;
-  const subject = `Të ka shkruar ${who} në AutoMarket`;
-  const text = `Të ka shkruar ${who}.\n\n${preview}\n\nHape bisedën: ${url}`;
-  const html = `<p>Të ka shkruar <strong>${escapeHtml(who)}</strong>.</p>
-<p>${escapeHtml(preview)}</p>
-<p><a href="${url}">Hape bisedën</a></p>`;
-  for (const to of recipients) {
-    await sendMail({
-      to,
-      subject,
-      text,
-      html,
-      from: await resolveMailFrom(),
-    });
+  const subject = "Dikush të ka shkruar në AutoMarket";
+  const text = `Dikush të ka shkruar\n\n${who} të dërgoi një mesazh ndërsa inbox ishte i mbyllur.\n\n${preview}\n\nHape bisedën: ${url}`;
+  const html = chatEmailHtml({ who, preview, link: url });
+  try {
+    for (const to of recipients) {
+      await sendMail({
+        to,
+        subject,
+        text,
+        html,
+        from: await resolveMailFrom(),
+      });
+    }
+  } catch (err) {
+    clearMailedWhileAway(receiverId);
+    throw err;
   }
-}
-
-function escapeHtml(value) {
-  return String(value || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 async function alreadyMailed(userId, type) {

@@ -52,7 +52,7 @@ const VEHICLE_SELECT = `
 
 const HAS_MIN_PHOTOS = `(
   SELECT COUNT(*) FROM VehicleImages vi WHERE vi.VehicleId = v.Id
-) >= 2`;
+) >= 1`;
 
 async function withImages(vehicles) {
   const list = camel(vehicles);
@@ -188,7 +188,7 @@ async function resolveBrandAndModel(body) {
       });
       const same =
         row &&
-        String(row.Name ?? row.name || "").toLowerCase() ===
+        String((row.Name ?? row.name) || "").toLowerCase() ===
           brandName.toLowerCase();
       if (!same) {
         brandId = await findOrCreateBrand(brandName);
@@ -208,7 +208,7 @@ async function resolveBrandAndModel(body) {
       const same =
         row &&
         Number(row.BrandId ?? row.brandId) === Number(brandId) &&
-        String(row.Name ?? row.name || "").toLowerCase() ===
+        String((row.Name ?? row.name) || "").toLowerCase() ===
           modelName.toLowerCase();
       if (!same) modelId = await findOrCreateModel(modelName, brandId);
     } else {
@@ -217,6 +217,28 @@ async function resolveBrandAndModel(body) {
   }
 
   return { ...p, brandId, modelId };
+}
+
+async function fillListingDefaults(p) {
+  let listingTypeId = asId(p.listingTypeId);
+  let categoryId = asId(p.categoryId);
+  if (!listingTypeId) {
+    const row = await queryOne(
+      `SELECT TOP 1 Id FROM ListingTypes
+       WHERE LOWER(ISNULL(Slug, N'')) = N'sale'
+          OR LOWER(LTRIM(RTRIM(Name))) = N'sale'`
+    );
+    listingTypeId = row?.Id ?? row?.id ?? null;
+  }
+  if (!categoryId) {
+    const row = await queryOne(
+      `SELECT TOP 1 Id FROM VehicleCategories
+       WHERE LOWER(ISNULL(Slug, N'')) = N'car'
+          OR LOWER(LTRIM(RTRIM(Name))) = N'car'`
+    );
+    categoryId = row?.Id ?? row?.id ?? null;
+  }
+  return { ...p, listingTypeId, categoryId };
 }
 
 function vehicleParams(body) {
@@ -378,7 +400,7 @@ export function vehiclesRouter() {
     const photoCount = Array.isArray(vehicle.images) ? vehicle.images.length : 0;
     const canSeeIncomplete =
       ownsRecord(row.OwnerId, req.user) || req.user?.roleName === "Admin";
-    if (photoCount < 2 && !canSeeIncomplete) {
+    if (photoCount < 1 && !canSeeIncomplete) {
       return res.status(404).json({ message: "Vehicle nuk u gjet." });
     }
     res.json(vehicle);
@@ -412,7 +434,7 @@ export function vehiclesRouter() {
 
     let p;
     try {
-      p = await resolveBrandAndModel(req.body);
+      p = await fillListingDefaults(await resolveBrandAndModel(req.body));
     } catch (err) {
       return res.status(400).json({
         message: err.message || "Brand ose modeli nuk u ruajt.",
@@ -420,8 +442,6 @@ export function vehiclesRouter() {
       });
     }
     const missing = [];
-    if (!p.listingTypeId) missing.push("listingTypeId");
-    if (!p.categoryId) missing.push("categoryId");
     if (!p.brandId) missing.push("brand");
     if (!p.modelId) missing.push("model");
     if (!p.price) missing.push("price");
@@ -480,7 +500,7 @@ export function vehiclesRouter() {
     }
     let p;
     try {
-      p = await resolveBrandAndModel(req.body);
+      p = await fillListingDefaults(await resolveBrandAndModel(req.body));
     } catch (err) {
       return res.status(400).json({
         message: err.message || "Brand ose modeli nuk u ruajt.",
@@ -488,8 +508,6 @@ export function vehiclesRouter() {
       });
     }
     const missing = [];
-    if (!p.listingTypeId) missing.push("listingTypeId");
-    if (!p.categoryId) missing.push("categoryId");
     if (!p.brandId) missing.push("brand");
     if (!p.modelId) missing.push("model");
     if (!p.price) missing.push("price");
@@ -498,7 +516,7 @@ export function vehiclesRouter() {
       `SELECT COUNT(*) AS n FROM VehicleImages WHERE VehicleId = @id`,
       { id }
     );
-    if (Number(photoRow?.n ?? photoRow?.N ?? 0) < 2) missing.push("photos");
+    if (Number(photoRow?.n ?? photoRow?.N ?? 0) < 1) missing.push("photos");
     if (missing.length) {
       return res.status(400).json({
         message: "Fushat e detyrueshme mungojnë.",

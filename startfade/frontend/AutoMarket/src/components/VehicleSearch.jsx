@@ -7,6 +7,7 @@ import {
   filterByListingType,
   listingTypeIdFromCatalog,
 } from "../utils/listingType";
+import { lookupLabel } from "../utils/listingTypeahead";
 import "./VehicleSearch.css";
 
 export const VehicleSearch = ({
@@ -930,7 +931,7 @@ export const VehicleSearch = ({
                 key={category.id}
                 value={category.id}
               >
-                {category.name}
+                {lookupLabel(t, category)}
               </option>
             ))}
           </SelectFilter>
@@ -1089,7 +1090,7 @@ export const VehicleSearch = ({
                   key={transmission.id}
                   value={transmission.id}
                 >
-                  {transmission.name}
+                  {lookupLabel(t, transmission)}
                 </option>
               )
             )}
@@ -1115,7 +1116,7 @@ export const VehicleSearch = ({
                 key={drive.id}
                 value={drive.id}
               >
-                {drive.name}
+                {lookupLabel(t, drive)}
               </option>
             ))}
           </SelectFilter>

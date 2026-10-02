@@ -1,8 +1,45 @@
+import { useEffect } from "react";
 import { apiFetch } from "./api";
 
 // =====================================================
 // GET OR CREATE CONVERSATION
 // =====================================================
+
+export const setChatPresence = async (open) => {
+  return apiFetch("/Chat/presence", {
+    method: "POST",
+    keepalive: true,
+    body: JSON.stringify({ open: Boolean(open) }),
+  });
+};
+
+export function useChatPresence(enabled) {
+  useEffect(() => {
+    if (!enabled) return undefined;
+    let stopped = false;
+
+    async function beat(open) {
+      try {
+        if (stopped && open) return;
+        await setChatPresence(open);
+      } catch {
+        /* presence is optional */
+      }
+    }
+
+    const sync = () =>
+      beat(typeof document === "undefined" || document.visibilityState === "visible");
+    sync();
+    const timer = window.setInterval(sync, 8000);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", sync);
+      beat(false);
+    };
+  }, [enabled]);
+}
 
 export const getOrCreateConversation = async (
   otherUserId,

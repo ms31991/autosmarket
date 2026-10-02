@@ -5,6 +5,14 @@ import { getClerkToken } from '../services/clerkToken'
 import { mediaUrl } from '../utils/mediaUrl'
 import { API_BASE } from '../config/api'
 import { compressImageFile } from '../utils/compressImage'
+import { ColorSelect } from '../components/ColorSelect'
+import {
+  bodyTypeHintFromModel,
+  filterBrandSuggestions,
+  filterModelSuggestions,
+  lookupLabel,
+  normalizePlace,
+} from '../utils/listingTypeahead'
 import { useLanguage } from '../i18n/LanguageContext'
 
 export const EditVehicle = () => {
@@ -23,7 +31,6 @@ export const EditVehicle = () => {
   const [fuelTypes, setFuelTypes] = useState([])
   const [transmissions, setTransmissions] = useState([])
   const [driveTypes, setDriveTypes] = useState([])
-  const [conditions, setConditions] = useState([])
   const [colors, setColors] = useState([])
   const [cities, setCities] = useState([])
   const [listingTypes, setListingTypes] = useState([])
@@ -64,8 +71,6 @@ export const EditVehicle = () => {
     mileage: '',
 
     engine: '',
-    engineCC: '',
-
     powerHP: '',
     powerKW: '',
 
@@ -202,10 +207,6 @@ export const EditVehicle = () => {
           url: `${API_BASE}/DriveTypes`,
         },
         {
-          key: 'conditions',
-          url: `${API_BASE}/Conditions`,
-        },
-        {
           key: 'colors',
           url: `${API_BASE}/Colors`,
         },
@@ -250,10 +251,9 @@ export const EditVehicle = () => {
       setFuelTypes(data[4])
       setTransmissions(data[5])
       setDriveTypes(data[6])
-      setConditions(data[7])
-      setColors(data[8])
-      setCities(data[9])
-      setListingTypes(data[10])
+      setColors(data[7])
+      setCities(data[8])
+      setListingTypes(data[9])
 
       // =================================================
       // SET VEHICLE DATA
@@ -282,7 +282,6 @@ export const EditVehicle = () => {
         mileage: vehicle.mileage ?? '',
 
         engine: vehicle.engine ?? '',
-        engineCC: vehicle.engineCC ?? '',
 
         powerHP: vehicle.powerHP ?? '',
         powerKW: vehicle.powerKW ?? '',
@@ -379,9 +378,7 @@ export const EditVehicle = () => {
 
   function collectMissing() {
     const keys = []
-    if (images.length < 2) keys.push('photos')
-    if (!formData.listingTypeId) keys.push('listingTypeId')
-    if (!formData.categoryId) keys.push('categoryId')
+    if (images.length < 1) keys.push('photos')
     if (!brandQuery.trim()) keys.push('brand')
     if (!modelQuery.trim()) keys.push('model')
     if (!formData.year) keys.push('year')
@@ -426,6 +423,41 @@ export const EditVehicle = () => {
     setSuccess('')
   }
 
+  function applyBodyHint(modelName) {
+    const hint = bodyTypeHintFromModel(modelName)
+    if (!hint) return
+    const matched = bodyTypes.find((item) => {
+      const name = normalizePlace(item.name)
+      return name === hint || name.includes(hint) || hint.includes(name)
+    })
+    if (!matched) return
+    setFormData((previous) => ({
+      ...previous,
+      bodyTypeId: String(matched.id),
+    }))
+  }
+
+  function pickBrandSuggestion(item) {
+    if (item.kind === 'model' && item.brand && item.model) {
+      setFormData((previous) => ({
+        ...previous,
+        brandId: String(item.brand.id),
+        modelId: String(item.model.id),
+      }))
+      setBrandQuery(item.brand.name)
+      setModelQuery(item.model.name)
+      setBrandOpen(false)
+      setModelOpen(false)
+      applyBodyHint(item.model.name)
+      markFilled('brand')
+      markFilled('model')
+      setError('')
+      setSuccess('')
+      return
+    }
+    if (item.brand) pickBrand(item.brand)
+  }
+
   // =====================================================
   // FILTER MODELS
   // =====================================================
@@ -439,34 +471,17 @@ export const EditVehicle = () => {
     )
   const matchedBrandId = matchedBrand?.id || formData.brandId
 
-  const filteredModels = matchedBrandId
-    ? models.filter(
-        (model) =>
-          Number(model.brandId) ===
-          Number(matchedBrandId)
-      )
-    : []
-
-  function normalizePlace(value) {
-    return String(value || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '')
-  }
-
   function cityLabel(city) {
     if (!city) return ''
     return city.countryName ? `${city.name} - ${city.countryName}` : city.name
   }
 
-  const brandSuggestions = (() => {
-    const needle = normalizePlace(brandQuery)
-    if (needle.length < 1) return []
-    return brands
-      .filter((brand) => normalizePlace(brand.name).includes(needle))
-      .slice(0, 15)
-  })()
+  const brandSuggestions = filterBrandSuggestions(brands, models, brandQuery)
+  const modelSuggestions = filterModelSuggestions(
+    models,
+    modelQuery,
+    matchedBrandId
+  )
 
   const citySuggestions = (() => {
     const needle = normalizePlace(cityQuery)
@@ -501,15 +516,6 @@ export const EditVehicle = () => {
     setError('')
   }
 
-  const modelSuggestions = (() => {
-    if (!matchedBrandId && !brandQuery.trim()) return []
-    const needle = normalizePlace(modelQuery)
-    if (needle.length < 1) return []
-    return filteredModels
-      .filter((model) => normalizePlace(model.name).includes(needle))
-      .slice(0, 15)
-  })()
-
   function handleModelQueryChange(e) {
     const value = e.target.value
     setModelQuery(value)
@@ -526,25 +532,22 @@ export const EditVehicle = () => {
   }
 
   function pickModel(model) {
+    const brand = brands.find(
+      (item) => Number(item.id) === Number(model.brandId)
+    )
     setFormData((previous) => ({
       ...previous,
+      brandId: model.brandId ? String(model.brandId) : previous.brandId,
       modelId: String(model.id),
     }))
+    if (brand) setBrandQuery(brand.name)
     setModelQuery(model.name)
     setModelOpen(false)
+    applyBodyHint(model.name)
+    markFilled('brand')
     markFilled('model')
     setError('')
   }
-
-  // =====================================================
-  // SELECTED COLOR
-  // =====================================================
-
-  const selectedColor = colors.find(
-    (color) =>
-      Number(color.id) ===
-      Number(formData.colorId)
-  )
 
   // =====================================================
   // NUMBER
@@ -630,7 +633,7 @@ export const EditVehicle = () => {
               sortOrder: newImage.sortOrder,
             },
           ]
-          if (next.length >= 2) markFilled('photos')
+          if (next.length >= 1) markFilled('photos')
           return next
         })
       }
@@ -750,7 +753,7 @@ export const EditVehicle = () => {
       return
     }
 
-    if (images.length <= 2) {
+    if (images.length <= 1) {
       setError(t('photosMinKeep'))
       return
     }
@@ -936,10 +939,7 @@ export const EditVehicle = () => {
           formData.engine.trim() ||
           null,
 
-        engineCC:
-          getNumberOrNull(
-            formData.engineCC
-          ),
+        engineCC: null,
 
         powerHP:
           getNumberOrNull(
@@ -1146,7 +1146,7 @@ export const EditVehicle = () => {
             <p>{t("photosHint")}</p>
           </div>
 
-          <label className={`photo-add-circle-wrap${images.length < 2 ? " photo-add-needed" : ""}${missing.includes("photos") ? " photo-add-invalid" : ""}`} data-field="photos">
+          <label className={`photo-add-circle-wrap${images.length < 1 ? " photo-add-needed" : ""}${missing.includes("photos") ? " photo-add-invalid" : ""}`} data-field="photos">
             <input
               id="vehicle-image-input"
               type="file"
@@ -1235,7 +1235,7 @@ export const EditVehicle = () => {
               <option value="">{t("selectCategory")}</option>
               {categories.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.name}
+                  {lookupLabel(t, item)}
                 </option>
               ))}
             </select>
@@ -1302,22 +1302,23 @@ export const EditVehicle = () => {
             />
             {brandOpen && brandQuery.trim() ? (
               <ul className="city-suggest-list" role="listbox">
-                {brandSuggestions.map((brand) => (
-                  <li key={brand.id}>
+                {brandSuggestions.map((item) => (
+                  <li key={item.key}>
                     <button
                       type="button"
                       className="city-suggest-item"
                       onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => pickBrand(brand)}
+                      onClick={() => pickBrandSuggestion(item)}
                     >
-                      {brand.name}
+                      {item.label}
                     </button>
                   </li>
                 ))}
                 {!brandSuggestions.some(
-                  (brand) =>
-                    String(brand.name || "").trim().toLowerCase() ===
-                    brandQuery.trim().toLowerCase()
+                  (item) =>
+                    String(item.brand?.name || item.label || '')
+                      .trim()
+                      .toLowerCase() === brandQuery.trim().toLowerCase()
                 ) ? (
                   <li>
                     <button
@@ -1343,14 +1344,14 @@ export const EditVehicle = () => {
               id="modelSearch"
               type="text"
               autoComplete="off"
-              placeholder={brandQuery.trim() ? t("typeModel") : t("firstBrand")}
+              placeholder={t("typeModel")}
               value={modelQuery}
               onChange={handleModelQueryChange}
-              onFocus={() => brandQuery.trim() && setModelOpen(true)}
+              onFocus={() => setModelOpen(true)}
               onBlur={() => {
                 window.setTimeout(() => setModelOpen(false), 160)
               }}
-              disabled={!brandQuery.trim() || saving}
+              disabled={saving}
             />
             {modelOpen && modelQuery.trim() ? (
               <ul className="city-suggest-list" role="listbox">
@@ -1408,25 +1409,15 @@ export const EditVehicle = () => {
 
           <div className="form-field">
             <label htmlFor="colorId">{t("color")}</label>
-            <select
+            <ColorSelect
               id="colorId"
               name="colorId"
               value={formData.colorId}
+              colors={colors}
+              placeholder={t("selectColor")}
+              disabled={saving}
               onChange={handleChange}
-            >
-              <option value="">{t("selectColor")}</option>
-              {colors.map((color) => (
-                <option key={color.id} value={color.id}>
-                  {color.name}
-                </option>
-              ))}
-            </select>
-            {selectedColor?.hexCode && (
-              <div className="color-preview">
-                <span style={{ backgroundColor: selectedColor.hexCode }} />
-                {selectedColor.name}
-              </div>
-            )}
+            />
           </div>
         </div>
 
@@ -1467,7 +1458,7 @@ export const EditVehicle = () => {
               <option value="">{t("selectTrans")}</option>
               {transmissions.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.name}
+                  {lookupLabel(t, item)}
                 </option>
               ))}
             </select>
@@ -1484,7 +1475,7 @@ export const EditVehicle = () => {
               <option value="">{t("selectDrive")}</option>
               {driveTypes.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.name}
+                  {lookupLabel(t, item)}
                 </option>
               ))}
             </select>
@@ -1499,19 +1490,6 @@ export const EditVehicle = () => {
               value={formData.engine}
               onChange={handleChange}
               placeholder="e.g. 2.0 Diesel"
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="engineCC">Engine CC</label>
-            <input
-              id="engineCC"
-              type="number"
-              name="engineCC"
-              value={formData.engineCC}
-              onChange={handleChange}
-              placeholder="e.g. 1995"
-              min="0"
             />
           </div>
 
@@ -1567,46 +1545,6 @@ export const EditVehicle = () => {
             />
           </div>
 
-          <div className="form-field">
-            <label htmlFor="doors">Doors</label>
-            <input
-              id="doors"
-              type="number"
-              name="doors"
-              value={formData.doors}
-              onChange={handleChange}
-              min="0"
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="conditionId">Condition</label>
-            <select
-              id="conditionId"
-              name="conditionId"
-              value={formData.conditionId}
-              onChange={handleChange}
-            >
-              <option value="">Select Condition</option>
-              {conditions.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-field form-field-wide">
-            <label htmlFor="vin">VIN (optional)</label>
-            <input
-              id="vin"
-              type="text"
-              name="vin"
-              value={formData.vin}
-              onChange={handleChange}
-              autoComplete="off"
-            />
-          </div>
         </div>
 
         <div className="form-section-title">

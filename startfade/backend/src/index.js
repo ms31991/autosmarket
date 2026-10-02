@@ -21,9 +21,9 @@ import {
   ensureListingTypeColumnNullable,
   ensureListingTypesSaleAndRent,
 } from "./routes/lookups.js";
-import { catalogRouter } from "./routes/catalog.js";
 import { vehiclesRouter } from "./routes/vehicles.js";
 import { vehicleImagesRouter } from "./routes/vehicleImages.js";
+import { ensureBrandModelSeed } from "./brandModelSeed.js";
 import { usersRouter } from "./routes/users.js";
 import { chatRouter } from "./routes/chat.js";
 import { startExpiryMailJob } from "./mail.js";
@@ -155,7 +155,6 @@ app.use("/api/VehicleCategories", lookupRouter("VehicleCategories", ["Name", "Sl
 app.use("/api/Cities", citiesRouter());
 app.use("/api/VehicleModels", vehicleModelsRouter());
 app.use("/api/ListingTypes", listingTypesRouter());
-app.use("/api/Catalog", catalogRouter());
 app.use("/api/Vehicles", vehiclesRouter());
 app.use("/api/VehicleImage", vehicleImagesRouter());
 app.use("/api/Users", usersRouter());
@@ -187,6 +186,7 @@ async function start() {
   await ensureListingTypesSaleAndRent();
   await ensureListingReportsTable();
   await ensureSiteSettingsTable();
+  await ensureBrandModelSeed();
   server.listen(port, "0.0.0.0", () => {
     console.log(`AutoMarket Node API running on http://localhost:${port}`);
     console.log(`LAN: http://<PC-IP>:${port}  (same WiFi as the phone)`);

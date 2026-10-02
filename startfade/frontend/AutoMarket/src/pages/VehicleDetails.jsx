@@ -32,6 +32,7 @@ import { generateVehicleSEO, vehicleImageAlt } from "../seo/generateVehicleSEO";
 import { ListingRelated, SeoBreadcrumbs } from "../seo/SeoBreadcrumbs";
 import { mediaUrl } from "../utils/mediaUrl";
 import { formatEuro } from "../utils/formatEuro";
+import { lookupLabel } from "../utils/listingTypeahead";
 import { API_BASE, API_ORIGIN } from "../config/api";
 import { SITE_LOGO } from "../config/site";
 import { apiFetch } from "../services/api";
@@ -638,12 +639,14 @@ export const VehicleDetails = () => {
       icon: <Fuel size={19} />,
     },
     {
-      label: "Gearbox",
-      value:
+      label: t("transmission"),
+      value: lookupLabel(
+        t,
         vehicle.transmissionName ||
-        vehicle.transmission ||
-        vehicle.gearbox ||
-        "-",
+          vehicle.transmission ||
+          vehicle.gearbox ||
+          "-"
+      ),
       icon: <Settings size={19} />,
     },
     {
@@ -655,12 +658,14 @@ export const VehicleDetails = () => {
       icon: <Zap size={19} />,
     },
     {
-      label: "Drivetrain",
-      value:
+      label: t("driveType"),
+      value: lookupLabel(
+        t,
         vehicle.driveTypeName ||
-        vehicle.drivetrain ||
-        vehicle.driveType ||
-        "-",
+          vehicle.drivetrain ||
+          vehicle.driveType ||
+          "-"
+      ),
       icon: <Car size={19} />,
     },
     {

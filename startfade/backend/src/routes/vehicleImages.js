@@ -123,9 +123,9 @@ export function vehicleImagesRouter() {
       `SELECT COUNT(*) AS n FROM VehicleImages WHERE VehicleId = @vehicleId`,
       { vehicleId: image.VehicleId }
     );
-    if (Number(countRow?.n ?? countRow?.N ?? 0) <= 2) {
+    if (Number(countRow?.n ?? countRow?.N ?? 0) <= 1) {
       return res.status(400).json({
-        message: "Duhet të mbeten të paktën 2 foto. Shto një foto tjetër para se ta fshish këtë.",
+        message: "Duhet të mbetet të paktën 1 foto. Shto një foto tjetër para se ta fshish këtë.",
       });
     }
     const filePath = publicFilePath(image.ImageUrl);

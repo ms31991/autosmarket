@@ -5,6 +5,7 @@ import { requireAuth } from "../auth.js";
 import { emitToUser } from "../realtime.js";
 import { keysFromAuth, userMatchSql } from "../identity.js";
 import { notifyNewMessage } from "../mail.js";
+import { markChatClosed, markChatOpen } from "../presence.js";
 
 function conversationAccessSql() {
   return `(
@@ -16,6 +17,16 @@ function conversationAccessSql() {
 export function chatRouter() {
   const router = Router();
   router.use(requireAuth);
+
+  router.post("/presence", (req, res) => {
+    const open = req.body?.open !== false;
+    const ids = [req.user.id, req.user.clerkUserId].filter(Boolean);
+    for (const id of ids) {
+      if (open) markChatOpen(id);
+      else markChatClosed(id);
+    }
+    res.json({ ok: true });
+  });
 
   router.get("/conversation/:otherUserId", async (req, res) => {
     const userId = req.user.id;

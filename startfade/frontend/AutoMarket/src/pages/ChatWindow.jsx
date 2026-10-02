@@ -2,7 +2,7 @@ import "./ChatWindow.css";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../i18n/LanguageContext";
-import { getMessages, sendMessage } from "../services/chatService";
+import { getMessages, sendMessage, useChatPresence } from "../services/chatService";
 import { subscribeRealtimeWake } from "../services/signalRService";
 
 function parseChatDate(value) {
@@ -29,6 +29,7 @@ export const ChatWindow = ({
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const messagesBoxRef = useRef(null);
+  useChatPresence(Boolean(conversationId));
 
   function isMine(message) {
     if (message.isMine === true || message.IsMine === true) return true;

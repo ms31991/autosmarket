@@ -10,6 +10,7 @@ import {
   markAsRead,
   deleteConversation,
   getOrCreateConversation,
+  useChatPresence,
 } from "../services/chatService";
 import { getFriends, onFriendshipChanged } from "../services/friendService";
 import { mediaUrl } from "../utils/mediaUrl";
@@ -59,6 +60,7 @@ export const MessagesPage = () => {
   const menuRef = useRef(null);
 
   const currentUserId = user?.id || null;
+  useChatPresence(Boolean(user));
 
   const pinStorageKey = (userId) =>
     `automarket-pinned-conversations:${userId || "guest"}`;
