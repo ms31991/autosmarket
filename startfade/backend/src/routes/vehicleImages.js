@@ -75,12 +75,12 @@ export function vehicleImagesRouter() {
       `SELECT COUNT(*) AS n FROM VehicleImages WHERE VehicleId = @vehicleId`,
       { vehicleId }
     );
-    if (Number(countRow?.n ?? countRow?.N ?? 0) >= 10) {
-      return res.status(400).json({ message: "Maksimumi është 10 foto për veturë." });
+    if (Number(countRow?.n ?? countRow?.N ?? 0) >= 6) {
+      return res.status(400).json({ message: "Maksimumi është 6 foto për veturë." });
     }
     const requestedOrder = Number(req.body?.sortOrder);
     const hasRequestedOrder =
-      Number.isInteger(requestedOrder) && requestedOrder >= 1 && requestedOrder <= 10;
+      Number.isInteger(requestedOrder) && requestedOrder >= 1 && requestedOrder <= 6;
     const maxRow = await queryOne(
       `SELECT MAX(SortOrder) AS maxOrder FROM VehicleImages WHERE VehicleId = @vehicleId`,
       { vehicleId }

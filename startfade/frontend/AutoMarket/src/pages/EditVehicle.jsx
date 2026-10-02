@@ -575,9 +575,9 @@ export const EditVehicle = () => {
 
     if (!selectedFiles.length) return
 
-    const room = 10 - images.length
+    const room = 6 - images.length
     if (room <= 0) {
-      setError('Maksimumi është 10 foto.')
+      setError('Maksimumi është 6 foto.')
       return
     }
 
@@ -1151,7 +1151,7 @@ export const EditVehicle = () => {
               accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
               multiple
               onChange={handleFileChange}
-              disabled={saving || uploadingImage || images.length >= 10}
+              disabled={saving || uploadingImage || images.length >= 6}
             />
             <span className="photo-add-circle" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">

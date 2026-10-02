@@ -26,7 +26,7 @@ import {
   tryBeginListingPublish,
 } from "../utils/pendingListingDraft";
 
-const MAX_VEHICLE_PHOTOS = 10;
+const MAX_VEHICLE_PHOTOS = 6;
 
 export const AddVehicle = () => {
   const navigate = useNavigate();
