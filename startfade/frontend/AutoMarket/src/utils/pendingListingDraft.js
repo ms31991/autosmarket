@@ -49,10 +49,11 @@ export async function loadPendingListing() {
     images: Array.isArray(draft.images)
       ? draft.images.map((item, index) => {
           if (item instanceof File || item instanceof Blob) {
-            return { file: asFile(item, index), thumb: null };
+            return { file: asFile(item, index), status: "ready" };
           }
           return {
             file: asFile(item?.file || item, index),
+            status: "ready",
             thumb: item?.thumb ? asFile(item.thumb, index) : null,
           };
         })

@@ -594,12 +594,15 @@ export const EditVehicle = () => {
     setSuccess('')
 
     try {
-      for (const file of files) {
+    const preparedList = await Promise.all(
+      files.map(async (file) => {
         if (!allowedTypes.includes(file.type)) {
-          setError('Lejohen vetëm JPG, JPEG, PNG dhe WEBP.')
-          continue
+          throw new Error('Lejohen vetëm JPG, JPEG, PNG dhe WEBP.')
         }
-        const prepared = await prepareListingPhoto(file)
+        return prepareListingPhoto(file)
+      })
+    )
+    for (const prepared of preparedList) {
         const formDataImage = new FormData()
         formDataImage.append('file', prepared.file)
         const response = await fetch(

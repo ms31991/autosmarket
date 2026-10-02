@@ -1,5 +1,5 @@
 import "./AddVehicle.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getClerkToken } from "../services/clerkToken";
 import {
@@ -76,6 +76,12 @@ export const AddVehicle = () => {
   });
 
   const [images, setImages] = useState([]);
+  const imagesRef = useRef([]);
+  const photoJobsRef = useRef(new Map());
+
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -462,58 +468,107 @@ export const AddVehicle = () => {
     return Number(value);
   }
 
+  function photoFile(photo) {
+    return photo?.file || (photo instanceof File ? photo : null);
+  }
+
+  async function waitPhotosReady() {
+    const jobs = [...photoJobsRef.current.values()];
+    if (jobs.length) await Promise.all(jobs);
+    return imagesRef.current
+      .map((photo) => photoFile(photo))
+      .filter(Boolean);
+  }
+
   async function handleImageChange(e) {
     const selectedFiles = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (!selectedFiles.length) return;
 
     setError("");
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-    ];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const room = MAX_VEHICLE_PHOTOS - imagesRef.current.length;
+    if (room <= 0) {
+      setError(t("photosMax"));
+      return;
+    }
 
-    const validFiles = [];
+    const accepted = [];
     const invalidFiles = [];
-
     for (const file of selectedFiles) {
       if (!allowedTypes.includes(file.type)) {
         invalidFiles.push(`${file.name} - format i palejuar`);
         continue;
       }
-      try {
-        validFiles.push(await prepareListingPhoto(file));
-      } catch {
-        invalidFiles.push(`${file.name} - nuk u kompresua nën 5 MB`);
+      if (accepted.length >= room) {
+        setError(t("photosMax"));
+        break;
       }
+      accepted.push(file);
     }
 
     if (invalidFiles.length > 0) {
       setError(`Disa foto nuk u pranuan: ${invalidFiles.join(", ")}`);
     }
+    if (!accepted.length) return;
+
+    const slots = accepted.map((file) => ({
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      name: file.name,
+      previewUrl: URL.createObjectURL(file),
+      file: null,
+      status: "processing",
+    }));
 
     setImages((previous) => {
-      const room = MAX_VEHICLE_PHOTOS - previous.length;
-      if (room <= 0) {
-        setError(t("photosMax"));
-        return previous;
-      }
-      if (validFiles.length > room) {
-        setError(t("photosMax"));
-      }
-      const next = [...previous, ...validFiles.slice(0, room)];
+      const next = [...previous, ...slots];
       if (next.length >= 1) markFilled("photos");
       return next;
     });
-    e.target.value = "";
+
+    slots.forEach((slot, index) => {
+      const raw = accepted[index];
+      const job = prepareListingPhoto(raw)
+        .then((prepared) => {
+          setImages((previous) =>
+            previous.map((photo) => {
+              if (photo.id !== slot.id) return photo;
+              if (photo.previewUrl && photo.previewUrl !== slot.previewUrl) {
+                URL.revokeObjectURL(photo.previewUrl);
+              }
+              return {
+                ...photo,
+                file: prepared.file,
+                status: "ready",
+                previewUrl: URL.createObjectURL(prepared.file),
+              };
+            })
+          );
+          URL.revokeObjectURL(slot.previewUrl);
+        })
+        .catch(() => {
+          setImages((previous) =>
+            previous.map((photo) =>
+              photo.id === slot.id ? { ...photo, status: "error" } : photo
+            )
+          );
+          setError(`${raw.name} - nuk u kompresua`);
+        })
+        .finally(() => {
+          photoJobsRef.current.delete(slot.id);
+        });
+      photoJobsRef.current.set(slot.id, job);
+    });
   }
 
   function removeImage(index) {
-    setImages((previous) =>
-      previous.filter(
-        (_, imageIndex) => imageIndex !== index
-      )
-    );
+    setImages((previous) => {
+      const photo = previous[index];
+      if (photo?.id) photoJobsRef.current.delete(photo.id);
+      if (photo?.previewUrl) URL.revokeObjectURL(photo.previewUrl);
+      return previous.filter((_, imageIndex) => imageIndex !== index);
+    });
   }
 
   async function handleSubmit(e) {
@@ -533,13 +588,14 @@ export const AddVehicle = () => {
 
     if (!token) {
       try {
+        const readyFiles = await waitPhotosReady();
         await savePendingListing({
           formData,
           cityQuery,
           brandQuery,
           modelQuery,
           listingConsent,
-          images,
+          images: readyFiles.map((file) => ({ file })),
         });
       } catch (err) {
         console.error("PENDING LISTING SAVE:", err);
@@ -557,6 +613,13 @@ export const AddVehicle = () => {
     try {
       setSaving(true);
       setVerifying(true);
+
+      const readyFiles = await waitPhotosReady();
+      if (readyFiles.length < 1) {
+        setVerifying(false);
+        revealMissing(["photos"]);
+        return;
+      }
 
       const vehicleData = {
         listingTypeId: Number(formData.listingTypeId),
@@ -592,8 +655,8 @@ export const AddVehicle = () => {
 
       const payload = new FormData();
       payload.append("payload", JSON.stringify(vehicleData));
-      images.forEach((photo) => {
-        payload.append("photos", photo.file || photo);
+      readyFiles.forEach((file) => {
+        payload.append("photos", file);
       });
 
       const response = await fetch(`${API_BASE}/Vehicles`, {
@@ -766,15 +829,19 @@ export const AddVehicle = () => {
           <div className="vehicle-photo-strip">
 
             {images.map((photo, index) => {
-              const file = photo.file || photo;
+              const file = photoFile(photo);
+              const preview = photo.previewUrl || (file ? URL.createObjectURL(file) : "");
               return (
               <div
                 className={`vehicle-photo-thumb ${
                   index === 0 ? "main-photo" : ""
-                }`}
-                key={`${file.name}-${index}`}
+                }${photo.status === "processing" ? " is-processing" : ""}`}
+                key={photo.id || `${file?.name || "photo"}-${index}`}
               >
-                <img src={URL.createObjectURL(file)} alt={file.name} />
+                {preview ? <img src={preview} alt={photo.name || file?.name || ""} /> : null}
+                {photo.status === "processing" ? (
+                  <span className="vehicle-photo-processing">…</span>
+                ) : null}
                 {index === 0 ? (
                   <span className="main-photo-label">Main</span>
                 ) : null}
