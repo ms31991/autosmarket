@@ -529,51 +529,46 @@ export const AddVehicle = () => {
     }
   }
 
-  async function uploadVehicleImages(vehicleId) {
+  async function uploadVehicleImages(vehicleId, token) {
     if (images.length === 0) return 0;
 
-    let uploaded = 0;
     try {
       setUploadingImages(true);
+      const results = await Promise.all(
+        images.map(async (file, i) => {
+          const uploadData = new FormData();
+          uploadData.append("file", file);
+          uploadData.append("sortOrder", String(i + 1));
 
-      const token = await getClerkToken();
+          const response = await fetch(
+            `${API_BASE}/VehicleImage/vehicle/${vehicleId}/upload`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              body: uploadData,
+            }
+          );
 
-      for (let i = 0; i < images.length; i++) {
-        const file = images[i];
+          if (response.ok) return true;
 
-        const uploadData = new FormData();
-        uploadData.append("file", file);
-
-        const response = await fetch(
-          `${API_BASE}/VehicleImage/vehicle/${vehicleId}/upload`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: uploadData,
+          const responseText = await response.text();
+          let message = `Fotoja ${file.name} nuk u uploadua.`;
+          try {
+            const errorData = JSON.parse(responseText);
+            if (errorData.message) message = errorData.message;
+          } catch {
+            if (responseText) message = responseText;
           }
-        );
-
-        if (response.ok) {
-          uploaded += 1;
-          continue;
-        }
-
-        const responseText = await response.text();
-        let message = `Fotoja ${file.name} nuk u uploadua.`;
-        try {
-          const errorData = JSON.parse(responseText);
-          if (errorData.message) message = errorData.message;
-        } catch {
-          if (responseText) message = responseText;
-        }
-        console.error("IMAGE UPLOAD ERROR:", message);
-      }
+          console.error("IMAGE UPLOAD ERROR:", message);
+          return false;
+        })
+      );
+      return results.filter(Boolean).length;
     } finally {
       setUploadingImages(false);
     }
-    return uploaded;
   }
 
   async function handleSubmit(e) {
@@ -713,7 +708,7 @@ export const AddVehicle = () => {
 
       let uploaded = 0;
       try {
-        uploaded = await uploadVehicleImages(vehicleId);
+        uploaded = await uploadVehicleImages(vehicleId, token);
       } catch (imageError) {
         console.error("IMAGE UPLOAD ERROR:", imageError);
         await discardUnpublishedVehicle(vehicleId);
@@ -727,36 +722,7 @@ export const AddVehicle = () => {
 
       setSuccess(t("createdOk"));
       await clearPendingListing();
-
-      setFormData({
-        listingTypeId: "",
-        categoryId: "",
-        brandId: "",
-        modelId: "",
-        bodyTypeId: "",
-        fuelTypeId: "",
-        transmissionId: "",
-        driveTypeId: "",
-        colorId: "",
-        cityId: "",
-        price: "",
-        year: "",
-        mileage: "",
-        engine: "",
-        powerHP: "",
-        powerKW: "",
-        cylinders: "",
-        seats: "",
-      });
-
-      setImages([]);
-      setCityQuery("");
-      setBrandQuery("");
-      setModelQuery("");
-
-      setTimeout(() => {
-        navigate("/my-vehicles");
-      }, 1000);
+      navigate("/my-vehicles");
     } catch (err) {
       console.error("CREATE VEHICLE ERROR:", err);
 

@@ -74,18 +74,30 @@ export function vehicleImagesRouter() {
     if (Number(countRow?.n ?? countRow?.N ?? 0) >= 10) {
       return res.status(400).json({ message: "Maksimumi është 10 foto për veturë." });
     }
+    const requestedOrder = Number(req.body?.sortOrder);
+    const hasRequestedOrder =
+      Number.isInteger(requestedOrder) && requestedOrder >= 1 && requestedOrder <= 10;
     const maxRow = await queryOne(
       `SELECT MAX(SortOrder) AS maxOrder FROM VehicleImages WHERE VehicleId = @vehicleId`,
       { vehicleId }
     );
     const isFirst = !maxRow?.maxOrder;
-    const sortOrder = isFirst ? 1 : maxRow.maxOrder + 1;
+    const sortOrder = hasRequestedOrder
+      ? requestedOrder
+      : isFirst
+        ? 1
+        : Number(maxRow.maxOrder) + 1;
     const imageUrl = `/uploads/vehicles/${req.file.filename}`;
     const result = await query(
       `INSERT INTO VehicleImages (VehicleId, ImageUrl, IsPrimary, SortOrder)
        OUTPUT INSERTED.*
        VALUES (@vehicleId, @imageUrl, @isPrimary, @sortOrder)`,
-      { vehicleId, imageUrl, isPrimary: isFirst ? 1 : 0, sortOrder }
+      {
+        vehicleId,
+        imageUrl,
+        isPrimary: hasRequestedOrder ? (requestedOrder === 1 ? 1 : 0) : isFirst ? 1 : 0,
+        sortOrder,
+      }
     );
     const row = camel(result[0]);
     res.json({

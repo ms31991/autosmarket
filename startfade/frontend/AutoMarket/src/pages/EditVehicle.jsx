@@ -1073,10 +1073,7 @@ export const EditVehicle = () => {
       setSuccess(
         'Vehicle u ndryshua me sukses!'
       )
-
-      setTimeout(() => {
-        navigate('/my-vehicles')
-      }, 1000)
+      navigate('/my-vehicles')
     } catch (err) {
       console.error(
         'UPDATE VEHICLE ERROR:',
