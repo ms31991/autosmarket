@@ -40,3 +40,19 @@ export function publicFilePath(imageUrl) {
   const rel = toPublicUrl(imageUrl).replace(/^\//, "");
   return path.join(publicDir, rel);
 }
+
+export function thumbUrlFrom(imageUrl) {
+  const full = toPublicUrl(imageUrl);
+  if (!full || /^https?:\/\//i.test(full)) return full;
+  return full.replace(/(\.[a-z0-9]+)$/i, "-thumb$1");
+}
+
+export function publicThumbUrl(imageUrl) {
+  const thumb = thumbUrlFrom(imageUrl);
+  try {
+    if (thumb && fs.existsSync(publicFilePath(thumb))) return thumb;
+  } catch {
+    /* keep full */
+  }
+  return toPublicUrl(imageUrl);
+}

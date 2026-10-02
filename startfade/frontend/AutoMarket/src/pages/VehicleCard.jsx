@@ -24,7 +24,11 @@ export const VehicleCard = ({
   const [loadingFavourite, setLoadingFavourite] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
 
-  const images = (vehicle?.images || [])
+  const images = (
+    (vehicle?.thumbs?.length ? vehicle.thumbs : vehicle?.images) ||
+    vehicle?.images ||
+    []
+  )
     .map((image) => mediaUrl(image))
     .filter(Boolean);
 
@@ -259,13 +263,18 @@ export const VehicleCard = ({
             <img
               src={mainImage}
               alt={vehicleImageAlt(vehicle)}
+              loading="lazy"
+              decoding="async"
               onError={(e) => {
-                if (
-                  e.currentTarget.src !==
-                  PLACEHOLDER_IMAGE
-                ) {
-                  e.currentTarget.src =
-                    PLACEHOLDER_IMAGE;
+                const full = (vehicle?.images || [])
+                  .map((image) => mediaUrl(image))
+                  .filter(Boolean)[activeImage];
+                if (full && e.currentTarget.src !== full) {
+                  e.currentTarget.src = full;
+                  return;
+                }
+                if (e.currentTarget.src !== PLACEHOLDER_IMAGE) {
+                  e.currentTarget.src = PLACEHOLDER_IMAGE;
                 }
               }}
             />

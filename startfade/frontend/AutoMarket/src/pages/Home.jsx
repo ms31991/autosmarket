@@ -355,6 +355,7 @@ export const Home = () => {
   // =====================================================
   const VehicleCard = ({ vehicle }) => {
     const rawImage =
+      vehicle.thumbs?.[0] ||
       vehicle.images?.[0] ||
       vehicle.imageUrl ||
       vehicle.mainImageUrl ||

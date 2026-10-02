@@ -273,12 +273,12 @@ export const UserProfilePage = () => {
   );
 
   const getVehicleImage = (vehicle) => {
-    const first = vehicle.images?.[0];
+    const first = vehicle.thumbs?.[0] || vehicle.images?.[0];
     return mediaUrl(first?.imageUrl || first?.url || first);
   };
 
   const getFavouriteImage = (favourite) => {
-    const first = favourite.images?.[0];
+    const first = favourite.thumbs?.[0] || favourite.images?.[0];
     return mediaUrl(first?.imageUrl || first?.url || first);
   };
 

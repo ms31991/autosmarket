@@ -2,7 +2,7 @@ import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { camel, pick, slugify } from "../camel.js";
 import { optionalAuth, requireAuth } from "../auth.js";
-import { toPublicUrl } from "../paths.js";
+import { publicThumbUrl, toPublicUrl } from "../paths.js";
 import { withPublicOwnerNames } from "../personName.js";
 import { keysFromAuth, ownsRecord, requireDbUser, resolveUserKeys, userMatchSql } from "../identity.js";
 import { deleteVehicleById } from "../deleteVehicle.js";
@@ -70,13 +70,16 @@ async function withImages(vehicles) {
   );
   const byVehicle = {};
   for (const img of images) {
-    if (!byVehicle[img.VehicleId]) byVehicle[img.VehicleId] = [];
-    byVehicle[img.VehicleId].push(toPublicUrl(img.ImageUrl));
+    if (!byVehicle[img.VehicleId]) byVehicle[img.VehicleId] = { images: [], thumbs: [] };
+    const full = toPublicUrl(img.ImageUrl);
+    byVehicle[img.VehicleId].images.push(full);
+    byVehicle[img.VehicleId].thumbs.push(publicThumbUrl(img.ImageUrl));
   }
   return list.map((v) =>
     withPublicOwnerNames({
       ...v,
-      images: byVehicle[v.id] || [],
+      images: byVehicle[v.id]?.images || [],
+      thumbs: byVehicle[v.id]?.thumbs || [],
       ownerProfileImage: toPublicUrl(v.ownerProfileImage) || null,
     })
   );

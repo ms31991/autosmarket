@@ -1,5 +1,7 @@
-const MAX_BYTES = 5 * 1024 * 1024;
-const MAX_EDGE = 1920;
+const TARGET_FULL = 380 * 1024;
+const TARGET_THUMB = 85 * 1024;
+const EDGE_FULL = 1600;
+const EDGE_THUMB = 720;
 
 function canvasToBlob(canvas, quality) {
   return new Promise((resolve) => {
@@ -7,22 +9,23 @@ function canvasToBlob(canvas, quality) {
   });
 }
 
-export async function compressImageFile(file, maxBytes = MAX_BYTES) {
-  if (!file || file.size <= maxBytes) return file;
-
-  const bitmap = await createImageBitmap(file);
+function sized(bitmap, maxEdge) {
   let width = bitmap.width;
   let height = bitmap.height;
-  if (Math.max(width, height) > MAX_EDGE) {
-    const scale = MAX_EDGE / Math.max(width, height);
-    width = Math.round(width * scale);
-    height = Math.round(height * scale);
+  const longest = Math.max(width, height);
+  if (longest > maxEdge) {
+    const scale = maxEdge / longest;
+    width = Math.max(1, Math.round(width * scale));
+    height = Math.max(1, Math.round(height * scale));
   }
+  return { width, height };
+}
 
+async function encodeJpeg(bitmap, maxEdge, maxBytes) {
+  let { width, height } = sized(bitmap, maxEdge);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
-  let quality = 0.88;
-  let blob = null;
+  let quality = 0.82;
 
   const draw = () => {
     canvas.width = width;
@@ -31,22 +34,45 @@ export async function compressImageFile(file, maxBytes = MAX_BYTES) {
   };
 
   draw();
-  blob = await canvasToBlob(canvas, quality);
-  while (blob && blob.size > maxBytes && quality > 0.45) {
-    quality -= 0.1;
+  let blob = await canvasToBlob(canvas, quality);
+  while (blob && blob.size > maxBytes && quality > 0.48) {
+    quality -= 0.08;
     blob = await canvasToBlob(canvas, quality);
   }
-  while (blob && blob.size > maxBytes && Math.max(width, height) > 720) {
-    width = Math.round(width * 0.82);
-    height = Math.round(height * 0.82);
+  while (blob && blob.size > maxBytes && Math.max(width, height) > 480) {
+    width = Math.max(1, Math.round(width * 0.82));
+    height = Math.max(1, Math.round(height * 0.82));
     draw();
-    blob = await canvasToBlob(canvas, 0.72);
+    blob = await canvasToBlob(canvas, 0.7);
   }
+  if (!blob) throw new Error("Fotoja nuk u kompresua.");
+  return blob;
+}
 
-  bitmap.close?.();
-  if (!blob || blob.size > maxBytes) {
-    throw new Error("Fotoja nuk u kompresua nën 5 MB.");
+function asJpegFile(blob, originalName, prefix = "") {
+  const base = String(originalName || "photo").replace(/\.[^.]+$/, "");
+  return new File([blob], `${prefix}${base}.jpg`, { type: "image/jpeg" });
+}
+
+export async function prepareListingPhoto(file) {
+  if (!file) throw new Error("Nuk u zgjodh foto.");
+  if (file.size > 25 * 1024 * 1024) {
+    throw new Error("Fotoja është shumë e madhe.");
   }
-  const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
-  return new File([blob], name, { type: "image/jpeg" });
+  const bitmap = await createImageBitmap(file);
+  try {
+    const fullBlob = await encodeJpeg(bitmap, EDGE_FULL, TARGET_FULL);
+    const thumbBlob = await encodeJpeg(bitmap, EDGE_THUMB, TARGET_THUMB);
+    return {
+      file: asJpegFile(fullBlob, file.name),
+      thumb: asJpegFile(thumbBlob, file.name, "t-"),
+    };
+  } finally {
+    bitmap.close?.();
+  }
+}
+
+export async function compressImageFile(file) {
+  const prepared = await prepareListingPhoto(file);
+  return prepared.file;
 }

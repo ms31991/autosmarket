@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { getClerkToken } from '../services/clerkToken'
 import { mediaUrl } from '../utils/mediaUrl'
 import { API_BASE } from '../config/api'
-import { compressImageFile } from '../utils/compressImage'
+import { prepareListingPhoto } from '../utils/compressImage'
 import { ColorSelect } from '../components/ColorSelect'
 import {
   bodyTypeHintFromModel,
@@ -599,9 +599,10 @@ export const EditVehicle = () => {
           setError('Lejohen vetëm JPG, JPEG, PNG dhe WEBP.')
           continue
         }
-        const compressed = await compressImageFile(file)
+        const prepared = await prepareListingPhoto(file)
         const formDataImage = new FormData()
-        formDataImage.append('file', compressed)
+        formDataImage.append('file', prepared.file)
+        if (prepared.thumb) formDataImage.append('thumb', prepared.thumb)
         const response = await fetch(
           `${API_BASE}/VehicleImage/vehicle/${id}/upload`,
           {

@@ -3,7 +3,7 @@ import { query, queryOne } from "../db.js";
 import { camel, pick } from "../camel.js";
 import { requireAuth, requireAdmin } from "../auth.js";
 import { keysFromAuth, resolveUserKeys, userMatchSql, ownsRecord } from "../identity.js";
-import { toPublicUrl } from "../paths.js";
+import { publicThumbUrl, toPublicUrl } from "../paths.js";
 import { withPublicOwnerNames } from "../personName.js";
 
 const PURCHASE_STATUS = { 1: "Pending", 2: "Paid", 3: "Failed", 4: "Cancelled" };
@@ -451,7 +451,7 @@ export function advertisementsRouter() {
         withPublicOwnerNames({
           ...row,
           imageUrl: toPublicUrl(row.imageUrl),
-          vehicleImageUrl: toPublicUrl(row.vehicleImageUrl),
+          vehicleImageUrl: publicThumbUrl(row.vehicleImageUrl),
           ownerId: row.ownerId || row.advertiserId,
           ownerName: row.ownerName || row.advertiserName,
           ownerSurname: row.ownerSurname || row.advertiserSurname,
@@ -491,7 +491,7 @@ export function advertisementsRouter() {
     res.json(
       camel(rows).map((row) => ({
         ...row,
-        vehicleImageUrl: toPublicUrl(row.vehicleImageUrl),
+          vehicleImageUrl: publicThumbUrl(row.vehicleImageUrl),
         imageUrl: toPublicUrl(row.imageUrl),
       }))
     );

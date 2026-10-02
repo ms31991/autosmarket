@@ -9,7 +9,7 @@ import {
 import { useLanguage } from "../i18n/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../config/api";
-import { compressImageFile } from "../utils/compressImage";
+import { prepareListingPhoto } from "../utils/compressImage";
 import { ColorSelect } from "../components/ColorSelect";
 import {
   bodyTypeHintFromModel,
@@ -482,7 +482,7 @@ export const AddVehicle = () => {
         continue;
       }
       try {
-        validFiles.push(await compressImageFile(file));
+        validFiles.push(await prepareListingPhoto(file));
       } catch {
         invalidFiles.push(`${file.name} - nuk u kompresua nën 5 MB`);
       }
@@ -535,9 +535,12 @@ export const AddVehicle = () => {
     try {
       setUploadingImages(true);
       const results = await Promise.all(
-        images.map(async (file, i) => {
+        images.map(async (photo, i) => {
+          const file = photo.file || photo;
+          const thumb = photo.thumb;
           const uploadData = new FormData();
           uploadData.append("file", file);
+          if (thumb) uploadData.append("thumb", thumb);
           uploadData.append("sortOrder", String(i + 1));
 
           const response = await fetch(
@@ -832,7 +835,9 @@ export const AddVehicle = () => {
 
           <div className="vehicle-photo-strip">
 
-            {images.map((file, index) => (
+            {images.map((photo, index) => {
+              const file = photo.file || photo;
+              return (
               <div
                 className={`vehicle-photo-thumb ${
                   index === 0 ? "main-photo" : ""
@@ -853,7 +858,8 @@ export const AddVehicle = () => {
                   ×
                 </button>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 

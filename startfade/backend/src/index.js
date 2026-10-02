@@ -112,7 +112,14 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 ensureUploadDirs();
-app.use("/uploads", express.static(path.join(publicDir, "uploads")));
+app.use(
+  "/uploads",
+  express.static(path.join(publicDir, "uploads"), {
+    maxAge: "7d",
+    immutable: true,
+    fallthrough: true,
+  })
+);
 app.use(express.static(publicDir));
 app.get(/^\/uploads\/.+/, (_req, res) => {
   res.sendFile(path.join(publicDir, "placeholder-car.svg"));

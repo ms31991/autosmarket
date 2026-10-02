@@ -5,7 +5,7 @@ import fs from "fs";
 import { randomUUID } from "crypto";
 import { query, queryOne } from "../db.js";
 import { camel } from "../camel.js";
-import { publicFilePath, vehicleUploadsDir } from "../paths.js";
+import { publicFilePath, thumbUrlFrom, vehicleUploadsDir } from "../paths.js";
 import { requireAuth } from "../auth.js";
 import { ownsRecord } from "../identity.js";
 
@@ -61,9 +61,13 @@ export function vehicleImagesRouter() {
   router.post(
     "/vehicle/:vehicleId/upload",
     requireAuth,
-    upload.single("file"),
+    upload.fields([
+      { name: "file", maxCount: 1 },
+      { name: "thumb", maxCount: 1 },
+    ]),
     async (req, res) => {
-    if (!req.file) return res.status(400).json({ message: "Duhet të zgjidhni një foto." });
+    const mainFile = req.files?.file?.[0] || req.file;
+    if (!mainFile) return res.status(400).json({ message: "Duhet të zgjidhni një foto." });
     const vehicleId = Number(req.params.vehicleId);
     const access = await assertCanEditVehicle(req, vehicleId);
     if (access.status) return res.status(access.status).json({ message: access.message });
@@ -87,7 +91,23 @@ export function vehicleImagesRouter() {
       : isFirst
         ? 1
         : Number(maxRow.maxOrder) + 1;
-    const imageUrl = `/uploads/vehicles/${req.file.filename}`;
+    const imageUrl = `/uploads/vehicles/${mainFile.filename}`;
+    const thumbFile = req.files?.thumb?.[0];
+    if (thumbFile) {
+      const ext = path.extname(mainFile.filename);
+      const base = path.basename(mainFile.filename, ext);
+      const thumbDest = path.join(uploadDir, `${base}-thumb.jpg`);
+      try {
+        fs.renameSync(thumbFile.path, thumbDest);
+      } catch {
+        try {
+          fs.copyFileSync(thumbFile.path, thumbDest);
+          fs.unlinkSync(thumbFile.path);
+        } catch {
+          /* listing still works with full image */
+        }
+      }
+    }
     const result = await query(
       `INSERT INTO VehicleImages (VehicleId, ImageUrl, IsPrimary, SortOrder)
        OUTPUT INSERTED.*
@@ -142,6 +162,10 @@ export function vehicleImagesRouter() {
     }
     const filePath = publicFilePath(image.ImageUrl);
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    const thumbPath = publicFilePath(thumbUrlFrom(image.ImageUrl));
+    if (thumbPath && thumbPath !== filePath && fs.existsSync(thumbPath)) {
+      fs.unlinkSync(thumbPath);
+    }
     await query(`DELETE FROM VehicleImages WHERE Id = @id`, { id: image.Id });
     if (image.IsPrimary) {
       const next = await queryOne(

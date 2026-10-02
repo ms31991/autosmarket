@@ -243,7 +243,10 @@ export const SelectVehicle = () => {
                 .join(" ") || `Vehicle #${vehicle.id}`;
             const isPaying = Number(payingId) === Number(vehicle.id);
             const photo = mediaUrl(
-              vehicle.images?.[0]?.imageUrl || vehicle.images?.[0]?.url || vehicle.images?.[0]
+              vehicle.thumbs?.[0] ||
+                vehicle.images?.[0]?.imageUrl ||
+                vehicle.images?.[0]?.url ||
+                vehicle.images?.[0]
             );
 
             return (
