@@ -1,4 +1,5 @@
 import { Router } from "express";
+import fs from "fs";
 import { query, queryOne } from "../db.js";
 import { camel, pick, slugify } from "../camel.js";
 import { optionalAuth, requireAuth } from "../auth.js";
@@ -6,6 +7,7 @@ import { publicThumbUrl, toPublicUrl } from "../paths.js";
 import { withPublicOwnerNames } from "../personName.js";
 import { keysFromAuth, ownsRecord, requireDbUser, resolveUserKeys, userMatchSql } from "../identity.js";
 import { deleteVehicleById } from "../deleteVehicle.js";
+import { vehiclePhotoUpload } from "./vehicleImages.js";
 
 const VEHICLE_SELECT = `
   SELECT
@@ -429,16 +431,56 @@ export function vehiclesRouter() {
     res.json({ ok: true });
   });
 
-  router.post("/", requireAuth, async (req, res) => {
+  router.post(
+    "/",
+    requireAuth,
+    (req, res, next) => {
+      const ct = String(req.headers["content-type"] || "");
+      if (!ct.includes("multipart/form-data")) return next();
+      vehiclePhotoUpload.array("photos", 6)(req, res, (err) => {
+        if (err) {
+          return res.status(400).json({
+            message: err.message || "Fotot nuk u pranuan.",
+          });
+        }
+        next();
+      });
+    },
+    async (req, res) => {
     const owner = await requireDbUser(req.user);
     if (!owner?.id) {
       return res.status(401).json({ message: "User nuk u gjet. Kyçu përsëri." });
     }
 
+    let body = req.body;
+    if (typeof req.body?.payload === "string") {
+      try {
+        body = JSON.parse(req.body.payload);
+      } catch {
+        return res.status(400).json({ message: "Të dhënat e shpalljes janë të pavlefshme." });
+      }
+    }
+
+    const files = Array.isArray(req.files) ? req.files.slice(0, 6) : [];
+    const isMultipart = String(req.headers["content-type"] || "").includes("multipart/form-data");
+    if (isMultipart && files.length < 1) {
+      return res.status(400).json({
+        message: "Shto të paktën 1 foto.",
+        missing: ["photos"],
+      });
+    }
+
     let p;
     try {
-      p = await fillListingDefaults(await resolveBrandAndModel(req.body));
+      p = await fillListingDefaults(await resolveBrandAndModel(body));
     } catch (err) {
+      for (const file of files) {
+        try {
+          if (file?.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
+        } catch {
+          /* ignore */
+        }
+      }
       return res.status(400).json({
         message: err.message || "Brand ose modeli nuk u ruajt.",
         missing: ["brand", "model"],
@@ -450,6 +492,13 @@ export function vehiclesRouter() {
     if (!p.price) missing.push("price");
     if (!p.year) missing.push("year");
     if (missing.length) {
+      for (const file of files) {
+        try {
+          if (file?.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
+        } catch {
+          /* ignore */
+        }
+      }
       return res.status(400).json({
         message: "Fushat e detyrueshme mungojnë.",
         missing,
@@ -487,10 +536,35 @@ export function vehiclesRouter() {
           { ...p, ownerId: owner.id }
         );
 
+    const vehicleId = result[0].Id;
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const imageUrl = `/uploads/vehicles/${file.filename}`;
+        await query(
+          `INSERT INTO VehicleImages (VehicleId, ImageUrl, IsPrimary, SortOrder)
+           VALUES (@vehicleId, @imageUrl, @isPrimary, @sortOrder)`,
+          {
+            vehicleId,
+            imageUrl,
+            isPrimary: i === 0 ? 1 : 0,
+            sortOrder: i + 1,
+          }
+        );
+      }
+    } catch (err) {
+      console.error("ATTACH PHOTOS:", err);
+      await deleteVehicleById(vehicleId);
+      return res.status(500).json({
+        message: "Fotot nuk u ruajtën. Shpallja nuk u publikua.",
+      });
+    }
+
     res.json({
       message: "Vehicle u krijua me sukses.",
-      vehicleId: result[0].Id,
+      vehicleId,
       ownerId: result[0].OwnerId,
+      photos: files.length,
     });
   });
 

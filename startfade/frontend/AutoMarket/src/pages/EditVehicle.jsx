@@ -602,7 +602,6 @@ export const EditVehicle = () => {
         const prepared = await prepareListingPhoto(file)
         const formDataImage = new FormData()
         formDataImage.append('file', prepared.file)
-        if (prepared.thumb) formDataImage.append('thumb', prepared.thumb)
         const response = await fetch(
           `${API_BASE}/VehicleImage/vehicle/${id}/upload`,
           {

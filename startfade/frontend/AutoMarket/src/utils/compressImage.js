@@ -1,7 +1,5 @@
 const TARGET_FULL = 380 * 1024;
-const TARGET_THUMB = 85 * 1024;
 const EDGE_FULL = 1600;
-const EDGE_THUMB = 720;
 
 function canvasToBlob(canvas, quality) {
   return new Promise((resolve) => {
@@ -62,10 +60,8 @@ export async function prepareListingPhoto(file) {
   const bitmap = await createImageBitmap(file);
   try {
     const fullBlob = await encodeJpeg(bitmap, EDGE_FULL, TARGET_FULL);
-    const thumbBlob = await encodeJpeg(bitmap, EDGE_THUMB, TARGET_THUMB);
     return {
       file: asJpegFile(fullBlob, file.name),
-      thumb: asJpegFile(thumbBlob, file.name, "t-"),
     };
   } finally {
     bitmap.close?.();

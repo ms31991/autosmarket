@@ -28,6 +28,8 @@ const upload = multer({
   },
 });
 
+export const vehiclePhotoUpload = upload;
+
 export function vehicleImagesRouter() {
   const router = Router();
 
@@ -61,12 +63,9 @@ export function vehicleImagesRouter() {
   router.post(
     "/vehicle/:vehicleId/upload",
     requireAuth,
-    upload.fields([
-      { name: "file", maxCount: 1 },
-      { name: "thumb", maxCount: 1 },
-    ]),
+    upload.single("file"),
     async (req, res) => {
-    const mainFile = req.files?.file?.[0] || req.file;
+    const mainFile = req.file;
     if (!mainFile) return res.status(400).json({ message: "Duhet të zgjidhni një foto." });
     const vehicleId = Number(req.params.vehicleId);
     const access = await assertCanEditVehicle(req, vehicleId);
@@ -92,22 +91,6 @@ export function vehicleImagesRouter() {
         ? 1
         : Number(maxRow.maxOrder) + 1;
     const imageUrl = `/uploads/vehicles/${mainFile.filename}`;
-    const thumbFile = req.files?.thumb?.[0];
-    if (thumbFile) {
-      const ext = path.extname(mainFile.filename);
-      const base = path.basename(mainFile.filename, ext);
-      const thumbDest = path.join(uploadDir, `${base}-thumb.jpg`);
-      try {
-        fs.renameSync(thumbFile.path, thumbDest);
-      } catch {
-        try {
-          fs.copyFileSync(thumbFile.path, thumbDest);
-          fs.unlinkSync(thumbFile.path);
-        } catch {
-          /* listing still works with full image */
-        }
-      }
-    }
     const result = await query(
       `INSERT INTO VehicleImages (VehicleId, ImageUrl, IsPrimary, SortOrder)
        OUTPUT INSERTED.*

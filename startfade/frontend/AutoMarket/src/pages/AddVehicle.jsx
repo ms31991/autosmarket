@@ -516,64 +516,6 @@ export const AddVehicle = () => {
     );
   }
 
-  async function discardUnpublishedVehicle(vehicleId) {
-    const token = await getClerkToken();
-    if (!token || !vehicleId) return;
-    try {
-      await fetch(`${API_BASE}/Vehicles/${vehicleId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch (err) {
-      console.error("DISCARD VEHICLE:", err);
-    }
-  }
-
-  async function uploadVehicleImages(vehicleId, token) {
-    if (images.length === 0) return 0;
-
-    try {
-      setUploadingImages(true);
-      const results = await Promise.all(
-        images.map(async (photo, i) => {
-          const file = photo.file || photo;
-          const thumb = photo.thumb;
-          const uploadData = new FormData();
-          uploadData.append("file", file);
-          if (thumb) uploadData.append("thumb", thumb);
-          uploadData.append("sortOrder", String(i + 1));
-
-          const response = await fetch(
-            `${API_BASE}/VehicleImage/vehicle/${vehicleId}/upload`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-              body: uploadData,
-            }
-          );
-
-          if (response.ok) return true;
-
-          const responseText = await response.text();
-          let message = `Fotoja ${file.name} nuk u uploadua.`;
-          try {
-            const errorData = JSON.parse(responseText);
-            if (errorData.message) message = errorData.message;
-          } catch {
-            if (responseText) message = responseText;
-          }
-          console.error("IMAGE UPLOAD ERROR:", message);
-          return false;
-        })
-      );
-      return results.filter(Boolean).length;
-    } finally {
-      setUploadingImages(false);
-    }
-  }
-
   async function handleSubmit(e) {
     e?.preventDefault?.();
 
@@ -648,17 +590,19 @@ export const AddVehicle = () => {
         doors: null,
       };
 
-      const response = await fetch(
-        `${API_BASE}/Vehicles`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(vehicleData),
-        }
-      );
+      const payload = new FormData();
+      payload.append("payload", JSON.stringify(vehicleData));
+      images.forEach((photo) => {
+        payload.append("photos", photo.file || photo);
+      });
+
+      const response = await fetch(`${API_BASE}/Vehicles`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: payload,
+      });
 
       const responseText = await response.text();
 
@@ -707,20 +651,6 @@ export const AddVehicle = () => {
         throw new Error(
           "Vehicle ID mungon në response."
         );
-      }
-
-      let uploaded = 0;
-      try {
-        uploaded = await uploadVehicleImages(vehicleId, token);
-      } catch (imageError) {
-        console.error("IMAGE UPLOAD ERROR:", imageError);
-        await discardUnpublishedVehicle(vehicleId);
-        throw new Error(t("photosPublishFail"));
-      }
-
-      if (uploaded < 1) {
-        await discardUnpublishedVehicle(vehicleId);
-        throw new Error(t("photosPublishFail"));
       }
 
       setSuccess(t("createdOk"));
