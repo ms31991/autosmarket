@@ -10,11 +10,8 @@ import { useLanguage } from "../i18n/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../config/api";
 import { prepareListingPhoto } from "../utils/compressImage";
-import {
-  fetchWithTimeout,
-  isNetworkProblem,
-  isOffline,
-} from "../utils/network";
+import { isOffline } from "../utils/network";
+import { startListingUpload } from "../utils/listingUpload";
 import { ColorSelect } from "../components/ColorSelect";
 import {
   bodyTypeHintFromModel,
@@ -24,8 +21,6 @@ import {
   normalizePlace,
 } from "../utils/listingTypeahead";
 import {
-  clearPendingListing,
-  endListingPublish,
   loadPendingListing,
   savePendingListing,
   tryBeginListingPublish,
@@ -90,8 +85,6 @@ export const AddVehicle = () => {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [slowNet, setSlowNet] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
 
   const [error, setError] = useState("");
@@ -552,6 +545,7 @@ export const AddVehicle = () => {
             })
           );
           URL.revokeObjectURL(slot.previewUrl);
+          return prepared.file;
         })
         .catch(() => {
           setImages((previous) =>
@@ -560,9 +554,7 @@ export const AddVehicle = () => {
             )
           );
           setError(`${raw.name} - nuk u kompresua`);
-        })
-        .finally(() => {
-          photoJobsRef.current.delete(slot.id);
+          return null;
         });
       photoJobsRef.current.set(slot.id, job);
     });
@@ -621,144 +613,68 @@ export const AddVehicle = () => {
 
     if (!tryBeginListingPublish()) return;
 
-    try {
-      setSaving(true);
-      setVerifying(true);
+    const snapshot = imagesRef.current.map((photo) => ({
+      file: photoFile(photo),
+      job: photo?.id ? photoJobsRef.current.get(photo.id) : null,
+    }));
+    const photoUrl = imagesRef.current.find((photo) => photo?.previewUrl)?.previewUrl || "";
+    const name = [brandQuery, modelQuery].map((part) => String(part || "").trim()).filter(Boolean).join(" ");
 
-      const readyFiles = await waitPhotosReady();
-      if (readyFiles.length < 1) {
-        setVerifying(false);
-        revealMissing(["photos"]);
-        return;
-      }
+    const vehicleData = {
+      listingTypeId: Number(formData.listingTypeId),
+      categoryId: Number(formData.categoryId),
+      brandId: formData.brandId ? Number(formData.brandId) : null,
+      modelId: formData.modelId ? Number(formData.modelId) : null,
+      brandName: brandQuery.trim(),
+      modelName: modelQuery.trim(),
 
-      const vehicleData = {
-        listingTypeId: Number(formData.listingTypeId),
-        categoryId: Number(formData.categoryId),
-        brandId: formData.brandId ? Number(formData.brandId) : null,
-        modelId: formData.modelId ? Number(formData.modelId) : null,
-        brandName: brandQuery.trim(),
-        modelName: modelQuery.trim(),
+      bodyTypeId: getNumberOrNull(formData.bodyTypeId),
+      fuelTypeId: getNumberOrNull(formData.fuelTypeId),
+      transmissionId: getNumberOrNull(
+        formData.transmissionId
+      ),
+      driveTypeId: getNumberOrNull(
+        formData.driveTypeId
+      ),
+      colorId: getNumberOrNull(formData.colorId),
+      cityId: getNumberOrNull(formData.cityId),
 
-        bodyTypeId: getNumberOrNull(formData.bodyTypeId),
-        fuelTypeId: getNumberOrNull(formData.fuelTypeId),
-        transmissionId: getNumberOrNull(
-          formData.transmissionId
-        ),
-        driveTypeId: getNumberOrNull(
-          formData.driveTypeId
-        ),
-        colorId: getNumberOrNull(formData.colorId),
-        cityId: getNumberOrNull(formData.cityId),
+      price: Number(formData.price),
+      year: Number(formData.year),
+      mileage: getNumberOrNull(formData.mileage),
 
-        price: Number(formData.price),
-        year: Number(formData.year),
-        mileage: getNumberOrNull(formData.mileage),
-
-        engine: formData.engine.trim() || null,
-        engineCC: null,
-        powerHP: getNumberOrNull(formData.powerHP),
-        powerKW: getNumberOrNull(formData.powerKW),
-        cylinders: getNumberOrNull(formData.cylinders),
-        seats: getNumberOrNull(formData.seats),
-        doors: null,
-      };
-
-      const payload = new FormData();
-      payload.append("payload", JSON.stringify(vehicleData));
-      readyFiles.forEach((file) => {
-        payload.append("photos", file);
-      });
-
-      const response = await fetchWithTimeout(`${API_BASE}/Vehicles`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: payload,
-      });
-
-      const responseText = await response.text();
-
-      if (!response.ok) {
-        let message =
-          `Vehicle nuk u krijua. Status: ${response.status}`;
-        let serverMissing = [];
-
-        try {
-          const errorData =
-            JSON.parse(responseText);
-
-          if (errorData.message) {
-            message = errorData.message;
-          }
-          if (Array.isArray(errorData.missing)) {
-            serverMissing = errorData.missing;
-          }
-        } catch {
-          if (responseText) {
-            message = responseText;
-          }
-        }
-
-        if (serverMissing.length) {
-          setVerifying(false);
-          revealMissing(serverMissing);
-          return;
-        }
-
-        throw new Error(message);
-      }
-
-      let vehicleId = null;
-
-      try {
-        const result = JSON.parse(responseText);
-        vehicleId = result.vehicleId;
-      } catch {
-        throw new Error(
-          "Vehicle u krijua, por nuk u mor ID."
-        );
-      }
-
-      if (!vehicleId) {
-        throw new Error(
-          "Vehicle ID mungon në response."
-        );
-      }
-
-      setSuccess(t("createdOk"));
-      await clearPendingListing();
-      navigate("/my-vehicles");
-    } catch (err) {
-      console.error("CREATE VEHICLE ERROR:", err);
-
-      setError(
-        isNetworkProblem(err)
-          ? t("internetSlow")
-          : err.message || t("createFail")
-      );
-      setVerifying(false);
-    } finally {
-      setSaving(false);
-      endListingPublish();
-    }
-  }
-
-  useEffect(() => {
-    if (!verifying) {
-      setSlowNet(false);
-      return;
-    }
-    const markSlow = () => setSlowNet(true);
-    if (isOffline()) markSlow();
-    const timer = setTimeout(markSlow, 8000);
-    window.addEventListener("offline", markSlow);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("offline", markSlow);
+      engine: formData.engine.trim() || null,
+      engineCC: null,
+      powerHP: getNumberOrNull(formData.powerHP),
+      powerKW: getNumberOrNull(formData.powerKW),
+      cylinders: getNumberOrNull(formData.cylinders),
+      seats: getNumberOrNull(formData.seats),
+      doors: null,
     };
-  }, [verifying]);
+
+    startListingUpload({
+      name,
+      photoUrl,
+      token,
+      vehicleData,
+      waitFiles: async () => {
+        const files = [];
+        for (const item of snapshot) {
+          if (item.file) {
+            files.push(item.file);
+            continue;
+          }
+          if (item.job) {
+            const file = await item.job;
+            if (file) files.push(file);
+          }
+        }
+        return files;
+      },
+    });
+
+    navigate("/my-vehicles");
+  }
 
   useEffect(() => {
     if (!pendingAuto || loading || saving) return;
@@ -788,17 +704,6 @@ export const AddVehicle = () => {
 
   return (
     <div className="add-vehicle-page">
-      {verifying ? (
-        <div className="publish-verify-overlay" role="status" aria-live="polite">
-          <div className="verify-spinner" aria-hidden="true">
-            {Array.from({ length: 12 }, (_, i) => (
-              <span key={i} style={{ transform: `rotate(${i * 30}deg)` }} />
-            ))}
-          </div>
-          <p>{slowNet ? t("internetSlow") : t("verifying")}</p>
-        </div>
-      ) : null}
-
       <div className="add-vehicle-heading">
         <div>
           <span className="form-eyebrow">

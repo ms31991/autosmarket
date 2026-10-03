@@ -2,13 +2,16 @@ import "./MyVehicles.css";
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { VehicleCard } from './VehicleCard'
+import { ListingUploadBar } from '../components/ListingUploadBar'
 import { getClerkToken } from '../services/clerkToken'
 import { API_BASE } from '../config/api'
+import { dismissListingUpload, useListingUpload } from '../utils/listingUpload'
 
 export const MyVehicles = () => {
   const [vehicles, setVehicles] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const upload = useListingUpload()
 
   // ==========================================
   // TOKEN (për ta kaluar te VehicleCard, p.sh.
@@ -23,9 +26,9 @@ export const MyVehicles = () => {
   // GET MY VEHICLES
   // ==========================================
 
-  async function fetchMyVehicles() {
+  async function fetchMyVehicles(silent = false) {
     try {
-      setLoading(true)
+      if (!silent) setLoading(true)
       setError('')
 
       const currentToken = await getClerkToken()
@@ -103,6 +106,13 @@ export const MyVehicles = () => {
   useEffect(() => {
     fetchMyVehicles()
   }, [])
+
+  useEffect(() => {
+    if (upload?.status !== 'done') return
+    fetchMyVehicles(true)
+    const timer = setTimeout(() => dismissListingUpload(), 900)
+    return () => clearTimeout(timer)
+  }, [upload?.status, upload?.id])
 
   // ==========================================
   // DELETE VEHICLE
@@ -248,6 +258,8 @@ export const MyVehicles = () => {
           + Add Vehicle
         </button>
       </div>
+
+      <ListingUploadBar />
 
       {/* =====================================
           ERROR
