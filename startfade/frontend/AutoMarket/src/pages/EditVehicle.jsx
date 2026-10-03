@@ -5,6 +5,11 @@ import { getClerkToken } from '../services/clerkToken'
 import { mediaUrl } from '../utils/mediaUrl'
 import { API_BASE } from '../config/api'
 import { prepareListingPhoto } from '../utils/compressImage'
+import {
+  fetchWithTimeout,
+  isNetworkProblem,
+  isOffline,
+} from '../utils/network'
 import { ColorSelect } from '../components/ColorSelect'
 import {
   bodyTypeHintFromModel,
@@ -88,6 +93,7 @@ export const EditVehicle = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [verifying, setVerifying] = useState(false)
+  const [slowNet, setSlowNet] = useState(false)
 
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -100,6 +106,21 @@ export const EditVehicle = () => {
   useEffect(() => {
     checkAuthAndLoad()
   }, [id])
+
+  useEffect(() => {
+    if (!verifying) {
+      setSlowNet(false)
+      return
+    }
+    const markSlow = () => setSlowNet(true)
+    if (isOffline()) markSlow()
+    const timer = setTimeout(markSlow, 8000)
+    window.addEventListener('offline', markSlow)
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('offline', markSlow)
+    }
+  }, [verifying])
 
   useEffect(() => {
     if (formData.modelId) {
@@ -605,7 +626,7 @@ export const EditVehicle = () => {
     for (const prepared of preparedList) {
         const formDataImage = new FormData()
         formDataImage.append('file', prepared.file)
-        const response = await fetch(
+        const response = await fetchWithTimeout(
           `${API_BASE}/VehicleImage/vehicle/${id}/upload`,
           {
             method: 'POST',
@@ -643,7 +664,9 @@ export const EditVehicle = () => {
       setSuccess('Fotoja u uploadua me sukses.')
     } catch (err) {
       setError(
-        err.message ||
+        isNetworkProblem(err)
+          ? t('internetSlow')
+          : err.message ||
           'Ndodhi një gabim gjatë upload-it të fotos.'
       )
     } finally {
@@ -872,6 +895,11 @@ export const EditVehicle = () => {
       return
     }
 
+    if (isOffline()) {
+      setError(t('internetSlow'))
+      return
+    }
+
     try {
       setSaving(true)
       setVerifying(true)
@@ -1004,7 +1032,7 @@ export const EditVehicle = () => {
       // PUT
       // -------------------------------------------------
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${API_BASE}/Vehicles/${id}`,
         {
           method: 'PUT',
@@ -1084,7 +1112,9 @@ export const EditVehicle = () => {
       )
 
       setError(
-        err.message ||
+        isNetworkProblem(err)
+          ? t('internetSlow')
+          : err.message ||
           'Ndodhi një gabim gjatë ndryshimit të veturës.'
       )
       setVerifying(false)
@@ -1114,7 +1144,7 @@ export const EditVehicle = () => {
               <span key={i} style={{ transform: `rotate(${i * 30}deg)` }} />
             ))}
           </div>
-          <p>{t("verifying")}</p>
+          <p>{slowNet ? t("internetSlow") : t("verifying")}</p>
         </div>
       ) : null}
       <div className="add-vehicle-heading">

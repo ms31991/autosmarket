@@ -10,6 +10,11 @@ import { useLanguage } from "../i18n/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../config/api";
 import { prepareListingPhoto } from "../utils/compressImage";
+import {
+  fetchWithTimeout,
+  isNetworkProblem,
+  isOffline,
+} from "../utils/network";
 import { ColorSelect } from "../components/ColorSelect";
 import {
   bodyTypeHintFromModel,
@@ -86,6 +91,7 @@ export const AddVehicle = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [slowNet, setSlowNet] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
 
   const [error, setError] = useState("");
@@ -608,6 +614,11 @@ export const AddVehicle = () => {
       return;
     }
 
+    if (isOffline()) {
+      setError(t("internetSlow"));
+      return;
+    }
+
     if (!tryBeginListingPublish()) return;
 
     try {
@@ -659,7 +670,7 @@ export const AddVehicle = () => {
         payload.append("photos", file);
       });
 
-      const response = await fetch(`${API_BASE}/Vehicles`, {
+      const response = await fetchWithTimeout(`${API_BASE}/Vehicles`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -723,8 +734,9 @@ export const AddVehicle = () => {
       console.error("CREATE VEHICLE ERROR:", err);
 
       setError(
-        err.message ||
-          "Ndodhi një gabim gjatë krijimit të veturës."
+        isNetworkProblem(err)
+          ? t("internetSlow")
+          : err.message || t("createFail")
       );
       setVerifying(false);
     } finally {
@@ -732,6 +744,21 @@ export const AddVehicle = () => {
       endListingPublish();
     }
   }
+
+  useEffect(() => {
+    if (!verifying) {
+      setSlowNet(false);
+      return;
+    }
+    const markSlow = () => setSlowNet(true);
+    if (isOffline()) markSlow();
+    const timer = setTimeout(markSlow, 8000);
+    window.addEventListener("offline", markSlow);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("offline", markSlow);
+    };
+  }, [verifying]);
 
   useEffect(() => {
     if (!pendingAuto || loading || saving) return;
@@ -768,7 +795,7 @@ export const AddVehicle = () => {
               <span key={i} style={{ transform: `rotate(${i * 30}deg)` }} />
             ))}
           </div>
-          <p>{t("verifying")}</p>
+          <p>{slowNet ? t("internetSlow") : t("verifying")}</p>
         </div>
       ) : null}
 
